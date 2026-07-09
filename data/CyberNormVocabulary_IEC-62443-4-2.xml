@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Systematic vocabulary extraction pass over IEC 62443-4-2 (norm-product-classification
+    skill, Workflow A), first of the "high-yield norms first" batch. Every record cites its real
+    source clause (queried live via find#NormClausesByDocument, not from memory) - no fabricated
+    category or requirement.
+
+    Scope of this pass: the document's own explicit 4-way component-type taxonomy (Software
+    Application/Embedded Device/Host Device/Network Device, clauses 12.1/13.1/14.1/15.1) plus each
+    type's component-specific technical requirements (clauses 12.2-12.3, 13.2-13.9, 14.2-14.9,
+    15.2-15.13). Deliberately NOT covered in this pass (reserve, don't fabricate, per
+    plm-bom-import's own "reserve don't populate" discipline): the general baseline Component
+    Requirements shared by all 4 types (clauses 5-11, CR 1.1-CR 7.8, ~53 clauses, FR1-FR7
+    foundational requirement families) - real, valuable vocabulary, deferred to a later pass
+    rather than rushed. Also NOT available in this pass: Annex A's own device-category
+    descriptions - a real gap found while doing this work, not previously known: the norm-indexer
+    clause segmenter (parser/clause_segmenter.py, _EN_IEC_HEADING_RE) only matches digit-led
+    hierarchical numbering ("12.1"), so lettered Annex clauses ("A.1") were silently never
+    extracted into the graph at all. Flagged for a future norm-indexer fix, not addressed here.
+
+    NCAT_IEC62443_4_2_NETDEV (Network Device) and FEAT_ZONE_BOUNDARY_MONITORING (NDR 5.2) already
+    exist from the earlier single validated example (CyberNormProductClassificationDemoSeedData.xml)
+    - not redefined here. This file adds the 3 sibling categories (Software Application/Embedded
+    Device/Host Device) plus a second requirements group for Network Device
+    (FGRP_IEC62443_4_2_NDR_REQS, linked to the existing NCAT_IEC62443_4_2_NETDEV via a second
+    ProductCategoryFeatGrpAppl row - the entity's PK explicitly supports more than one group per
+    category, verified against ProductDefinitionEntities.xml before relying on it).
+
+    DeviceTypeEnumId decision: Network Device already has an exact existing match
+    (moqui-device's DtNetworkDevice, parent DtPhysicalDevice) - reused, not duplicated, by
+    Workflow B's classification logic (this file adds no DeviceType rows for it). For the other
+    3 types (Software Application, Embedded Device, Host Device), no confident existing
+    DeviceType node fits without either overloading an unrelated node or re-parenting parts of
+    the existing ~150-value functional tree (e.g. Embedded Device would overlap DtController/
+    DtSensor/DtSmartActuator's existing, more specific classification) - a tree reorganization
+    decision out of scope for a vocabulary-extraction pass. Deliberately deferred, not forced;
+    ProductCategory membership alone (which supports multiple simultaneous memberships, unlike
+    the single-value deviceTypeEnumId field) already carries the classification for these 3.
+
+    Retrofit: every ProductFeature/ProductCategory in this file now carries sourceGraphId/
+    sourceGraphVertexId (extend-entity added to CyberDeviceAssetExtensions.xml), resolved to the
+    real X.Y.1 "Requirement" sub-clause vertex - not the parent X.Y heading, which is an empty
+    (0-length text) section title in this norm's own structure (verified: e.g. clause 13.5 "EDR
+    3.10 - Support for updates" has no text, the actual "shall" statement lives in 13.5.1
+    "Requirement"). Category records cite their own defining X.1 clause (12.1/13.1/14.1/15.1)
+    directly, since those headings do carry real body text.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <!-- Component-type categories (clauses 12.1/13.1/14.1) - siblings of the existing
+         NCAT_IEC62443_4_2_NETDEV (clause 15.1) -->
+    <mantle.product.category.ProductCategory productCategoryId="NCAT_IEC62443_4_2_SWAPP" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="80cb7bf8876d5603461ad09d8601e3fc"
+            productCategoryTypeEnumId="PctRegulatory" categoryName="IEC 62443-4-2 Software Application"
+            description="IEC 62443-4-2 clause 12.1: the purpose of this set of requirements is to document requirements that are specific to software applications."/>
+    <mantle.product.category.ProductCategory productCategoryId="NCAT_IEC62443_4_2_EMBDEV" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="87c0f0c0ee70e910e1066af0aaf512ab"
+            productCategoryTypeEnumId="PctRegulatory" categoryName="IEC 62443-4-2 Embedded Device"
+            description="IEC 62443-4-2 clause 13.1: the purpose of this set of requirements is to document requirements that are specific to embedded devices."/>
+    <mantle.product.category.ProductCategory productCategoryId="NCAT_IEC62443_4_2_HOSTDEV" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="3174ed178fffaede135311b9bdcdfbaf"
+            productCategoryTypeEnumId="PctRegulatory" categoryName="IEC 62443-4-2 Host Device"
+            description="IEC 62443-4-2 clause 14.1: the purpose of this set of requirements is to document requirements that are specific to host devices."/>
+
+    <!-- SAR (Software Application Requirements, clause 12) - 2 component-specific requirements -->
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_SAR_MOBILE_CODE_POLICY" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="1d5c9f8857bfa6158d94c7e1fd37e4f0" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 SAR 2.4 (Mobile code): if the software application uses mobile code, it shall provide the capability to enforce a security policy controlling execution, transfer, and integrity-checked execution of that code."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_SAR_MALWARE_PROTECT_DOC" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="64501e74446e778cacc9fc6191a0448f" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 SAR 3.2 (Protection from malicious code): the application supplier shall qualify and document which malicious-code protection mechanisms are compatible with the application, and any special configuration requirements."/>
+
+    <!-- EDR (Embedded Device Requirements, clause 13) - 8 component-specific requirements -->
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_EDR_MOBILE_CODE_POLICY" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="05d979d2450a38d7cbba512f1bc6063c" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 EDR 2.4 (Mobile code): if the embedded device uses mobile code, it shall provide the capability to enforce a security policy controlling execution, upload, and integrity-checked execution of that code."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_EDR_DIAG_INTERFACE_PROTECT" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="7dcf619773335da70b89fb834dd7ca1a" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 EDR 2.13 (Physical diagnostic/test interfaces): embedded devices shall protect against unauthorized use of physical factory diagnostic and test interfaces (e.g. JTAG debugging)."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_EDR_MALWARE_PROTECT" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="3677d3197f519d783894fec83f9c9fb6" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 EDR 3.2 (Protection from malicious code): the embedded device shall provide the capability to protect from installation and execution of unauthorized software."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_EDR_UPDATE_SUPPORT" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="6ed6944301d57f9f49dc10ceee426d29" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 EDR 3.10 (Support for updates): the embedded device shall support the ability to be updated and upgraded."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_EDR_TAMPER_RESISTANCE" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="a10e72b30756f4a5dd45a80390a3b8a7" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 EDR 3.11 (Physical tamper resistance/detection): the embedded device shall provide tamper resistance and detection mechanisms against unauthorized physical access into the device."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_EDR_SUPPLIER_ROOT_OF_TRUST" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="c3bbd44111a3682e1249998cf25790b8" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 EDR 3.12 (Provisioning supplier roots of trust): embedded devices shall provide the capability to provision and protect the confidentiality, integrity and authenticity of product supplier keys/data used as roots of trust at manufacture."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_EDR_OWNER_ROOT_OF_TRUST" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="0029b864d1fb085b97b51982957e4387" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 EDR 3.13 (Provisioning owner roots of trust): embedded devices shall provide the capability to provision and protect asset owner keys/data as roots of trust, without reliance on components outside the device's security zone."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_EDR_BOOT_INTEGRITY" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="1a42911b1a43955cad0fab8ab0a284fe" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 EDR 3.14 (Boot process integrity): embedded devices shall verify the integrity of the firmware, software and configuration data needed for the component's boot and runtime processes prior to use."/>
+
+    <!-- HDR (Host Device Requirements, clause 14) - 8 component-specific requirements -->
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_HDR_MOBILE_CODE_POLICY" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="3f2d0e6480993ade84329c9ef8d332a8" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 HDR 2.4 (Mobile code): if the host device uses mobile code, it shall provide the capability to enforce a security policy controlling execution and upload of that code."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_HDR_DIAG_INTERFACE_PROTECT" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="d52700fd6395508778d8b0f7f9f11c22" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 HDR 2.13 (Physical diagnostic/test interfaces): host devices shall protect against unauthorized use of physical factory diagnostic and test interfaces (e.g. JTAG debugging)."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_HDR_MALWARE_PROTECT" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="2461def99c95f4144f0bb4e4107ff108" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 HDR 3.2 (Protection from malicious code): mechanisms qualified by the IACS product supplier shall provide protection from malicious code on host devices, with any special configuration documented."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_HDR_UPDATE_SUPPORT" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="3e9c8e472333d97943ff2a0da0323c0e" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 HDR 3.10 (Support for updates): host devices shall support the ability to be updated and upgraded."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_HDR_TAMPER_RESISTANCE" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="2438359812b7b6a95d6c95685ba234e7" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 HDR 3.11 (Physical tamper resistance/detection): host devices shall provide the capability to support tamper resistance and detection mechanisms against unauthorized physical access."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_HDR_SUPPLIER_ROOT_OF_TRUST" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="6cb79b3d522e1fe91606fd38179dd53a" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 HDR 3.12 (Provisioning supplier roots of trust): host devices shall provide the capability to provision and protect the confidentiality, integrity and authenticity of product supplier keys/data used as roots of trust at manufacture."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_HDR_OWNER_ROOT_OF_TRUST" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="9ab34676e4280f4e1c059a8ffe7aa804" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 HDR 3.13 (Provisioning owner roots of trust): host devices shall provide the capability to provision and protect asset owner keys/data as roots of trust, without reliance on components outside the device's security zone."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_HDR_BOOT_INTEGRITY" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="2b1810dea12859bc749dedf5b9baef23" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 HDR 3.14 (Boot process integrity): host devices shall verify the integrity of the firmware, software and configuration data needed for the component's boot process prior to use."/>
+
+    <!-- NDR (Network Device Requirements, clause 15) - 11 component-specific requirements, in
+         addition to the existing FEAT_ZONE_BOUNDARY_MONITORING (NDR 5.2) -->
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NDR_WIRELESS_ACCESS_MGMT" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="7e0c791dedeaa4134c60ef7b31b98a7f" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 NDR 1.6 (Wireless access management): a network device supporting wireless access shall provide the capability to identify and authenticate all users engaged in wireless communication."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NDR_UNTRUSTED_NET_ACCESS_CTRL" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="2175b82b0588534829c34f25f5a39328" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 NDR 1.13 (Access via untrusted networks): a network device supporting device access into a network shall provide the capability to monitor and control all access via untrusted networks."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NDR_MOBILE_CODE_POLICY" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="d13ee6a02c34ae0928ab45a00f5dae00" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 NDR 2.4 (Mobile code): if the network device uses mobile code, it shall provide the capability to enforce a security policy controlling execution and transfer of that code."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NDR_DIAG_INTERFACE_PROTECT" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="3023c060f6fb27da90d8a8006803507d" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 NDR 2.13 (Physical diagnostic/test interfaces): network devices shall protect against unauthorized use of physical factory diagnostic and test interfaces (e.g. JTAG debugging)."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NDR_MALWARE_PROTECT" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="02145b4381c566a15bf56da4f618539f" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 NDR 3.2 (Protection from malicious code): the network device shall provide for protection from malicious code."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NDR_UPDATE_SUPPORT" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="50f7da5abad3eec01f20d828c2365543" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 NDR 3.10 (Support for updates): network devices shall support the ability to be updated and upgraded."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NDR_TAMPER_RESISTANCE" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="bf4f81637a066e6c3a24eedff2b0bf94" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 NDR 3.11 (Physical tamper resistance/detection): network devices shall provide tamper resistance and detection mechanisms against unauthorized physical access into the device."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NDR_SUPPLIER_ROOT_OF_TRUST" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="f45a30be83a808d49d7f027db9e73d70" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 NDR 3.12 (Provisioning supplier roots of trust): network devices shall provide the capability to provision and protect the confidentiality, integrity and authenticity of product supplier keys/data used as roots of trust at manufacture."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NDR_OWNER_ROOT_OF_TRUST" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="957e454e65d4dc4f78def77c14e38a75" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 NDR 3.13 (Provisioning owner roots of trust): network devices shall provide the capability to provision and protect asset owner keys/data as roots of trust, without reliance on components outside the device's security zone."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NDR_BOOT_INTEGRITY" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="c16c70f35a2cce8abb12382abcddc3fa" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 NDR 3.14 (Boot process integrity): network devices shall verify the integrity of the firmware, software and configuration data needed for the component's boot process prior to use."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NDR_P2P_COMM_RESTRICT" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="30c4c0646a6c91dc3ff1022c3116e0fa" productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 NDR 5.3 (Person-to-person communication restrictions): a network device at a zone boundary shall provide the capability to protect against general-purpose person-to-person messages from external users/systems."/>
+
+    <!-- Feature groups, one per component type -->
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_IEC62443_4_2_SAR_REQS"
+            description="IEC 62443-4-2 Software Application (Clause 12) component-specific technical requirements"/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_IEC62443_4_2_EDR_REQS"
+            description="IEC 62443-4-2 Embedded Device (Clause 13) component-specific technical requirements"/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_IEC62443_4_2_HDR_REQS"
+            description="IEC 62443-4-2 Host Device (Clause 14) component-specific technical requirements"/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS"
+            description="IEC 62443-4-2 Network Device (Clause 15) component-specific technical requirements, additional to the existing FGRP_IEC62443_4_2_NETDEV_REQS (zone boundary monitoring)"/>
+
+    <!-- Group membership: SAR -->
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_SAR_REQS" productFeatureId="FEAT_SAR_MOBILE_CODE_POLICY" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_SAR_REQS" productFeatureId="FEAT_SAR_MALWARE_PROTECT_DOC" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+
+    <!-- Group membership: EDR -->
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_EDR_REQS" productFeatureId="FEAT_EDR_MOBILE_CODE_POLICY" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_EDR_REQS" productFeatureId="FEAT_EDR_DIAG_INTERFACE_PROTECT" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_EDR_REQS" productFeatureId="FEAT_EDR_MALWARE_PROTECT" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_EDR_REQS" productFeatureId="FEAT_EDR_UPDATE_SUPPORT" fromDate="2026-01-01 00:00:00" sequenceNum="4"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_EDR_REQS" productFeatureId="FEAT_EDR_TAMPER_RESISTANCE" fromDate="2026-01-01 00:00:00" sequenceNum="5"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_EDR_REQS" productFeatureId="FEAT_EDR_SUPPLIER_ROOT_OF_TRUST" fromDate="2026-01-01 00:00:00" sequenceNum="6"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_EDR_REQS" productFeatureId="FEAT_EDR_OWNER_ROOT_OF_TRUST" fromDate="2026-01-01 00:00:00" sequenceNum="7"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_EDR_REQS" productFeatureId="FEAT_EDR_BOOT_INTEGRITY" fromDate="2026-01-01 00:00:00" sequenceNum="8"/>
+
+    <!-- Group membership: HDR -->
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_HDR_REQS" productFeatureId="FEAT_HDR_MOBILE_CODE_POLICY" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_HDR_REQS" productFeatureId="FEAT_HDR_DIAG_INTERFACE_PROTECT" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_HDR_REQS" productFeatureId="FEAT_HDR_MALWARE_PROTECT" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_HDR_REQS" productFeatureId="FEAT_HDR_UPDATE_SUPPORT" fromDate="2026-01-01 00:00:00" sequenceNum="4"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_HDR_REQS" productFeatureId="FEAT_HDR_TAMPER_RESISTANCE" fromDate="2026-01-01 00:00:00" sequenceNum="5"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_HDR_REQS" productFeatureId="FEAT_HDR_SUPPLIER_ROOT_OF_TRUST" fromDate="2026-01-01 00:00:00" sequenceNum="6"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_HDR_REQS" productFeatureId="FEAT_HDR_OWNER_ROOT_OF_TRUST" fromDate="2026-01-01 00:00:00" sequenceNum="7"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_HDR_REQS" productFeatureId="FEAT_HDR_BOOT_INTEGRITY" fromDate="2026-01-01 00:00:00" sequenceNum="8"/>
+
+    <!-- Group membership: NDR -->
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS" productFeatureId="FEAT_NDR_WIRELESS_ACCESS_MGMT" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS" productFeatureId="FEAT_NDR_UNTRUSTED_NET_ACCESS_CTRL" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS" productFeatureId="FEAT_NDR_MOBILE_CODE_POLICY" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS" productFeatureId="FEAT_NDR_DIAG_INTERFACE_PROTECT" fromDate="2026-01-01 00:00:00" sequenceNum="4"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS" productFeatureId="FEAT_NDR_MALWARE_PROTECT" fromDate="2026-01-01 00:00:00" sequenceNum="5"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS" productFeatureId="FEAT_NDR_UPDATE_SUPPORT" fromDate="2026-01-01 00:00:00" sequenceNum="6"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS" productFeatureId="FEAT_NDR_TAMPER_RESISTANCE" fromDate="2026-01-01 00:00:00" sequenceNum="7"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS" productFeatureId="FEAT_NDR_SUPPLIER_ROOT_OF_TRUST" fromDate="2026-01-01 00:00:00" sequenceNum="8"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS" productFeatureId="FEAT_NDR_OWNER_ROOT_OF_TRUST" fromDate="2026-01-01 00:00:00" sequenceNum="9"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS" productFeatureId="FEAT_NDR_BOOT_INTEGRITY" fromDate="2026-01-01 00:00:00" sequenceNum="10"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS" productFeatureId="FEAT_NDR_P2P_COMM_RESTRICT" fromDate="2026-01-01 00:00:00" sequenceNum="11"/>
+
+    <!-- Category -> group links (PfatStandard: intrinsic/regulatory characteristic, not a
+         commercial selectable/optional feature) -->
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="NCAT_IEC62443_4_2_SWAPP"
+            productFeatureGroupId="FGRP_IEC62443_4_2_SAR_REQS" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="NCAT_IEC62443_4_2_EMBDEV"
+            productFeatureGroupId="FGRP_IEC62443_4_2_EDR_REQS" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="NCAT_IEC62443_4_2_HOSTDEV"
+            productFeatureGroupId="FGRP_IEC62443_4_2_HDR_REQS" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <!-- Second group for the existing NCAT_IEC62443_4_2_NETDEV category (first group,
+         FGRP_IEC62443_4_2_NETDEV_REQS, was linked by CyberNormProductClassificationDemoSeedData.xml) -->
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="NCAT_IEC62443_4_2_NETDEV"
+            productFeatureGroupId="FGRP_IEC62443_4_2_NDR_REQS" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+
+</entity-facade-xml>

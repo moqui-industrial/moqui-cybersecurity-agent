@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Phase 5 (risk scoring), Tappa 1: System of Interest + Asset. A fourth Graph
+    (moqui-math), same mechanism as norms (Phase 1)/PLC (Phase 3)/crosswalk
+    (Phase 4): CyberAsset/DamageScenario/ThreatScenario as GraphVertex, scored
+    attributes as Parameter (Parameter.graphVertexId/textValue already exist via
+    the moqui-plc-knowledge dependency - no new entity extension needed).
+
+    All scale values below (CyberElapsedTime, CyberSpecialistExpertise,
+    CyberKnowledgeOfSoI, CyberWindowOfOpportunity, CyberEquipment,
+    CyberLikelihoodRating threshold bands, and the Impact x Likelihood -> Risk
+    Rating matrix used by check#ThreatScenarioRisk) are transcribed verbatim
+    from the real, already-loaded ISO-DIS-24882 norm text (Tables 5, 10 and 11,
+    clauses 5.6.3.2/5.6.3.3/5.7.3 - queried directly, not taken from any
+    third-party reference document) - see design-session/SESSION.md for the
+    verification detail.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <!-- ============ EnumerationType declarations for all new enum types below
+         (required before any Enumeration record of that type can be created). ============ -->
+    <moqui.basic.EnumerationType enumTypeId="CyberAssetCategory" description="Cyber Asset Category"/>
+    <moqui.basic.EnumerationType enumTypeId="CyberAssetCriticality" description="Cyber Asset Criticality"/>
+    <moqui.basic.EnumerationType enumTypeId="DamageScenarioCategory" description="Damage Scenario Category"/>
+    <moqui.basic.EnumerationType enumTypeId="CyberImpactLevel" description="Cyber Impact Level"/>
+    <moqui.basic.EnumerationType enumTypeId="StrideType" description="STRIDE Threat Type"/>
+    <moqui.basic.EnumerationType enumTypeId="CyberElapsedTime" description="Likelihood - Elapsed Time Scale"/>
+    <moqui.basic.EnumerationType enumTypeId="CyberSpecialistExpertise" description="Likelihood - Specialist Expertise Scale"/>
+    <moqui.basic.EnumerationType enumTypeId="CyberKnowledgeOfSoI" description="Likelihood - Knowledge of System of Interest Scale"/>
+    <moqui.basic.EnumerationType enumTypeId="CyberWindowOfOpportunity" description="Likelihood - Window of Opportunity Scale"/>
+    <moqui.basic.EnumerationType enumTypeId="CyberEquipment" description="Likelihood - Equipment Scale"/>
+    <moqui.basic.EnumerationType enumTypeId="CyberLikelihoodRating" description="Cyber Likelihood Rating"/>
+    <moqui.basic.EnumerationType enumTypeId="CyberRiskTreatment" description="Cyber Risk Treatment"/>
+
+    <!-- ============ Asset categories (ISO/DIS 24882 cap 5.3): a "digital asset" in
+         this sense is a data flow, a data-at-rest/config item, a HW/SW component or
+         an external interface - NOT the same concept as mantle.product.asset.Asset. ============ -->
+    <moqui.basic.Enumeration enumId="CacDataFlow" description="Category A - data flow (data in transit)" enumTypeId="CyberAssetCategory"/>
+    <moqui.basic.Enumeration enumId="CacDataAtRest" description="Category B - commands/calibration/configuration data at rest or in transit" enumTypeId="CyberAssetCategory"/>
+    <moqui.basic.Enumeration enumId="CacHwSwComponent" description="Category C - hardware or software component related to core functionality/safety" enumTypeId="CyberAssetCategory"/>
+    <moqui.basic.Enumeration enumId="CacExternalInterface" description="Category D - external connection interface" enumTypeId="CyberAssetCategory"/>
+
+    <!-- Asset criticality per C/I/A property. -->
+    <moqui.basic.Enumeration enumId="CascCritical" description="Critical" enumTypeId="CyberAssetCriticality"/>
+    <moqui.basic.Enumeration enumId="CascHigh" description="High" enumTypeId="CyberAssetCriticality"/>
+    <moqui.basic.Enumeration enumId="CascMedium" description="Medium" enumTypeId="CyberAssetCriticality"/>
+    <moqui.basic.Enumeration enumId="CascLow" description="Low" enumTypeId="CyberAssetCriticality"/>
+    <moqui.basic.Enumeration enumId="CascNotApplicable" description="Not applicable" enumTypeId="CyberAssetCriticality"/>
+
+    <!-- ============ Damage Scenario (ISO/DIS 24882 cap 5.3/5.5) ============ -->
+    <moqui.basic.Enumeration enumId="DscSafety" description="Safety (physical harm)" enumTypeId="DamageScenarioCategory"/>
+    <moqui.basic.Enumeration enumId="DscFinancial" description="Financial" enumTypeId="DamageScenarioCategory"/>
+    <moqui.basic.Enumeration enumId="DscPrivacy" description="Privacy" enumTypeId="DamageScenarioCategory"/>
+    <moqui.basic.Enumeration enumId="DscAvailability" description="Operational availability" enumTypeId="DamageScenarioCategory"/>
+
+    <!-- Impact rating (ISO/DIS 24882 Tables 1-4): one value per damage-scenario
+         category, Overall = max across the four. -->
+    <moqui.basic.Enumeration enumId="CilSevere" description="Severe" enumTypeId="CyberImpactLevel"/>
+    <moqui.basic.Enumeration enumId="CilMajor" description="Major" enumTypeId="CyberImpactLevel"/>
+    <moqui.basic.Enumeration enumId="CilModerate" description="Moderate" enumTypeId="CyberImpactLevel"/>
+    <moqui.basic.Enumeration enumId="CilNegligible" description="Negligible" enumTypeId="CyberImpactLevel"/>
+
+    <!-- ============ Threat Scenario STRIDE (ISO/DIS 24882 cap 5.4/5.6) ============ -->
+    <moqui.basic.Enumeration enumId="StrSpoofing" description="Spoofing" enumTypeId="StrideType"/>
+    <moqui.basic.Enumeration enumId="StrTampering" description="Tampering" enumTypeId="StrideType"/>
+    <moqui.basic.Enumeration enumId="StrRepudiation" description="Repudiation" enumTypeId="StrideType"/>
+    <moqui.basic.Enumeration enumId="StrInfoDisclosure" description="Information Disclosure" enumTypeId="StrideType"/>
+    <moqui.basic.Enumeration enumId="StrDenialOfService" description="Denial of Service" enumTypeId="StrideType"/>
+    <moqui.basic.Enumeration enumId="StrElevationOfPrivilege" description="Elevation of Privilege" enumTypeId="StrideType"/>
+
+    <!-- Likelihood sub-category scales - ISO/DIS 24882 Table 5, verified verbatim
+         against the loaded norm text. The numeric value used in check#ThreatScenarioRisk
+         is Parameter.numericValue (set to match the chosen level at authoring time),
+         not stored on the Enumeration record itself. -->
+    <moqui.basic.Enumeration enumId="CetOneDay" description="&lt;= 1 day (value 0)" enumTypeId="CyberElapsedTime"/>
+    <moqui.basic.Enumeration enumId="CetOneWeek" description="&lt;= 1 week (value 1)" enumTypeId="CyberElapsedTime"/>
+    <moqui.basic.Enumeration enumId="CetOneMonth" description="&lt;= 1 month (value 4)" enumTypeId="CyberElapsedTime"/>
+    <moqui.basic.Enumeration enumId="CetSixMonths" description="&lt;= 6 months (value 17)" enumTypeId="CyberElapsedTime"/>
+    <moqui.basic.Enumeration enumId="CetOverSixMonths" description="&gt; 6 months (value 19)" enumTypeId="CyberElapsedTime"/>
+
+    <moqui.basic.Enumeration enumId="CseLayman" description="Layman (value 0)" enumTypeId="CyberSpecialistExpertise"/>
+    <moqui.basic.Enumeration enumId="CseProficient" description="Proficient (value 3)" enumTypeId="CyberSpecialistExpertise"/>
+    <moqui.basic.Enumeration enumId="CseExpert" description="Expert (value 6)" enumTypeId="CyberSpecialistExpertise"/>
+    <moqui.basic.Enumeration enumId="CseMultipleExperts" description="Multiple Experts (value 8)" enumTypeId="CyberSpecialistExpertise"/>
+
+    <moqui.basic.Enumeration enumId="CkPublic" description="Public (value 0)" enumTypeId="CyberKnowledgeOfSoI"/>
+    <moqui.basic.Enumeration enumId="CkRestricted" description="Restricted (value 3)" enumTypeId="CyberKnowledgeOfSoI"/>
+    <moqui.basic.Enumeration enumId="CkConfidential" description="Confidential (value 7)" enumTypeId="CyberKnowledgeOfSoI"/>
+    <moqui.basic.Enumeration enumId="CkStrictlyConfidential" description="Strictly Confidential (value 11)" enumTypeId="CyberKnowledgeOfSoI"/>
+
+    <moqui.basic.Enumeration enumId="CwoUnlimited" description="Unlimited (value 0)" enumTypeId="CyberWindowOfOpportunity"/>
+    <moqui.basic.Enumeration enumId="CwoEasy" description="Easy (value 1)" enumTypeId="CyberWindowOfOpportunity"/>
+    <moqui.basic.Enumeration enumId="CwoModerate" description="Moderate (value 4)" enumTypeId="CyberWindowOfOpportunity"/>
+    <moqui.basic.Enumeration enumId="CwoDifficult" description="Difficult (value 10)" enumTypeId="CyberWindowOfOpportunity"/>
+
+    <moqui.basic.Enumeration enumId="CeqStandard" description="Standard (value 0)" enumTypeId="CyberEquipment"/>
+    <moqui.basic.Enumeration enumId="CeqSpecialized" description="Specialized (value 4)" enumTypeId="CyberEquipment"/>
+    <moqui.basic.Enumeration enumId="CeqBespoke" description="Bespoke (value 7)" enumTypeId="CyberEquipment"/>
+    <moqui.basic.Enumeration enumId="CeqMultipleBespoke" description="Multiple Bespoke (value 9)" enumTypeId="CyberEquipment"/>
+
+    <!-- Likelihood rating bands - ISO/DIS 24882 Table 10: sum 0-13 High, 14-19
+         Medium, 20-24 Low, >=25 Very Low (higher sum = harder attack = lower
+         likelihood - Common Criteria attack-potential convention). -->
+    <moqui.basic.Enumeration enumId="ClkHigh" description="High (likelihood sum 0-13)" enumTypeId="CyberLikelihoodRating"/>
+    <moqui.basic.Enumeration enumId="ClkMedium" description="Medium (likelihood sum 14-19)" enumTypeId="CyberLikelihoodRating"/>
+    <moqui.basic.Enumeration enumId="ClkLow" description="Low (likelihood sum 20-24)" enumTypeId="CyberLikelihoodRating"/>
+    <moqui.basic.Enumeration enumId="ClkVeryLow" description="Very Low (likelihood sum >= 25)" enumTypeId="CyberLikelihoodRating"/>
+
+    <!-- Risk treatment decision (ISO/DIS 24882 cap 5.8), per threat scenario. -->
+    <moqui.basic.Enumeration enumId="CrtMitigate" description="Mitigate" enumTypeId="CyberRiskTreatment"/>
+    <moqui.basic.Enumeration enumId="CrtShare" description="Share (e.g. insurance, supplier agreement)" enumTypeId="CyberRiskTreatment"/>
+    <moqui.basic.Enumeration enumId="CrtAvoid" description="Avoid (remove the function generating the vulnerability)" enumTypeId="CyberRiskTreatment"/>
+    <moqui.basic.Enumeration enumId="CrtAccept" description="Accept (residual risk, formally justified)" enumTypeId="CyberRiskTreatment"/>
+
+    <!-- ============ ParameterDef: graph vertex metadata, same pattern as
+         moqui-plc-knowledge's PlcGraphVertexTypeParam/PlcGraphLogicalIdParam
+         (Parameter.textValue holding a plain string, pivoted by a future
+         view-entity only if/when actually needed for reporting). Reuses the
+         real existing ParameterType/ParameterPurpose enums (PtTextShort,
+         PtEnumeration, PtNumberInteger already exist in moqui-math; PpPlcGraph
+         is moqui-plc-knowledge's own analogous purpose value - a new,
+         equally-scoped PpCyberRiskGraph is added here rather than reusing it,
+         since it is a different graph.) ============ -->
+    <moqui.basic.Enumeration enumId="PpCyberRiskGraph" enumTypeId="ParameterPurpose" description="Cyber Risk Assessment Graph Metadata"/>
+
+    <moqui.math.ParameterDef parameterDefId="CyberRiskVertexTypeParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberRiskVertexType" parameterName="Cyber Risk Vertex Type" description="CyberAsset / DamageScenario / ThreatScenario - which of the three ISO/DIS 24882 vertex kinds this GraphVertex represents."/>
+    <moqui.math.ParameterDef parameterDefId="CyberRiskLogicalIdParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberRiskLogicalId" parameterName="Cyber Risk Logical ID" description="Norm-aligned identifier (A-NN / SD-x-NN / TS-x-NN), same convention used by the real TARA reference and its authoring skill."/>
+
+    <!-- Asset category/criticality (enumId-only parameters). -->
+    <moqui.math.ParameterDef parameterDefId="CyberAssetCategoryParam" parameterTypeEnumId="PtEnumeration" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberAssetCategory" parameterName="Asset Category" description="A/B/C/D per ISO/DIS 24882 cap 5.3, stored via parameterEnumId (enumTypeId=CyberAssetCategory)."/>
+    <moqui.math.ParameterDef parameterDefId="CyberAssetConfidentialityParam" parameterTypeEnumId="PtEnumeration" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberAssetConfidentiality" parameterName="Asset Confidentiality Criticality" description="parameterEnumId, enumTypeId=CyberAssetCriticality."/>
+    <moqui.math.ParameterDef parameterDefId="CyberAssetIntegrityParam" parameterTypeEnumId="PtEnumeration" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberAssetIntegrity" parameterName="Asset Integrity Criticality" description="parameterEnumId, enumTypeId=CyberAssetCriticality."/>
+    <moqui.math.ParameterDef parameterDefId="CyberAssetAvailabilityParam" parameterTypeEnumId="PtEnumeration" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberAssetAvailability" parameterName="Asset Availability Criticality" description="parameterEnumId, enumTypeId=CyberAssetCriticality."/>
+
+    <!-- CyberDamageScenarioCategoryParam/CyberDamageScenarioRationaleParam (Damage
+         Scenario primary category + free-text rationale) live in
+         CyberDeviceAssetExtensions.xml's entity seed-data instead of here, for the
+         same alphabetical-loading-order reason documented there. -->
+
+    <!-- Damage Scenario impact per category + overall (enumId-only parameters). -->
+    <moqui.math.ParameterDef parameterDefId="CyberImpactSafetyParam" parameterTypeEnumId="PtEnumeration" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberImpactSafety" parameterName="Impact - Safety" description="parameterEnumId, enumTypeId=CyberImpactLevel."/>
+    <moqui.math.ParameterDef parameterDefId="CyberImpactFinancialParam" parameterTypeEnumId="PtEnumeration" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberImpactFinancial" parameterName="Impact - Financial" description="parameterEnumId, enumTypeId=CyberImpactLevel."/>
+    <moqui.math.ParameterDef parameterDefId="CyberImpactPrivacyParam" parameterTypeEnumId="PtEnumeration" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberImpactPrivacy" parameterName="Impact - Privacy" description="parameterEnumId, enumTypeId=CyberImpactLevel."/>
+    <moqui.math.ParameterDef parameterDefId="CyberImpactAvailabilityParam" parameterTypeEnumId="PtEnumeration" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberImpactAvailability" parameterName="Impact - Availability" description="parameterEnumId, enumTypeId=CyberImpactLevel."/>
+    <moqui.math.ParameterDef parameterDefId="CyberImpactOverallParam" parameterTypeEnumId="PtEnumeration" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberImpactOverall" parameterName="Impact - Overall" description="Max across the four categories. parameterEnumId, enumTypeId=CyberImpactLevel."/>
+
+    <!-- Threat Scenario: STRIDE type (enum-only) + the 5 Likelihood sub-scores
+         (PtNumberInteger: numericValue = the Table 5 number, parameterEnumId =
+         the chosen level for readability) + computed likelihoodSum/
+         likelihoodRating/riskRating/riskTreatment (populated by
+         check#ThreatScenarioRisk, Tappa 4 - not yet implemented). -->
+    <moqui.math.ParameterDef parameterDefId="CyberStrideTypeParam" parameterTypeEnumId="PtEnumeration" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberStrideType" parameterName="STRIDE Type" description="parameterEnumId, enumTypeId=StrideType."/>
+    <moqui.math.ParameterDef parameterDefId="CyberElapsedTimeParam" parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberElapsedTime" parameterName="Likelihood - Elapsed Time" description="numericValue = Table 5 value; parameterEnumId, enumTypeId=CyberElapsedTime."/>
+    <moqui.math.ParameterDef parameterDefId="CyberSpecialistExpertiseParam" parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberSpecialistExpertise" parameterName="Likelihood - Specialist Expertise" description="numericValue = Table 5 value; parameterEnumId, enumTypeId=CyberSpecialistExpertise."/>
+    <moqui.math.ParameterDef parameterDefId="CyberKnowledgeOfSoIParam" parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberKnowledgeOfSoI" parameterName="Likelihood - Knowledge of System of Interest" description="numericValue = Table 5 value; parameterEnumId, enumTypeId=CyberKnowledgeOfSoI."/>
+    <moqui.math.ParameterDef parameterDefId="CyberWindowOfOpportunityParam" parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberWindowOfOpportunity" parameterName="Likelihood - Window of Opportunity" description="numericValue = Table 5 value; parameterEnumId, enumTypeId=CyberWindowOfOpportunity."/>
+    <moqui.math.ParameterDef parameterDefId="CyberEquipmentParam" parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberEquipment" parameterName="Likelihood - Equipment" description="numericValue = Table 5 value; parameterEnumId, enumTypeId=CyberEquipment."/>
+    <moqui.math.ParameterDef parameterDefId="CyberLikelihoodSumParam" parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberLikelihoodSum" parameterName="Likelihood Sum (computed)" description="numericValue = sum of the 5 sub-scores. Written by check#ThreatScenarioRisk."/>
+    <moqui.math.ParameterDef parameterDefId="CyberLikelihoodRatingParam" parameterTypeEnumId="PtEnumeration" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberLikelihoodRating" parameterName="Likelihood Rating (computed)" description="parameterEnumId, enumTypeId=CyberLikelihoodRating. Written by check#ThreatScenarioRisk."/>
+    <moqui.math.ParameterDef parameterDefId="CyberRiskRatingParam" parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberRiskRating" parameterName="Risk Rating (computed)" description="numericValue = 1-5 per Table 11. Written by check#ThreatScenarioRisk."/>
+    <moqui.math.ParameterDef parameterDefId="CyberRiskTreatmentParam" parameterTypeEnumId="PtEnumeration" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberRiskTreatment" parameterName="Risk Treatment" description="parameterEnumId, enumTypeId=CyberRiskTreatment. Set per-engagement, not computed."/>
+
+</entity-facade-xml>

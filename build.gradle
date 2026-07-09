@@ -1,0 +1,118 @@
+/*
+ * This software is in the public domain under CC0 1.0 Universal plus a
+ * Grant of Patent License.
+ */
+
+apply plugin: 'groovy'
+
+def componentNode = parseComponent(project)
+version = componentNode.'@version'
+def jarBaseName = componentNode.'@name'
+def moquiDir = projectDir.parentFile.parentFile.parentFile
+def frameworkDir = file(moquiDir.absolutePath + '/framework')
+
+repositories {
+    flatDir name: 'localLib', dirs: frameworkDir.absolutePath + '/lib'
+    mavenCentral()
+}
+
+tasks.withType(JavaCompile) { options.compilerArgs << "-proc:none" }
+tasks.withType(GroovyCompile) { options.compilerArgs << "-proc:none" }
+
+dependencies {
+    implementation project(':framework')
+}
+
+check.dependsOn.clear()
+
+task cleanLib(type: Delete) { delete fileTree(dir: projectDir.absolutePath + '/lib', include: '*') }
+clean.dependsOn cleanLib
+
+jar {
+    destinationDirectory = file(projectDir.absolutePath + '/lib')
+    archiveBaseName = jarBaseName
+}
+
+tasks.register('copyDependencies', Copy) {
+    dependsOn cleanLib
+    from (configurations.runtimeClasspath -
+          project(':framework').configurations.runtimeClasspath -
+          project(':framework').tasks.named('jar').get().archiveFile.get().asFile)
+    into file(projectDir.absolutePath + '/lib')
+}
+
+jar.dependsOn copyDependencies
+
+def pythonExecutable = providers.gradleProperty('pythonExecutable').orElse('python3')
+def normIndexerDir = layout.projectDirectory.dir('tools/norm-indexer')
+def defaultIrDir = normIndexerDir.dir('work/ir')
+def defaultGraphDir = normIndexerDir.dir('work/graph')
+def defaultSchemaDir = normIndexerDir.dir('ir/schema')
+def defaultConfigFile = normIndexerDir.file('config/norm-sources.json')
+def defaultGraphId = providers.gradleProperty('graphId').orElse('OtCyberNormGraph')
+def defaultRpcEndpoint = providers.gradleProperty('rpcEndpoint').orElse('http://localhost:8081/rpc/json')
+// cybersecurity project root, two levels above moqui-framework/, where norm/ and the root norm PDFs live
+def defaultSourceRoot = providers.gradleProperty('normSourceRoot').orElse(moquiDir.parentFile.absolutePath)
+
+// Phase 1 pipeline: PDF sources -> IR -> validated IR -> graph JSONL -> Moqui load.
+// Mirrors the parser -> IR -> graph pattern used by moqui-source-knowledge
+// (see /home/igor/Downloads/frigo-rag), adapted to normative-clause documents
+// instead of PLC source code.
+
+tasks.register('parseNormSources', Exec) {
+    group = 'moqui-cybersecurity-agent'
+    description = 'Extract text, segment clauses, and detect cross-references for configured norm PDF sources, producing IR JSONL.'
+    workingDir = normIndexerDir.asFile
+    commandLine pythonExecutable.get(),
+            'parse_norm_sources.py',
+            '--config', defaultConfigFile.asFile.absolutePath,
+            '--source-root', defaultSourceRoot.get(),
+            '--output-dir', defaultIrDir.asFile.absolutePath
+}
+
+tasks.register('validateNormIr') {
+    group = 'moqui-cybersecurity-agent'
+    description = 'Validate the generated norm IR against the JSON schemas.'
+    doLast {
+        exec {
+            workingDir = normIndexerDir.asFile
+            commandLine pythonExecutable.get(),
+                    'validate_norm_ir.py',
+                    '--ir-dir', defaultIrDir.asFile.absolutePath,
+                    '--schema-dir', defaultSchemaDir.asFile.absolutePath
+        }
+    }
+}
+
+tasks.register('generateNormGraph') {
+    group = 'moqui-cybersecurity-agent'
+    description = 'Convert validated norm IR into deterministic Graph/GraphVertex/GraphEdge JSONL exports.'
+    doLast {
+        exec {
+            workingDir = normIndexerDir.asFile
+            commandLine pythonExecutable.get(),
+                    'generate_norm_graph.py',
+                    '--ir-dir', defaultIrDir.asFile.absolutePath,
+                    '--output-dir', defaultGraphDir.asFile.absolutePath,
+                    '--graph-id', defaultGraphId.get()
+        }
+    }
+}
+
+tasks.register('loadNormGraph', Exec) {
+    group = 'moqui-cybersecurity-agent'
+    description = 'Load the generated norm graph JSONL into a running Moqui server via load#NormGraph (requires the server to be up).'
+    def verticesFile = defaultGraphDir.file('vertices.jsonl').asFile.absolutePath
+    def edgesFile = defaultGraphDir.file('edges.jsonl').asFile.absolutePath
+    commandLine 'curl', '-s', '-X', 'POST', defaultRpcEndpoint.get(),
+            '-H', 'Content-Type: application/json',
+            '-d', groovy.json.JsonOutput.toJson([
+                serviceName: 'org.moqui.cyber.CyberNormServices.load#NormGraph',
+                parameters: [
+                    verticesFilePath: verticesFile,
+                    edgesFilePath: edgesFile,
+                    graphId: defaultGraphId.get(),
+                    clearExisting: true
+                ]
+            ])
+}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Phase 4 kickoff, single example edge: demonstrates the crosswalk pattern between the PLC/
+    software graph (moqui-plc-knowledge, graphId TestIec61131Codesys) and the normative graph
+    (moqui-cybersecurity-agent, graphId OtCyberNormGraph) WITHOUT merging them - a separate,
+    dedicated crosswalk Graph whose edges reference vertex IDs that physically live in the other
+    two graphs (moqui-math GraphVertexId values are globally unique/stable-hash-based, so this
+    cross-referencing is valid without duplicating any vertex).
+
+    The one edge here is real, not synthetic: it connects the actual GraphVertex for
+    "MqttConnectionFactory.password" (a VAR_EXTERNAL symbol found in the real CODESYS source at
+    moqui-plc/iec61131, referencing a hardcoded-credential-carrying global - see
+    design-session/SESSION.md prior-art findings) to the actual GraphVertex for IEC 62443-3-3
+    clause 5.9.3.1 ("SR 1.7 RE 1 - Password generation and lifetime restrictions for human
+    users"), already loaded in the norm graph. Both vertex IDs were confirmed present via direct
+    query before writing this file, not guessed.
+
+    This is one example to validate the crosswalk pattern end-to-end, not the full crosswalk
+    (deferred to when Phase 4/5 need it at scale).
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="demo">
+
+    <moqui.math.Graph graphId="CyberPlcNormCrosswalk" graphTypeEnumId="GtDirected"
+            name="PLC-to-Norm Crosswalk" loopsAllowed="N"
+            description="Crosswalk edges linking PLC/firmware graph vertices to normative clause vertices, without merging either source graph."/>
+
+    <moqui.math.GraphEdge graphEdgeId="EDGE_PLC_NORM_1" graphId="CyberPlcNormCrosswalk"
+            edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N"
+            fromVertexId="ab2af31fd95d97b65072d5bd" toVertexId="2447cc5dedfe2b339f657493853b417e"
+            label="VIOLATES_SECURE_CODING_RULE"/>
+
+    <moqui.math.Parameter parameterId="PARAM_PLC_NORM_1_CONF" parameterDefId="CyberNormConfidenceParam"
+            graphId="CyberPlcNormCrosswalk" graphEdgeId="EDGE_PLC_NORM_1" textValue="0.85"/>
+    <moqui.math.Parameter parameterId="PARAM_PLC_NORM_1_RAT" parameterDefId="CyberNormRationaleParam"
+            graphId="CyberPlcNormCrosswalk" graphEdgeId="EDGE_PLC_NORM_1"
+            textValue="MqttConnectionFactory.password is a VAR_EXTERNAL symbol bound to a hardcoded credential value in the real CODESYS source (MoquiConf.st); IEC 62443-3-3 SR 1.7 RE 1 requires password generation/lifetime controls for human user accounts, which a hardcoded compile-time credential structurally cannot satisfy."/>
+
+</entity-facade-xml>

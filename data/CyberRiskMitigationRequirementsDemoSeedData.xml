@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Phase 5, Tappa 6/7 (ISO/DIS 24882 cap 5.9): Cybersecurity Requirements for the 7
+    CrtMitigate ThreatScenarios from Tappa 5 (TH-04 is CrtAccept, correctly excluded).
+    Reuses the exact Phase 4 mechanism (mantle-udm ProductFeature/ProductFeatureGroup/
+    ProductCategoryFeatGrpAppl, PftSecurityCapability feature type, PfatStandard appl
+    type) instead of a new requirements entity - closes the loop with the already-built
+    check#ProductCategoryCompliance, which can now check these same real products
+    against these new requirements with zero code changes.
+
+    Threats grouped into 3 requirement areas by shared underlying weakness, same style
+    as the reference TARA's own section 6/7 grouping (not by threat 1:1):
+    - FGRP_PROFINET_INTEGRITY (TH-01, TH-02): process-value integrity/authentication.
+    - FGRP_NETWORK_DOS_PROTECTION (TH-03, TH-06): DoS detection/segmentation, anchored
+      to the real IEC 62443-3-3 SR 7.1 text already cited in Tappa 3.
+    - FGRP_ADMIN_ACCESS_CONTROL (TH-05, TH-07, TH-08): authenticated/authorized access
+      to configuration/diagnostic interfaces.
+
+    Linked to the existing generic automation ProductCategory records from Phase 2
+    (PRODCAT_PLC_CPU/PRODCAT_REMOTE_IO/PRODCAT_VFD/PRODCAT_NET_SWITCH in
+    CyberHvacCellDemoSeedData.xml) - not the IEC 62443-4-2 regulatory category used only
+    for the switch in Phase 4 - since these requirements come from this risk assessment
+    itself, not from that norm's own component-type vocabulary.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="demo">
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROFINET_MSG_INTEGRITY"
+            productFeatureTypeEnumId="PftSecurityCapability"
+            description="Critical PROFINET process values (sensor data, VFD setpoints) require message integrity/source authentication, or PLC-side plausibility checks if unavailable natively. Mitigates TH-01/TH-02."/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_PROFINET_INTEGRITY"
+            description="PROFINET process-value integrity/authentication requirements (Phase 5 Tappa 6/7, TH-01/TH-02)"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_PROFINET_INTEGRITY"
+            productFeatureId="FEAT_PROFINET_MSG_INTEGRITY" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="PRODCAT_VFD"
+            productFeatureGroupId="FGRP_PROFINET_INTEGRITY" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="PRODCAT_PLC_CPU"
+            productFeatureGroupId="FGRP_PROFINET_INTEGRITY" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NETWORK_DOS_PROTECTION"
+            productFeatureTypeEnumId="PftSecurityCapability"
+            description="Detection/protection against network flooding; segmentation limits a DoS event's impact to one segment, per IEC 62443-3-3 SR 7.1 (Denial of service protection). Mitigates TH-03/TH-06."/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_NETWORK_DOS_PROTECTION"
+            description="Network DoS protection/segmentation requirements (Phase 5 Tappa 6/7, TH-03/TH-06)"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_NETWORK_DOS_PROTECTION"
+            productFeatureId="FEAT_NETWORK_DOS_PROTECTION" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="PRODCAT_NET_SWITCH"
+            productFeatureGroupId="FGRP_NETWORK_DOS_PROTECTION" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="PRODCAT_PLC_CPU"
+            productFeatureGroupId="FGRP_NETWORK_DOS_PROTECTION" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="PRODCAT_REMOTE_IO"
+            productFeatureGroupId="FGRP_NETWORK_DOS_PROTECTION" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_AUTHENTICATED_ADMIN_ACCESS"
+            productFeatureTypeEnumId="PftSecurityCapability"
+            description="Configuration/diagnostic interfaces (VFD params, switch mgmt, PLC diagnostic port) require authentication/authorization; no default or shared credentials. Mitigates TH-05/TH-07/TH-08."/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_ADMIN_ACCESS_CONTROL"
+            description="Authenticated administrative/diagnostic access control requirements (Phase 5 Tappa 6/7, TH-05/TH-07/TH-08)"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_ADMIN_ACCESS_CONTROL"
+            productFeatureId="FEAT_AUTHENTICATED_ADMIN_ACCESS" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="PRODCAT_VFD"
+            productFeatureGroupId="FGRP_ADMIN_ACCESS_CONTROL" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="PRODCAT_NET_SWITCH"
+            productFeatureGroupId="FGRP_ADMIN_ACCESS_CONTROL" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="PRODCAT_PLC_CPU"
+            productFeatureGroupId="FGRP_ADMIN_ACCESS_CONTROL" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+
+    <!-- Soft cross-reference from each Mitigate ThreatScenario to the ProductFeature that
+         addresses it (TH-04 is CrtAccept, correctly has none). -->
+    <moqui.math.Parameter parameterId="CTS_01_MIT" parameterDefId="CyberThreatMitigationFeatureRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01" textValue="FEAT_PROFINET_MSG_INTEGRITY"/>
+    <moqui.math.Parameter parameterId="CTS_02_MIT" parameterDefId="CyberThreatMitigationFeatureRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02" textValue="FEAT_PROFINET_MSG_INTEGRITY"/>
+    <moqui.math.Parameter parameterId="CTS_03_MIT" parameterDefId="CyberThreatMitigationFeatureRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03" textValue="FEAT_NETWORK_DOS_PROTECTION"/>
+    <moqui.math.Parameter parameterId="CTS_05_MIT" parameterDefId="CyberThreatMitigationFeatureRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05" textValue="FEAT_AUTHENTICATED_ADMIN_ACCESS"/>
+    <moqui.math.Parameter parameterId="CTS_06_MIT" parameterDefId="CyberThreatMitigationFeatureRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06" textValue="FEAT_NETWORK_DOS_PROTECTION"/>
+    <moqui.math.Parameter parameterId="CTS_07_MIT" parameterDefId="CyberThreatMitigationFeatureRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07" textValue="FEAT_AUTHENTICATED_ADMIN_ACCESS"/>
+    <moqui.math.Parameter parameterId="CTS_08_MIT" parameterDefId="CyberThreatMitigationFeatureRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08" textValue="FEAT_AUTHENTICATED_ADMIN_ACCESS"/>
+
+</entity-facade-xml>

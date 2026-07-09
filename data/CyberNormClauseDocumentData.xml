@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Retrofit: declarative projection layer over the normative graph, same
+    "DataDocument first, script only for evaluation/bootstrap" principle already
+    stated in CyberComplianceRunDocumentData.xml. Real search/embedding
+    (search#NormClauses, search#NormClausesSemantic, index#NormDocuments in
+    service/org/moqui/cyber/CyberNormServices.xml) was already built and verified
+    end to end (1681 clauses embedded in OpenSearch index moqui_cyber_norms_v1,
+    hybrid BM25+kNN search live) via a direct entity-to-OpenSearch push script
+    BEFORE this DataDocument existed - that mechanism is proven and stays as the
+    actual indexing path. This DataDocument is the canonical, declarative
+    definition of what fields/shape a "norm clause document" has (same index,
+    same scope: primaryEntityName is the same moqui.cyber.graph.CyberNormVertexMeta
+    view the script already queries, with the same vertexType=NormClause
+    condition) - useful for any OTHER DataFeed/consumer that wants the same
+    projection without duplicating the field list, and as living documentation of
+    the shape index#NormDocuments produces. Not (yet) refactored to be the
+    literal source of truth index#NormDocuments reads its field list from -
+    kept manually in sync for now, a known, small follow-up.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <moqui.entity.document.DataDocument
+            dataDocumentId="NormClauseDocument"
+            documentName="OT Cybersecurity Norm Clause"
+            documentTitle="${documentId} ${clauseNumber}: ${clauseTitle}"
+            primaryEntityName="moqui.cyber.graph.CyberNormVertexMeta"
+            indexName="moqui_cyber_norms_v1">
+        <fields fieldSeqId="01" fieldPath="graphVertexId"/>
+        <fields fieldSeqId="02" fieldPath="logicalId"/>
+        <fields fieldSeqId="03" fieldPath="documentId"/>
+        <fields fieldSeqId="04" fieldPath="documentFamily"/>
+        <fields fieldSeqId="05" fieldPath="documentTitle"/>
+        <fields fieldSeqId="06" fieldPath="edition"/>
+        <fields fieldSeqId="07" fieldPath="clauseNumber"/>
+        <fields fieldSeqId="08" fieldPath="clauseTitle"/>
+        <fields fieldSeqId="09" fieldPath="clauseText"/>
+        <fields fieldSeqId="10" fieldPath="sourceFile"/>
+        <fields fieldSeqId="11" fieldPath="provenanceClass"/>
+        <fields fieldSeqId="12" fieldPath="lastUpdatedStamp"/>
+        <conditions conditionSeqId="01" fieldNameAlias="vertexType" operator="equals" fieldValue="NormClause"/>
+    </moqui.entity.document.DataDocument>
+
+</entity-facade-xml>

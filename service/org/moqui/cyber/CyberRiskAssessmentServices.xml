@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This software is in the public domain under CC0 1.0 Universal plus a
+     Grant of Patent License.
+
+     To the extent possible under law, the author(s) have dedicated all
+     copyright and related and neighboring rights to this software to the
+     public domain worldwide. This software is distributed without any warranty.
+
+     You should have received a copy of the CC0 Public Domain Dedication
+     along with this software (see the LICENSE.md file). If not, see
+     <https://creativecommons.org/publicdomain/zero/1.0/>. -->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="check" noun="ThreatScenarioRisk" authenticate="true" allow-remote="true">
+        <description>ISO/DIS 24882 Tappa 4: for a ThreatScenario GraphVertex, sums its 5
+            analyst-assigned Likelihood sub-scores (CyberElapsedTimeParam/
+            CyberSpecialistExpertiseParam/CyberKnowledgeOfSoIParam/
+            CyberWindowOfOpportunityParam/CyberEquipmentParam - Table 5), bands the sum into a
+            Likelihood Rating per Table 10, takes the maximum Overall Impact across every
+            DamageScenario this threat REALIZES_DAMAGE_SCENARIO (Table 1-4), and looks up the
+            Risk Rating per Table 11 - all three tables verified verbatim against the real
+            loaded ISO-DIS-24882 norm text (see design-session/SESSION.md). Writes the three
+            computed values back onto the ThreatScenario vertex as Parameters.
+
+            This is a MmtCodeDefinedFunction MathModel (MM_THREAT_SCENARIO_RISK, see
+            CyberMachineGraphMetadataSeedData.xml), following the same math-model-run-tracking
+            pattern as check#ProductCategoryCompliance/check#DeviceGroupContinuityImpact.</description>
+        <in-parameters>
+            <parameter name="graphVertexId" required="true"><description>The ThreatScenario GraphVertex to score.</description></parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="likelihoodSum" type="BigDecimal"/>
+            <parameter name="likelihoodRating"/>
+            <parameter name="impactOverall"/>
+            <parameter name="riskRating" type="Integer"/>
+            <parameter name="mathModelRunId"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+
+                def runValue = ec.entity.makeValue('moqui.math.MathModelRun')
+                        .setAll([mathModelId: 'MM_THREAT_SCENARIO_RISK',
+                                 startTime: ec.user.nowTimestamp, parameters: JsonOutput.toJson([graphVertexId: graphVertexId]),
+                                 hasError: 'N'])
+                runValue.setSequencedIdPrimary()
+                runValue.create()
+                mathModelRunId = runValue.mathModelRunId
+
+                try {
+                    // ISO/DIS 24882 Table 5 sub-scores: sum the 5 analyst-assigned numericValues.
+                    List subScoreDefIds = ['CyberElapsedTimeParam', 'CyberSpecialistExpertiseParam',
+                            'CyberKnowledgeOfSoIParam', 'CyberWindowOfOpportunityParam', 'CyberEquipmentParam']
+                    BigDecimal sum = 0G
+                    subScoreDefIds.each { defId ->
+                        def p = ec.entity.find('moqui.math.Parameter')
+                                .condition('graphVertexId', graphVertexId).condition('parameterDefId', defId).one()
+                        if (p?.numericValue != null) sum = sum + p.numericValue
+                    }
+                    likelihoodSum = sum
+
+                    // Table 10: 0-13 High, 14-19 Medium, 20-24 Low, >=25 Very Low.
+                    if (sum <= 13) likelihoodRating = 'ClkHigh'
+                    else if (sum <= 19) likelihoodRating = 'ClkMedium'
+                    else if (sum <= 24) likelihoodRating = 'ClkLow'
+                    else likelihoodRating = 'ClkVeryLow'
+
+                    // Max Overall Impact across every linked DamageScenario.
+                    List impactOrder = ['CilNegligible', 'CilModerate', 'CilMajor', 'CilSevere']
+                    List edges = ec.entity.find('moqui.math.GraphEdge')
+                            .condition('fromVertexId', graphVertexId).condition('label', 'REALIZES_DAMAGE_SCENARIO')
+                            .list()
+                    impactOverall = 'CilNegligible'
+                    edges.each { edge ->
+                        def impactParam = ec.entity.find('moqui.math.Parameter')
+                                .condition('graphVertexId', edge.toVertexId).condition('parameterDefId', 'CyberImpactOverallParam').one()
+                        String candidate = impactParam?.parameterEnumId as String
+                        if (candidate && impactOrder.indexOf(candidate) > impactOrder.indexOf(impactOverall)) impactOverall = candidate
+                    }
+
+                    // Table 11: Impact (rows) x Likelihood (cols) -> Risk Rating 1-5.
+                    Map riskMatrix = [
+                        CilSevere:     [ClkVeryLow: 1, ClkLow: 3, ClkMedium: 4, ClkHigh: 5],
+                        CilMajor:      [ClkVeryLow: 1, ClkLow: 2, ClkMedium: 3, ClkHigh: 4],
+                        CilModerate:   [ClkVeryLow: 1, ClkLow: 2, ClkMedium: 2, ClkHigh: 3],
+                        CilNegligible: [ClkVeryLow: 1, ClkLow: 1, ClkMedium: 1, ClkHigh: 1]
+                    ]
+                    riskRating = riskMatrix[impactOverall][likelihoodRating]
+
+                    // Write results back onto the vertex (create-or-update, safe to re-run).
+                    Map<String, Object> resultParams = [
+                        CyberLikelihoodSumParam:    [numericValue: likelihoodSum],
+                        CyberLikelihoodRatingParam: [parameterEnumId: likelihoodRating],
+                        CyberRiskRatingParam:       [numericValue: riskRating]
+                    ]
+                    resultParams.each { defId, fields ->
+                        def existing = ec.entity.find('moqui.math.Parameter').useCache(false)
+                                .condition('graphVertexId', graphVertexId).condition('parameterDefId', defId).one()
+                        if (existing) {
+                            existing.setAll(fields)
+                            existing.update()
+                        } else {
+                            def newParam = ec.entity.makeValue('moqui.math.Parameter')
+                                    .setAll([parameterDefId: defId, graphVertexId: graphVertexId] + fields)
+                            newParam.setSequencedIdPrimary()
+                            newParam.create()
+                        }
+                    }
+
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, results: JsonOutput.toJson(
+                                    [graphVertexId: graphVertexId, likelihoodSum: likelihoodSum,
+                                     likelihoodRating: likelihoodRating, impactOverall: impactOverall, riskRating: riskRating])])
+                            .update()
+                } catch (Throwable t) {
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, hasError: 'Y', errors: t.toString()])
+                            .update()
+                    throw t
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+</services>

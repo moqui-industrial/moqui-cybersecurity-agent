@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    MITRE ATT&CK for ICS taxonomy (Threat/AttackVector gap from the original Phase 4 list):
+    12 Tactics + 97 active Techniques (deprecated/superseded/revoked entries excluded),
+    generated from the real, public STIX JSON corpus
+    (raw.githubusercontent.com/mitre/cti/master/ics-attack/ics-attack.json) via a script, not
+    transcribed by hand - same reasoning as the AssetClass taxonomy import (BIA/zone-conduit
+    work): reusable reference vocabulary, not case-specific data, so imported in full.
+
+    enumId for a Technique is the real MITRE technique ID (e.g. "T0814", "T0836") - not an
+    invented one - matching this project's convention of using the source's own identifier for
+    norm-derived vocabulary (SD-x/TS-x logical IDs, IEC 62443 clause numbers, etc.). Sub-technique
+    parentEnumId is derived from the real ID structure (e.g. "T1694.001" -> parent "T1694").
+    Descriptions are truncated to the first sentence (~200 chars) to fit the text-medium 255-char
+    SQL limit - the fuller real description lives in the source JSON, not reproduced here.
+
+    Tactic-to-technique mapping (ATT&CK's own kill_chain_phases, many-to-many) is deliberately
+    NOT modeled here - out of scope for this project's actual need, which is tagging a
+    ThreatScenario with a specific technique, not building a full ATT&CK matrix browser.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <moqui.basic.EnumerationType enumTypeId="MitreAttackIcsTactic" description="MITRE ATT&amp;CK for ICS Tactic"/>
+    <moqui.basic.EnumerationType enumTypeId="MitreAttackIcsTechnique" description="MITRE ATT&amp;CK for ICS Technique"/>
+
+    <moqui.basic.Enumeration enumId="TaInhibitResponseFunction" description="Inhibit Response Function" enumTypeId="MitreAttackIcsTactic"/>
+    <moqui.basic.Enumeration enumId="TaPrivilegeEscalation" description="Privilege Escalation" enumTypeId="MitreAttackIcsTactic"/>
+    <moqui.basic.Enumeration enumId="TaLateralMovement" description="Lateral Movement" enumTypeId="MitreAttackIcsTactic"/>
+    <moqui.basic.Enumeration enumId="TaDiscovery" description="Discovery" enumTypeId="MitreAttackIcsTactic"/>
+    <moqui.basic.Enumeration enumId="TaInitialAccess" description="Initial Access" enumTypeId="MitreAttackIcsTactic"/>
+    <moqui.basic.Enumeration enumId="TaImpact" description="Impact" enumTypeId="MitreAttackIcsTactic"/>
+    <moqui.basic.Enumeration enumId="TaPersistence" description="Persistence" enumTypeId="MitreAttackIcsTactic"/>
+    <moqui.basic.Enumeration enumId="TaExecution" description="Execution" enumTypeId="MitreAttackIcsTactic"/>
+    <moqui.basic.Enumeration enumId="TaCommandAndControl" description="Command and Control" enumTypeId="MitreAttackIcsTactic"/>
+    <moqui.basic.Enumeration enumId="TaCollection" description="Collection" enumTypeId="MitreAttackIcsTactic"/>
+    <moqui.basic.Enumeration enumId="TaEvasion" description="Evasion" enumTypeId="MitreAttackIcsTactic"/>
+    <moqui.basic.Enumeration enumId="TaImpairProcessControl" description="Impair Process Control" enumTypeId="MitreAttackIcsTactic"/>
+
+    <moqui.basic.Enumeration enumId="T0800" description="Activate Firmware Update Mode - Adversaries may activate firmware update mode on devices to prevent expected response functions from engaging in reaction to an emergency or process malfunction." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0801" description="Monitor Process State - Adversaries may gather information about the physical process state." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0802" description="Automated Collection - Adversaries may automate collection of industrial environment information using tools or scripts." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0806" description="Brute Force I/O - Adversaries may repetitively or successively change I/O point values to perform an action." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0807" description="Command-Line Interface - Adversaries may utilize command-line interfaces (CLIs) to interact with systems and execute commands." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0809" description="Data Destruction - Adversaries may perform data destruction over the course of an operation." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0811" description="Data from Information Repositories - Adversaries may target and collect data from information repositories." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0813" description="Denial of Control - Adversaries may cause a denial of control to temporarily prevent operators and engineers from interacting with process controls." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0814" description="Denial of Service - Adversaries may perform Denial-of-Service (DoS) attacks to disrupt expected device functionality." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0815" description="Denial of View - Adversaries may cause a denial of view in attempt to disrupt and prevent operator oversight on the status of an ICS environment." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0816" description="Device Restart/Shutdown - Adversaries may forcibly restart or shutdown a device in an ICS environment to disrupt and potentially negatively impact physical processes." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0817" description="Drive-by Compromise - Adversaries may gain access to a system during a drive-by compromise, when a user visits a website as part of a regular browsing session." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0819" description="Exploit Public-Facing Application - Adversaries may leverage weaknesses to exploit internet-facing software for initial access into an industrial network." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0820" description="Exploitation for Evasion - Adversaries may exploit a software vulnerability to take advantage of a programming error in a program, service, or within the operating system software or kernel itself to evade detection." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0821" description="Modify Controller Tasking - Adversaries may modify the tasking of a controller to allow for the execution of their own programs." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0822" description="External Remote Services - Adversaries may leverage external remote services as a point of initial access into your network." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0823" description="Graphical User Interface - Adversaries may attempt to gain access to a machine via a Graphical User Interface (GUI) to enhance execution capabilities." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0826" description="Loss of Availability - Adversaries may attempt to disrupt essential components or systems to prevent owner and operator from delivering products or services." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0827" description="Loss of Control - Adversaries may seek to achieve a sustained loss of control or a runaway condition in which operators cannot issue any commands even if the malicious interference has subsided." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0828" description="Loss of Productivity and Revenue - Adversaries may cause loss of productivity and revenue through disruption and even damage to the availability and integrity of control system operations, devices, and related processes." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0829" description="Loss of View - Adversaries may cause a sustained or permanent loss of view where the ICS equipment will require local, hands-on operator intervention; for instance, a restart or manual operation." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0830" description="Adversary-in-the-Middle - Adversaries with privileged network access may seek to modify network traffic in real time using adversary-in-the-middle (AiTM) attacks." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0831" description="Manipulation of Control - Adversaries may manipulate physical process control within the industrial environment." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0832" description="Manipulation of View - Adversaries may attempt to manipulate the information reported back to operators or controllers." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0834" description="Native API - Adversaries may directly interact with the native OS application programming interface (API) to access system functions." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0835" description="Manipulate I/O Image - Adversaries may manipulate the I/O image of PLCs through various means to prevent them from functioning as expected." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0836" description="Modify Parameter - Adversaries may modify parameters used to instruct industrial control system devices." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0837" description="Loss of Protection - Adversaries may compromise protective system functions designed to prevent the effects of faults and abnormal conditions." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0838" description="Modify Alarm Settings - Adversaries may modify alarm settings to prevent alerts that may inform operators of their presence or to prevent responses to dangerous and unintended scenarios." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0840" description="Network Connection Enumeration - Adversaries may perform network connection enumeration to discover information about device communication patterns." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0842" description="Network Sniffing - Network sniffing is the practice of using a network interface on a computer system to monitor or capture information regardless of whether it is the specified destination for the information." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0843" description="Program Download - Adversaries may perform a program download to transfer a user program to a controller." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0843.001" description="Download All - Adversaries may execute a full program download to a PLC to overwrite the entire PLC program and configuration to deploy a new project or make major changes." parentEnumId="T0843" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0843.002" description="Online Edit - Adversaries may execute an online edit of a PLC to update parts of an existing program." parentEnumId="T0843" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0843.003" description="Program Append - Adversaries may execute a program append to a PLC to update parts of an existing program." parentEnumId="T0843" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0845" description="Program Upload - Adversaries may attempt to upload a program from a PLC to gather information about an industrial process." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0846" description="Remote System Discovery - Adversaries may attempt to get a listing of other systems by IP address, hostname, or other logical identifier on a network that may be used for subsequent Lateral Movement or Discovery techniques." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0846.001" description="Port Scan - Adversaries may perform a port scan on a system, device, or network to identify live hosts, enumerate open ports and running services, identify operating systems, and map out the network." parentEnumId="T0846" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0846.002" description="Broadcast Discovery - Adversaries may perform broadcast discovery requests to enumerate systems and devices on a network." parentEnumId="T0846" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0846.003" description="Multicast Discovery - Adversaries may perform multicast discovery requests which is when one system or device sends messages to all systems and devices in a pre-defined group on a network (or subnet) and then waits for a r" parentEnumId="T0846" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0847" description="Replication Through Removable Media - Adversaries may move onto systems, such as those separated from the enterprise network, by copying malware to removable media which is inserted into the control systems environment." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0848" description="Rogue Master - Adversaries may setup a rogue master to leverage control server functions to communicate with outstations." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0849" description="Masquerading - Adversaries may use masquerading to disguise a malicious application or executable as another file, to avoid operator and engineer suspicion." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0851" description="Rootkit - Adversaries may deploy rootkits to hide the presence of programs, files, network connections, services, drivers, and other system components." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0852" description="Screen Capture - Adversaries may attempt to perform screen capture of devices in the control system environment." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0853" description="Scripting - Adversaries may use scripting languages to execute arbitrary code in the form of a pre-written script or in the form of user-supplied code to an interpreter." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0858" description="Change Operating Mode - Adversaries may change the operating mode of a controller to gain additional access to engineering functions such as Program Download." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0859" description="Valid Accounts - Adversaries may steal the credentials of a specific user or service account using credential access techniques." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0860" description="Wireless Compromise - Adversaries may perform wireless compromise as a method of gaining communications and unauthorized access to a wireless network." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0861" description="Point &amp; Tag Identification - Adversaries may collect point and tag values to gain a more comprehensive understanding of the process environment." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0862" description="Supply Chain Compromise - Adversaries may perform supply chain compromise to gain control systems environment access by means of infected products, software, and workflows." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0863" description="User Execution - Adversaries may rely on a targeted organizations user interaction for the execution of malicious code." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0864" description="Transient Cyber Asset - Adversaries may target devices that are transient across ICS networks and external networks." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0865" description="Spearphishing Attachment - Adversaries may use a spearphishing attachment, a variant of spearphishing, as a form of a social engineering attack against specific targets." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0866" description="Exploitation of Remote Services - Adversaries may exploit a software vulnerability to take advantage of a programming error in a program, service, or within the operating system software or kernel itself to enable remote service abuse" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0867" description="Lateral Tool Transfer - Adversaries may transfer tools or other files from one system to another to stage adversary tools or other files over the course of an operation." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0868" description="Detect Operating Mode - Adversaries may gather information about a PLCs or controllers current operating mode." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0869" description="Standard Application Layer Protocol - Adversaries may establish command and control capabilities over commonly used application layer protocols such as HTTP(S), OPC, RDP, telnet, DNP3, and modbus." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0871" description="Execution through API - Adversaries may attempt to leverage Application Program Interfaces (APIs) used for communication between control software and the hardware." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0872" description="Indicator Removal on Host - Adversaries may attempt to remove indicators of their presence on a system in an effort to cover their tracks." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0873" description="Project File Infection - Adversaries may attempt to infect project files with malicious code." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0873.001" description="Siemens Project File Format - Adversaries may infect Siemens PLC project files (i.e., Step 7, WinCC, etc.) to achieve [Execution](https://attack.mitre.org/tactics/TA0104), [Persistence](https://attack.mitre.org/tactics/TA0110), an" parentEnumId="T0873" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0874" description="Hooking - Adversaries may hook into application programming interface (API) functions used by processes to redirect calls for execution and privilege escalation means." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0877" description="I/O Image - Adversaries may seek to capture process values related to the inputs and outputs of a PLC." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0878" description="Alarm Suppression - Adversaries may target protection function alarms to prevent them from notifying operators of critical conditions." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0879" description="Damage to Property - Adversaries may cause damage and destruction of property to infrastructure, equipment, and the surrounding environment when attacking control systems." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0880" description="Loss of Safety - Adversaries may compromise safety system functions designed to maintain safe operation of a process when unacceptable or dangerous conditions occur." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0881" description="Service Stop - Adversaries may stop or disable services on a system to render those services unavailable to legitimate users." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0882" description="Theft of Operational Information - Adversaries may steal operational information on a production environment as a direct mission outcome for personal gain or to inform future operations." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0883" description="Internet Accessible Device - Adversaries may gain access into industrial environments through systems exposed directly to the internet for remote access rather than through [External Remote Services](https://attack.mitre.org/tech" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0884" description="Connection Proxy - Adversaries may use a connection proxy to direct network traffic between systems or act as an intermediary for network communications." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0885" description="Commonly Used Port - Adversaries may communicate over a commonly used port to bypass firewalls or network detection systems and to blend in with normal network activity, to avoid more detailed inspection." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0886" description="Remote Services - Adversaries may leverage remote services to move between assets and network segments." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0887" description="Wireless Sniffing - Adversaries may seek to capture radio frequency (RF) communication used for remote control and reporting in distributed environments." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0888" description="Remote System Information Discovery - An adversary may attempt to get detailed information about remote systems and their peripherals, such as make/model, role, and configuration." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0889" description="Modify Program - Adversaries may modify or add a program on a controller to affect how it interacts with the physical process, peripheral devices and other hosts on the network." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0890" description="Exploitation for Privilege Escalation - Adversaries may exploit software vulnerabilities in an attempt to elevate privileges." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0892" description="Change Credential - Adversaries may modify software and device credentials to prevent operator and responder access." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0893" description="Data from Local System - Adversaries may target and collect data from local system sources, such as file systems, configuration files, or local databases." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0894" description="System Binary Proxy Execution - Adversaries may bypass process and/or signature-based defenses by proxying execution of malicious content with signed, or otherwise trusted, binaries." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T0895" description="Autorun Image - Adversaries may leverage AutoRun functionality or scripts to execute malicious code." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1691" description="Block Operational Technology Message - Adversaries may block messages between systems and devices in an OT/ICS environment to disrupt processes." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1691.001" description="Command Message - Adversaries may block a command message from reaching its intended target to prevent command execution." parentEnumId="T1691" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1691.002" description="Reporting Message - Adversaries may block or prevent a reporting message from reaching its intended target." parentEnumId="T1691" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1692" description="Unauthorized Message - Adversaries may send unauthorized messages to ICS systems and devices to evade defenses or manipulate processes." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1692.001" description="Command Message - Adversaries may send unauthorized command messages to instruct control system assets to perform actions outside of their intended functionality, or without the logical preconditions to trigger their e" parentEnumId="T1692" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1692.002" description="Reporting Message - Adversaries may spoof reporting messages in control system environments for evasion and to impair process control." parentEnumId="T1692" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1693" description="Modify Firmware - Firmware is low-level software embedded in hardware that enables systems and devices to function properly and is commonly found in ICS environments." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1693.001" description="System Firmware - System firmware on modern assets is often designed with an update feature." parentEnumId="T1693" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1693.002" description="Module Firmware - Adversaries may install malicious or vulnerable firmware onto modular hardware devices." parentEnumId="T1693" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1694" description="Insecure Credentials - Adversaries may target insecure credentials as a means to persist on a system or device or move laterally from one system or device to another." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1694.001" description="Default Credentials - Adversaries may leverage manufacturer or supplier set default credentials on control system devices." parentEnumId="T1694" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1694.002" description="Hardcoded Credentials - Adversaries may leverage credentials that are hardcoded in software or firmware to gain an unauthorized interactive user session to an asset." parentEnumId="T1694" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1695" description="Block Communications - Operational technology communications occur over serial COM, Ethernet, Wi-Fi, cellular (4G/5G), and satellite mediums." enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1695.001" description="Serial COM - Adversaries may block access to serial COM to prevent instructions or configurations from reaching target devices." parentEnumId="T1695" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1695.002" description="Ethernet - Adversaries may block access to Ethernet communications to prevent instructions or configurations messages from reaching target systems and devices." parentEnumId="T1695" enumTypeId="MitreAttackIcsTechnique"/>
+    <moqui.basic.Enumeration enumId="T1695.003" description="Wi-Fi - Adversaries may block access to Wi-Fi communications to prevent messages from reaching target systems and devices." parentEnumId="T1695" enumTypeId="MitreAttackIcsTechnique"/>
+
+</entity-facade-xml>

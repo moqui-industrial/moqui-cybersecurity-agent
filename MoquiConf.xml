@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- No copyright or license for configuration file, details here are not considered a creative work. -->
+<moqui-conf xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/moqui-conf-3.xsd">
+    <!-- Real, already-running LibreChat stack lives in a separate project
+         (moqui-industrial/moqui-deploy/ai/), bind-mounting its local
+         upload storage (fileStrategy: "local") to a host directory this
+         Moqui process (running directly on the host, not in Docker) can
+         also read. attach#ProductContentFromPath/attach#ProductFamilyContentFromPath
+         (CyberProductContentServices.xml) fall back to searching this
+         directory by filename when the calling agent cannot supply a
+         real absolute path (observed: LLM endpoints sometimes report an
+         attached file's path as their own provider sandbox path, e.g.
+         OpenAI's /mnt/data, which is never reachable from Moqui). -->
+    <default-property name="cyber_librechat_uploads_root"
+            value="/home/igor/development/projects/moqui/moqui-industrial/moqui-deploy/ai/librechat/uploads"/>
+</moqui-conf>

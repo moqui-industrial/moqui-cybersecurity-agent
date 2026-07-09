@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+    <!--
+        Neither moqui-device nor mantle-udm depends on the other, so this link
+        lives here, in the component that depends on both. Placed on the base
+        Device entity (not PhysicalDevice) because Device/PhysicalDevice/
+        DeviceGroup share the same PK (deviceId) in a class-table-inheritance
+        style, and a fixed asset can be a single physical device OR a whole
+        device group (e.g. an electrical panel tracked as one Asset with
+        several PhysicalDevice children).
+
+        Type vs instance: mantle.product.Product is the type/class (e.g. "SIMATIC
+        ET 200SP IM155-6PN"); mantle.product.asset.Asset is one physical instance
+        of a Product (e.g. the specific IM155-6PN installed in a specific
+        cabinet); moqui.device.Device/PhysicalDevice is also instance-level
+        (PhysicalDevice already carries serialNumber/uuid/hash/firmwareVersion),
+        so Device and Asset are two views of the same physical unit - this
+        FK is what ties those two views together.
+    -->
+    <extend-entity entity-name="Device" package="moqui.device">
+        <field name="assetId" type="id"/>
+        <relationship type="one-nofk" related="mantle.product.asset.Asset" short-alias="asset"/>
+    </extend-entity>
+
+    <!--
+        BIA (Business Impact Analysis) continuity targets, per device. moqui-device's
+        DeviceStats already tracks reliability/availability (MTBF/MTTR/etc.); RPO/RTO are the
+        two continuity-planning numbers those metrics don't cover, so they're added here rather
+        than as a new entity. Populate only from a real, documented continuity requirement - never
+        a plausible-looking invented number for a real device.
+    -->
+    <extend-entity entity-name="DeviceStats" package="moqui.device">
+        <field name="recoveryPointObjective" type="number-decimal">
+            <description>Recovery Point Objective (RPO) [hours]. The maximum acceptable amount
+                of data/state loss, measured as time since the last valid state, if this device
+                fails and must be restored from a backup/last-known-good configuration.</description></field>
+        <field name="recoveryTimeObjective" type="number-decimal">
+            <description>Recovery Time Objective (RTO) [hours]. The maximum acceptable time to
+                restore this device to normal operation after a failure.</description></field>
+    </extend-entity>
+
+    <!--
+        Per-DeviceGroupMember continuity role, orthogonal to purposeEnumId (purposeEnumId says
+        WHAT the member does - e.g. DgmpProcessPLC, DgmpDrive; criticalityEnumId says WHETHER
+        this specific instance is a single point of failure for the group). Deliberately a
+        separate field rather than inferring criticality from purposeEnumId or from duplicate
+        purposeEnumId values within a group: two members can share the same purpose without
+        being redundant for each other (e.g. two VFDs each driving a different fan - losing
+        either one is critical, despite both having purposeEnumId="DgmpDrive").
+    -->
+    <extend-entity entity-name="DeviceGroupMember" package="moqui.device">
+        <field name="criticalityEnumId" type="id">
+            <description>Continuity role of this member within its group. Absent/DgmcEssential
+                means losing this device stops the group; DgmcRedundant/DgmcStandby/
+                DgmcNonEssential mean the group continues without it.</description></field>
+        <relationship type="one" title="DeviceGroupMemberCriticality" related="moqui.basic.Enumeration" short-alias="criticality">
+            <key-map field-name="criticalityEnumId"/></relationship>
+        <seed-data>
+            <moqui.basic.EnumerationType description="Device Group Member Criticality" enumTypeId="DeviceGroupMemberCriticality"/>
+            <moqui.basic.Enumeration enumId="DgmcEssential" description="Essential (default) - losing this member stops the group" enumTypeId="DeviceGroupMemberCriticality"/>
+            <moqui.basic.Enumeration enumId="DgmcRedundant" description="Redundant - an active peer covers this member's function" enumTypeId="DeviceGroupMemberCriticality"/>
+            <moqui.basic.Enumeration enumId="DgmcStandby" description="Standby - a cold/passive backup takes over on failure" enumTypeId="DeviceGroupMemberCriticality"/>
+            <moqui.basic.Enumeration enumId="DgmcNonEssential" description="Non-essential - an auxiliary function whose loss does not stop the group (e.g. monitoring-only)" enumTypeId="DeviceGroupMemberCriticality"/>
+
+            <!-- IEC 62443 zone/conduit modeling (see the device-group-zone-modeling skill): a
+                 conduit is a boundary device that is a DeviceGroupMember of two zone-DeviceGroups
+                 at once. Placed here, in entity seed-data, rather than in a data/ seed-initial
+                 file: entity-definition seed-data loads before the file-by-file data loading pass,
+                 which processes all included types (seed/seed-initial/demo) in one alphabetically
+                 sorted pass, not grouped by type - a data/ file's enum value is not guaranteed to
+                 be loaded before an alphabetically-earlier demo file that references it (real bug
+                 hit and fixed while building the first real zone-boundary example: CyberHvacCell-
+                 DemoSeedData.xml < CyberMachineGraphMetadataSeedData.xml alphabetically). -->
+            <moqui.basic.Enumeration enumId="DgmpZoneBoundary" description="Zone Boundary / Conduit Device - this member also belongs to another zone's DeviceGroup; the shared membership is the IEC 62443 conduit between the two zones" enumTypeId="DeviceGroupMemberPurpose"/>
+        </seed-data>
+    </extend-entity>
+
+    <!--
+        Same early-loading-timing reason as DgmpZoneBoundary above: these two
+        ParameterDefs (Phase 5, Tappa 2 - Damage Scenario) must exist before the
+        alphabetically-earlier CyberRiskAssessmentSmokingCellDemoSeedData.xml (a
+        demo-type file) references them, so they live here (entity seed-data,
+        loaded before the file-by-file data pass) rather than in
+        CyberRiskGraphMetadataSeedData.xml (a seed-initial data/ file, alphabetically
+        later than the demo file that needs them). No new field added to
+        ParameterDef itself - this extend-entity exists only to carry seed-data.
+
+        purposeEnumId deliberately omitted here (it's nullable): the
+        PpCyberRiskGraph enum value these ParameterDefs would otherwise be
+        tagged with is itself declared in the later-loading data/ file, so
+        setting it here would just trade one FK-ordering failure for another.
+        Purely cosmetic/categorization field - omitting it doesn't affect how
+        Parameter rows reference these ParameterDefs.
+    -->
+    <extend-entity entity-name="ParameterDef" package="moqui.math">
+        <seed-data>
+            <moqui.math.ParameterDef parameterDefId="CyberDamageScenarioCategoryParam" parameterTypeEnumId="PtEnumeration" parameterCode="cyberDamageScenarioCategory" parameterName="Damage Scenario Primary Category" description="parameterEnumId, enumTypeId=DamageScenarioCategory. The scenario's defining/grouping category, not a substitute for the four per-category impact ratings."/>
+            <moqui.math.ParameterDef parameterDefId="CyberDamageScenarioRationaleParam" parameterTypeEnumId="PtTextShort" parameterCode="cyberDamageScenarioRationale" parameterName="Damage Scenario Rationale" description="textValue = free-text justification for the impact ratings assigned, same discipline as CyberNormRationaleParam in the PLC-to-norm crosswalk."/>
+            <!-- Phase 5, Tappa 3 (Threat Scenario STRIDE) - same early-loading reason. -->
+            <moqui.math.ParameterDef parameterDefId="CyberThreatScenarioPreconditionParam" parameterTypeEnumId="PtTextShort" parameterCode="cyberThreatScenarioPrecondition" parameterName="Threat Scenario Precondition/Vector" description="textValue = free-text attack precondition/vector, same role as the reference TARA's 'Precondizione/vettore' column."/>
+            <!-- Phase 5, Tappa 5 (Risk Treatment) - same early-loading reason.
+                 CyberRiskAcceptanceThresholdParam is set once per engagement, attached to the
+                 Graph itself (graphId only, no graphVertexId) rather than per-vertex - ISO/DIS
+                 24882 cap 5.8 requires one threshold defined and justified per engagement, not
+                 per threat. CyberRiskTreatmentRationaleParam is reused at both scopes (the
+                 threshold's own justification at graph level, and each threat's treatment
+                 justification at vertex level) rather than adding two near-duplicate ParameterDefs. -->
+            <moqui.math.ParameterDef parameterDefId="CyberRiskAcceptanceThresholdParam" parameterTypeEnumId="PtNumberInteger" parameterCode="cyberRiskAcceptanceThreshold" parameterName="Risk Acceptance Threshold" description="numericValue = the per-engagement Risk Rating (1-5) at or below which a residual risk may be Accepted instead of Mitigated. Set once per Graph (engagement), not per ThreatScenario."/>
+            <moqui.math.ParameterDef parameterDefId="CyberRiskTreatmentRationaleParam" parameterTypeEnumId="PtTextShort" parameterCode="cyberRiskTreatmentRationale" parameterName="Risk Treatment Rationale" description="textValue = free-text justification, used both for the engagement's acceptance threshold (graph-level) and for each ThreatScenario's treatment decision (vertex-level)."/>
+            <!-- Phase 5, Tappa 6/7 (Cybersecurity Requirements) - soft cross-reference from a
+                 ThreatScenario to the mantle.product.feature.ProductFeature that mitigates it,
+                 same "separate entities, cross-referenced by ID" principle as
+                 CyberAssetDeviceRefParam above (ProductFeature is a different entity family
+                 entirely, not a GraphVertex, so this can't be a GraphEdge). -->
+            <moqui.math.ParameterDef parameterDefId="CyberThreatMitigationFeatureRefParam" parameterTypeEnumId="PtTextShort" parameterCode="cyberThreatScenarioMitigationFeatureRef" parameterName="Threat Scenario Mitigation Feature Cross-Reference" description="textValue = mantle.product.feature.ProductFeature.productFeatureId of the technical requirement that mitigates this ThreatScenario, when one has been defined (Mitigate-treatment threats only)."/>
+            <!-- Threat/AttackVector taxonomy gap (post Tappa 6/7): tags a ThreatScenario with a
+                 real MITRE ATT&CK for ICS technique (CyberAttackTaxonomySeedData.xml), a more
+                 specific/standard classification than STRIDE alone - not a replacement for
+                 CyberStrideTypeParam. Same early-loading reason as the others above. -->
+            <moqui.math.ParameterDef parameterDefId="CyberThreatScenarioAttackTechniqueParam" parameterTypeEnumId="PtEnumeration" parameterCode="cyberThreatScenarioAttackTechnique" parameterName="Threat Scenario ATT&amp;CK Technique" description="parameterEnumId, enumTypeId=MitreAttackIcsTechnique (real MITRE technique ID, e.g. T0814)."/>
+        </seed-data>
+    </extend-entity>
+
+    <!-- Product/PLM perfection task: PftSafetyFunction is a new ProductFeatureType value for real
+         machine functional-safety parameters (PL, SILCL, PFHd, MTTFd, MTBF, B10d - the 22 real
+         EPLAN P_ARTICLE_SAFETYRELATED_* columns) - not used by any Product yet (those columns are
+         empty in Smoking Cell 1's real Distinta.csv, verified), registered now so the BOM-import
+         script (plm-bom-import skill) can attach it as soon as a future distinta has them
+         populated, without a second schema change. Same early-loading reason as the blocks above:
+         CyberHvacCellDemoSeedData.xml (where a future BOM import would create the
+         ProductFeatureAppl rows) sorts alphabetically before any data/ seed-initial file that
+         could otherwise hold this enum value. -->
+    <extend-entity entity-name="Enumeration" package="moqui.basic">
+        <seed-data>
+            <moqui.basic.Enumeration enumId="PftSafetyFunction" description="Safety Function (PL/SIL/PFHd/MTTFd/MTBF/B10d)" enumTypeId="ProductFeatureType"/>
+
+            <!-- ISO/TR 22100-4 clause 2 vector checklist: physical ports as a distinct attack
+                 surface from the network protocols already covered by DeviceConnectionDriver
+                 (DcdModbusTCP, DcdProfinet, etc. - moqui-device/entity/DeviceEntities.xml).
+                 purposeEnumId does NOT need a new value: DcpMaintenance/DcpDiagnostics (real,
+                 already in moqui-device) already fit a local physical-access connection. -->
+            <moqui.basic.Enumeration enumId="DcdUsbPhysical" enumCode="usb-physical" description="USB Physical Port" enumTypeId="DeviceConnectionDriver"/>
+            <moqui.basic.Enumeration enumId="DcdSerialPhysical" enumCode="serial-physical" description="Serial/RS-232/RS-485 Physical Port" enumTypeId="DeviceConnectionDriver"/>
+            <moqui.basic.Enumeration enumId="DcdSdCardPhysical" enumCode="sdcard-physical" description="SD Card / Removable Media Slot" enumTypeId="DeviceConnectionDriver"/>
+
+            <!-- Product/PLM content attachment (product-content-attachment skill): regulatory
+                 certificate schemes are distinct real facts (a PED certificate does not satisfy a
+                 CE marking requirement or vice versa), worth their own ProductContentType values
+                 rather than folding everything into the generic PcntCertificate already added
+                 earlier this project. PcntCatalog is distinct from PcntDatasheet: a catalog
+                 typically covers a whole product line/family, a datasheet one model - kept
+                 available at product level too (a single product can have its own catalog page),
+                 the family-level equivalent is PcctCatalog below. -->
+            <moqui.basic.Enumeration enumId="PcntCeCertificate" description="CE Certificate/Declaration of Conformity" enumTypeId="ProductContentType"/>
+            <moqui.basic.Enumeration enumId="PcntPedCertificate" description="PED Certificate (Pressure Equipment Directive)" enumTypeId="ProductContentType"/>
+            <moqui.basic.Enumeration enumId="PcntUlCsaCertificate" description="UL/CSA Certificate" enumTypeId="ProductContentType"/>
+            <moqui.basic.Enumeration enumId="PcntCatalog" description="Product Catalog" enumTypeId="ProductContentType"/>
+
+            <!-- mantle.product.category.ProductCategoryContent.categoryContentTypeEnumId
+                 references ProductCategoryContentType, a DIFFERENT enumTypeId than
+                 ProductContentType (verified via entity definition, not assumed) - base
+                 mantle-udm only seeds generic e-commerce values for it (CategoryName/Description/
+                 ImageUrl/Footer/MetaKeywords), no Certificate/Datasheet/Catalog equivalent existed
+                 before this. Mirrors the Pcnt* set above field-for-field. -->
+            <moqui.basic.Enumeration enumId="PcctCertificate" description="Certificate (CE, UL, PED, etc.)" enumTypeId="ProductCategoryContentType"/>
+            <moqui.basic.Enumeration enumId="PcctCeCertificate" description="CE Certificate/Declaration of Conformity" enumTypeId="ProductCategoryContentType"/>
+            <moqui.basic.Enumeration enumId="PcctPedCertificate" description="PED Certificate (Pressure Equipment Directive)" enumTypeId="ProductCategoryContentType"/>
+            <moqui.basic.Enumeration enumId="PcctUlCsaCertificate" description="UL/CSA Certificate" enumTypeId="ProductCategoryContentType"/>
+            <moqui.basic.Enumeration enumId="PcctDatasheet" description="Datasheet" enumTypeId="ProductCategoryContentType"/>
+            <moqui.basic.Enumeration enumId="PcctCatalog" description="Product Catalog" enumTypeId="ProductCategoryContentType"/>
+            <moqui.basic.Enumeration enumId="PcctOperatingManual" description="Operating / Maintenance Manual" enumTypeId="ProductCategoryContentType"/>
+        </seed-data>
+    </extend-entity>
+
+    <!--
+        Structured traceability from a norm-derived ProductFeature back to the exact NormClause
+        vertex it was extracted from - until now the only link was a free-text citation inside
+        description (e.g. "IEC 62443-4-2 EDR 2.4..."), fine for a human to read but not queryable
+        ("which ProductFeature records cite this clause, given the clause just changed"). Nullable:
+        most ProductFeature records (e.g. plm-bom-import's own BOM-derived ones) have no norm
+        origin at all. graphVertexId alone would be ambiguous if this project ever has more than
+        one norm graph, so graphId is stored alongside it even though only OtCyberNormGraph exists
+        today - same two-field convention already used by moqui-mcp's own Parameter extension
+        (AgentGraphMathExtensions.xml).
+    -->
+    <extend-entity entity-name="ProductFeature" package="mantle.product.feature">
+        <field name="sourceGraphId" type="id"/>
+        <field name="sourceGraphVertexId" type="id"/>
+    </extend-entity>
+    <extend-entity entity-name="ProductCategory" package="mantle.product.category">
+        <field name="sourceGraphId" type="id"/>
+        <field name="sourceGraphVertexId" type="id"/>
+    </extend-entity>
+
+</entities>

@@ -1,0 +1,16 @@
+{
+  "type": "object",
+  "required": ["id", "relationType", "confidence", "provenanceClass"],
+  "properties": {
+    "id": {"type": "string"},
+    "fromClauseId": {"type": ["string", "null"]},
+    "fromDocumentId": {"type": ["string", "null"]},
+    "relationType": {"type": "string"},
+    "toClauseId": {"type": ["string", "null"]},
+    "toDocumentId": {"type": ["string", "null"]},
+    "unresolvedReferenceText": {"type": ["string", "null"]},
+    "confidence": {"type": "number"},
+    "rationale": {"type": ["string", "null"]},
+    "provenanceClass": {"type": "string"}
+  }
+}

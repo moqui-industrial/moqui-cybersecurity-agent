@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="find" noun="ClassificationVocabulary" authenticate="true" allow-remote="true">
+        <description>Read-only: returns the full (or keyword-filtered) DeviceType and AssetClass
+            Enumeration trees, every norm-derived ProductCategory (productCategoryTypeEnumId=
+            PctRegulatory - excludes plm-bom-import's own BOM-derived categories, a different
+            mechanism) with its linked ProductFeatureGroup(s)/ProductFeature(s) inlined, plus any
+            norm-derived ProductFeature that exists but is NOT linked to any ProductFeatureGroup
+            (standaloneFeatures - e.g. the ISO 12100/ISO-TR-22100-4 safety/security features, which
+            check#DeviceSafetyExposure reads as flat evidence rather than through a category/group
+            traversal; found by a real gap - these were previously invisible here entirely).
+            Deliberately no automatic ranking/matching against the evidence text - DeviceType/
+            AssetClass labels are 2-4 words, too short for reliable semantic similarity against
+            paragraph-length evidence (verified: Enumeration.description is the only text field, no
+            richer description exists). The calling agent reads this list and judges the match itself
+            (norm-product-classification skill, Workflow B), then calls classify#Product to apply the
+            decision.</description>
+        <in-parameters>
+            <parameter name="keyword"><description>Optional filter, matched against description (DeviceType/AssetClass) or category/feature description - omit to get the full vocabulary.</description></parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="deviceTypes" type="List"/>
+            <parameter name="assetClasses" type="List"/>
+            <parameter name="productCategories" type="List"/>
+            <parameter name="standaloneFeatures" type="List"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                // Case-insensitive keyword filter applied in Groovy, not SQL LIKE - H2's default
+                // collation is case-sensitive (confirmed: "robot" would not match "Industrial
+                // Robot" via a raw LIKE condition), and the agent calling this tool cannot be
+                // expected to guess the exact casing used in a stored description.
+                String kw = keyword ? (keyword as String).toLowerCase() : null
+
+                List dtList = ec.entity.find('moqui.basic.Enumeration').condition('enumTypeId', 'DeviceType').orderBy('enumId').list()
+                if (kw) dtList = dtList.findAll { (it.description as String)?.toLowerCase()?.contains(kw) }
+                deviceTypes = dtList.collect { [enumId: it.enumId, parentEnumId: it.parentEnumId, description: it.description] }
+
+                List acList = ec.entity.find('moqui.basic.Enumeration').condition('enumTypeId', 'AssetClass').orderBy('enumId').list()
+                if (kw) acList = acList.findAll { (it.description as String)?.toLowerCase()?.contains(kw) }
+                assetClasses = acList.collect { [enumId: it.enumId, parentEnumId: it.parentEnumId, description: it.description] }
+
+                List catList = ec.entity.find('mantle.product.category.ProductCategory')
+                        .condition('productCategoryTypeEnumId', 'PctRegulatory').orderBy('productCategoryId').list()
+                if (kw) catList = catList.findAll { (it.description as String)?.toLowerCase()?.contains(kw) }
+                productCategories = catList.collect { cat ->
+                    List groupAppls = ec.entity.find('mantle.product.feature.ProductCategoryFeatGrpAppl')
+                            .condition('productCategoryId', cat.productCategoryId).list()
+                    List groups = groupAppls.collect { ga ->
+                        def group = ec.entity.find('mantle.product.feature.ProductFeatureGroup')
+                                .condition('productFeatureGroupId', ga.productFeatureGroupId).one()
+                        List featAppls = ec.entity.find('mantle.product.feature.ProductFeatureGroupAppl')
+                                .condition('productFeatureGroupId', ga.productFeatureGroupId).orderBy('sequenceNum').list()
+                        List features = featAppls.collect { fa ->
+                            def feat = ec.entity.find('mantle.product.feature.ProductFeature')
+                                    .condition('productFeatureId', fa.productFeatureId).one()
+                            [productFeatureId: feat?.productFeatureId, description: feat?.description]
+                        }
+                        [productFeatureGroupId: group?.productFeatureGroupId, description: group?.description, features: features]
+                    }
+                    [productCategoryId: cat.productCategoryId, categoryName: cat.categoryName,
+                            description: cat.description, featureGroups: groups]
+                }
+
+                // norm-derived feature types that exist as flat evidence (no category/group
+                // traversal) - real gap found and fixed 2026-07-09: these were completely absent
+                // from this tool's output before, even though check#DeviceSafetyExposure already
+                // reads them at runtime.
+                List normFeatureTypes = ['PftSafetyFunction', 'PftSecurityCapability']
+                List allNormFeatures = ec.entity.find('mantle.product.feature.ProductFeature')
+                        .condition('productFeatureTypeEnumId', 'in', normFeatureTypes)
+                        .orderBy('productFeatureId').list()
+                Set groupedFeatureIds = ec.entity.find('mantle.product.feature.ProductFeatureGroupAppl').list()
+                        *.productFeatureId as Set
+                List standalone = allNormFeatures.findAll { !groupedFeatureIds.contains(it.productFeatureId) }
+                if (kw) standalone = standalone.findAll { (it.description as String)?.toLowerCase()?.contains(kw) }
+                standaloneFeatures = standalone.collect {
+                    [productFeatureId: it.productFeatureId, productFeatureTypeEnumId: it.productFeatureTypeEnumId,
+                            description: it.description]
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+    <service verb="classify" noun="Product" authenticate="true" allow-remote="true">
+        <description>Applies a classification decision already made by the calling agent (per
+            norm-product-classification skill, Workflow B - hierarchical, most-specific-first: try
+            deviceTypeEnumId only for genuinely electronic/automation components, always try
+            assetClassEnumId, independently try productCategoryIds). Updates Asset.classEnumId for
+            every real Asset instance of this Product (a Product can have more than one physical
+            Asset instance - confirmed, not assumed, e.g. PROD_SIE_XB208 has 2); updates
+            Device.deviceTypeEnumId too wherever a Device exists for one of those Assets. Ensures
+            ProductCategoryMember for each chosen category (idempotent - same ensure-membership
+            pattern as attach#ProductFamilyContentFromPath, skips categories the product already
+            belongs to). At least one of deviceTypeEnumId/assetClassEnumId/productCategoryIds must be
+            given - this service never guesses on its own, it only applies an already-made
+            decision.</description>
+        <in-parameters>
+            <parameter name="productId" required="true"/>
+            <parameter name="deviceTypeEnumId"><description>Only for electronic/automation components - omit for purely mechanical/electromechanical ones.</description></parameter>
+            <parameter name="assetClassEnumId"/>
+            <parameter name="productCategoryIds" type="List"><description>Real, existing PctRegulatory ProductCategory ids from find#ClassificationVocabulary - never a category invented on the spot.</description></parameter>
+            <parameter name="rationale"><description>Short justification (evidence used), stored on the MathModelRun for audit.</description></parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="assetsUpdated" type="Integer"/>
+            <parameter name="devicesUpdated" type="Integer"/>
+            <parameter name="categoriesEnsured" type="Integer"/>
+            <parameter name="mathModelRunId"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+
+                if (!deviceTypeEnumId && !assetClassEnumId && !(productCategoryIds as List)) {
+                    ec.message.addError("At least one of deviceTypeEnumId, assetClassEnumId, or productCategoryIds is required.")
+                    return
+                }
+
+                def runValue = ec.entity.makeValue('moqui.math.MathModelRun')
+                        .setAll([mathModelId: 'MM_PRODUCT_CLASSIFICATION',
+                                 startTime: ec.user.nowTimestamp,
+                                 parameters: JsonOutput.toJson([productId: productId, deviceTypeEnumId: deviceTypeEnumId,
+                                         assetClassEnumId: assetClassEnumId, productCategoryIds: productCategoryIds,
+                                         rationale: rationale]),
+                                 hasError: 'N'])
+                runValue.setSequencedIdPrimary()
+                runValue.create()
+                mathModelRunId = runValue.mathModelRunId
+
+                try {
+                    int assetsUpdatedCount = 0
+                    int devicesUpdatedCount = 0
+                    List assets = ec.entity.find('mantle.product.asset.Asset').condition('productId', productId).list()
+                    assets.each { asset ->
+                        if (assetClassEnumId) {
+                            ec.entity.find('mantle.product.asset.Asset').condition('assetId', asset.assetId).one()
+                                    .setAll([classEnumId: assetClassEnumId]).update()
+                            assetsUpdatedCount++
+                        }
+                        if (deviceTypeEnumId) {
+                            // Device is cache="true" (moqui-device/entity/DeviceEntities.xml) - a
+                            // cached find returns an immutable value; must re-find with
+                            // .useCache(false) before update, same class of bug as the earlier
+                            // Parameter cache-immutability fix in check#ThreatScenarioRisk.
+                            def deviceValue = ec.entity.find('moqui.device.Device').condition('assetId', asset.assetId).useCache(false).one()
+                            if (deviceValue) {
+                                ec.entity.find('moqui.device.Device').condition('deviceId', deviceValue.deviceId).useCache(false).one()
+                                        .setAll([deviceTypeEnumId: deviceTypeEnumId]).update()
+                                devicesUpdatedCount++
+                            }
+                        }
+                    }
+                    assetsUpdated = assetsUpdatedCount
+                    devicesUpdated = devicesUpdatedCount
+
+                    int categoriesEnsuredCount = 0
+                    (productCategoryIds as List ?: []).each { catId ->
+                        def existingMember = ec.entity.find('mantle.product.category.ProductCategoryMember')
+                                .condition('productCategoryId', catId).condition('productId', productId).one()
+                        if (!existingMember) {
+                            ec.service.sync().name('create#mantle.product.category.ProductCategoryMember')
+                                    .parameters([productCategoryId: catId, productId: productId,
+                                            fromDate: ec.user.nowTimestamp, comments: rationale]).call()
+                            categoriesEnsuredCount++
+                        }
+                    }
+                    categoriesEnsured = categoriesEnsuredCount
+
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, results: JsonOutput.toJson(
+                                    [assetsUpdated: assetsUpdatedCount, devicesUpdated: devicesUpdatedCount,
+                                     categoriesEnsured: categoriesEnsuredCount])])
+                            .update()
+                } catch (Throwable t) {
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, hasError: 'Y', errors: t.toString()])
+                            .update()
+                    throw t
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+</services>

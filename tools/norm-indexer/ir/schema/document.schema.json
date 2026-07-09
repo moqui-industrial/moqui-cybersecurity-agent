@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "required": ["id", "documentId", "logicalId", "title", "documentFamily", "sourceFile"],
+  "properties": {
+    "id": {"type": "string"},
+    "documentId": {"type": "string"},
+    "logicalId": {"type": "string"},
+    "title": {"type": "string"},
+    "documentFamily": {"type": "string"},
+    "edition": {"type": ["string", "null"]},
+    "sourceFile": {"type": "string"},
+    "designator": {"type": ["string", "null"]}
+  }
+}

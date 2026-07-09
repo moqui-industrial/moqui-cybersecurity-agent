@@ -1,0 +1,34 @@
+{
+  "settings": {
+    "index": {
+      "knn": true,
+      "knn.algo_param.ef_search": 128,
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    }
+  },
+  "mappings": {
+    "properties": {
+      "graphVertexId": { "type": "keyword" },
+      "logicalId": { "type": "keyword" },
+      "documentId": { "type": "keyword" },
+      "documentFamily": { "type": "keyword" },
+      "documentTitle": { "type": "text" },
+      "edition": { "type": "keyword" },
+      "clauseNumber": { "type": "keyword" },
+      "clauseTitle": { "type": "text" },
+      "clauseText": { "type": "text" },
+      "sourceFile": { "type": "keyword" },
+      "provenanceClass": { "type": "keyword" },
+      "embedding": {
+        "type": "knn_vector",
+        "dimension": 3072,
+        "method": {
+          "name": "hnsw",
+          "engine": "lucene",
+          "space_type": "cosinesimil"
+        }
+      }
+    }
+  }
+}

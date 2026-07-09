@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Phase 3 example: bridges the Phase 2 physical asset graph (moqui-device Device) to the
+    Phase 3 PLC/software graph (moqui-plc-knowledge, loaded into moqui-math Graph/GraphVertex/
+    GraphEdge under graphId TestIec61131Codesys) by reusing existing moqui-math/moqui-device
+    entities rather than a new bridge entity:
+
+      Device (DEV_CPU_1) -> DeviceMathModel -> MathModel (graphId=TestIec61131Codesys)
+              -> MathModelDef (modelTypeEnumId=MmtPlcProgram)
+
+    No real machine in this session has both an HVAC cell (Phase 2) and this specific CODESYS
+    project (Phase 3) in the same real deployment: DEV_CPU_1 is the Phase 2 demo PLC CPU device,
+    and TestIec61131Codesys is the Phase 3 test CODESYS graph. This is deliberately an example
+    linkage to validate the schema end-to-end, not a factual claim about a real installation.
+
+    NOT auto-loaded (type="demo", same convention as CyberHvacCellDemoSeedData.xml).
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="demo">
+
+    <moqui.math.MathModelDef mathModelDefId="MMD_PLC_CODESYS_MOQUI" modelTypeEnumId="MmtPlcProgram"
+            modelName="Moqui PLC Framework (CODESYS dialect)" versionNumber="1"
+            releaseStatusId="MathModelTested"
+            description="Abstract definition of the Moqui-PLC-framework control program, CODESYS Structured Text dialect."/>
+
+    <moqui.math.MathModel mathModelId="MM_PLC_CODESYS_TESTIEC61131" mathModelDefId="MMD_PLC_CODESYS_MOQUI"
+            graphId="TestIec61131Codesys" statusId="MathModelTested"
+            modelAlias="TestIec61131Codesys"
+            description="Concrete instance: the parsed/loaded CODESYS ST graph for the moqui-plc/iec61131 test corpus."/>
+
+    <moqui.device.DeviceMathModel deviceId="DEV_CPU_1" mathModelId="MM_PLC_CODESYS_TESTIEC61131"
+            bindingPurposeEnumId="MmbpClosedLoopControl" sequenceNum="1" fromDate="2026-01-01 00:00:00"
+            description="Example binding: this PLC CPU device runs the Moqui-PLC CODESYS control program (schema validation example, see file header)."/>
+
+</entity-facade-xml>

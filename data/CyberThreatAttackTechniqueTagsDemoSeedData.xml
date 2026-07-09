@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Tags the 8 real ThreatScenario vertices from Phase 5 (CyberRiskAssessmentSmokingCellDemoSeedData.xml)
+    with a real MITRE ATT&CK for ICS technique, each individually verified against the real
+    technique descriptions in the source STIX JSON (not guessed from the technique name alone):
+
+    - TH-01 (spoofing sensor/VFD status) -> T1692 Unauthorized Message: "adversaries can
+      manipulate... reporting messages that contain telemetry data about the current state".
+    - TH-02/TH-05 (VFD setpoint/parameter tampering) -> T0836 Modify Parameter: "modify
+      parameters used to instruct industrial control system devices".
+    - TH-03/TH-06 (network/switch DoS) -> T0814 Denial of Service: "perform DoS attacks to
+      disrupt expected device functionality".
+    - TH-04 (CIP interlock logic tampering in the PLC program) -> T0889 Modify Program: "modify
+      or add a program on a controller to affect how it interacts with the physical process".
+    - TH-07 (switch management elevation of privilege) -> T1694.001 Default Credentials:
+      "leverage manufacturer or supplier set default credentials on control system devices".
+    - TH-08 (diagnostic information disclosure) -> T0801 Monitor Process State: "gather
+      information about the physical process state... OPC tags, historian data, PLC block
+      information".
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="demo">
+
+    <moqui.math.Parameter parameterId="CTS_01_ATK" parameterDefId="CyberThreatScenarioAttackTechniqueParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01" parameterEnumId="T1692"/>
+    <moqui.math.Parameter parameterId="CTS_02_ATK" parameterDefId="CyberThreatScenarioAttackTechniqueParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02" parameterEnumId="T0836"/>
+    <moqui.math.Parameter parameterId="CTS_03_ATK" parameterDefId="CyberThreatScenarioAttackTechniqueParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03" parameterEnumId="T0814"/>
+    <moqui.math.Parameter parameterId="CTS_04_ATK" parameterDefId="CyberThreatScenarioAttackTechniqueParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_04" parameterEnumId="T0889"/>
+    <moqui.math.Parameter parameterId="CTS_05_ATK" parameterDefId="CyberThreatScenarioAttackTechniqueParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05" parameterEnumId="T0836"/>
+    <moqui.math.Parameter parameterId="CTS_06_ATK" parameterDefId="CyberThreatScenarioAttackTechniqueParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06" parameterEnumId="T0814"/>
+    <moqui.math.Parameter parameterId="CTS_07_ATK" parameterDefId="CyberThreatScenarioAttackTechniqueParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07" parameterEnumId="T1694.001"/>
+    <moqui.math.Parameter parameterId="CTS_08_ATK" parameterDefId="CyberThreatScenarioAttackTechniqueParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08" parameterEnumId="T0801"/>
+
+</entity-facade-xml>

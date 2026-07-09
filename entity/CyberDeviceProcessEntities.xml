@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Schema readiness for the procedural side of an OT risk assessment (remote-access
+    architecture, communication matrix, RBAC/account inventory) - requested alongside the
+    Product/PLM BOM-import perfection task, on the correct observation that attackers exploit
+    behaviors/processes, not only cables. Deliberately zero seed instances: no communication
+    matrix, account inventory, or remote-access document exists for Smoking Cell 1 (only
+    Distinta.csv and two electrical schematics are available there) - populating these now
+    would be invented data, not real.
+
+    Verified before adding new schema (not assumed missing):
+    - Remote-access/teleassistenza is already modelable with existing moqui-device schema, no
+      new entity needed: moqui.device.DeviceConnection (moqui-device/entity/DeviceEntities.xml)
+      already has purposeEnumId (real DcpMaintenance/DcpDiagnostics values) and a userId
+      relationship explicitly documented as "no FK in order to allow externally authenticated
+      users" - a teleassistenza gateway (VPN/4G router) is just another Device at a zone
+      boundary (DeviceGroupMember purposeEnumId="DgmpZoneBoundary", the pattern already used in
+      CyberHvacCellDemoSeedData.xml for the inter-panel conduit).
+    - Communication matrix (who talks to whom, on which port/protocol) and RBAC/account tier
+      inventory have no existing entity anywhere in mantle-udm/mantle-usl/moqui-device/moqui-math
+      (grep, zero hits) - these two are real, standalone entities below.
+-->
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+    <entity entity-name="CyberDeviceCommunicationFlow" package="org.moqui.cyber" cache="never">
+        <description>A real, documented network communication flow between two Device records
+            (source talks to destination on a given protocol/port) - the structured counterpart
+            of a "communication matrix" document. Distinct from moqui.device.DeviceConnection
+            (which represents this Moqui instance's own connection *to* a device to poll/control
+            it) and from moqui.device.DeviceRequest (a request sent to one device) - this entity
+            represents a fact about the monitored network itself, observed or documented
+            independently of whether Moqui talks to either device.</description>
+        <field name="communicationFlowId" type="id" is-pk="true"/>
+        <field name="sourceDeviceId" type="id" not-null="true"/>
+        <field name="destDeviceId" type="id" not-null="true"/>
+        <field name="protocolEnumId" type="id"/>
+        <field name="port" type="number-integer"/>
+        <field name="purposeEnumId" type="id"/>
+        <field name="description" type="text-medium"/>
+        <relationship type="one" title="SourceDevice" related="moqui.device.Device" short-alias="sourceDevice">
+            <key-map field-name="sourceDeviceId"/></relationship>
+        <relationship type="one" title="DestDevice" related="moqui.device.Device" short-alias="destDevice">
+            <key-map field-name="destDeviceId"/></relationship>
+        <relationship type="one" title="CommunicationFlowProtocol" related="moqui.basic.Enumeration" short-alias="protocol">
+            <key-map field-name="protocolEnumId"/></relationship>
+        <relationship type="one" title="CommunicationFlowPurpose" related="moqui.basic.Enumeration" short-alias="purpose">
+            <key-map field-name="purposeEnumId"/></relationship>
+        <!-- protocolEnumId intentionally reuses no fixed vocabulary here: populate with the real
+             moqui.device.DeviceConnectionDriver enumId when the flow's protocol matches one of
+             its real values (DcdModbusTCP, DcdSiemensS7, DcdProfinet, ...), otherwise add a new
+             CommunicationFlowProtocol enum value from the real document being imported - never
+             invented ahead of a real flow to classify. -->
+    </entity>
+
+    <entity entity-name="CyberDeviceAccount" package="org.moqui.cyber" cache="never">
+        <description>A real, documented account/privilege tier supported by a Device (HMI, PLC
+            web server, etc.) - the structured counterpart of an RBAC/roles-and-access matrix
+            document. One row per account tier found in real documentation (operating manual,
+            commissioning document), not an actual login credential.</description>
+        <field name="deviceAccountId" type="id" is-pk="true"/>
+        <field name="deviceId" type="id" not-null="true"/>
+        <field name="accountName" type="text-medium">
+            <description>The real account/role name as documented, e.g. "Operator", "Maintenance", "Admin".</description></field>
+        <field name="privilegeTierEnumId" type="id"/>
+        <field name="isDefaultCredential" type="text-indicator">
+            <description>Y if the documented account still uses a vendor-default credential per
+                the source document - a real, common finding in operating manuals, not an
+                assumption.</description></field>
+        <field name="description" type="text-medium"/>
+        <relationship type="one" related="moqui.device.Device">
+            <key-map field-name="deviceId"/></relationship>
+        <relationship type="one" title="DeviceAccountPrivilegeTier" related="moqui.basic.Enumeration" short-alias="privilegeTier">
+            <key-map field-name="privilegeTierEnumId"/></relationship>
+        <seed-data>
+            <moqui.basic.EnumerationType description="Device Account Privilege Tier" enumTypeId="DeviceAccountPrivilegeTier"/>
+            <moqui.basic.Enumeration enumId="DaptOperator" description="Operator - start/stop/monitor only" enumTypeId="DeviceAccountPrivilegeTier"/>
+            <moqui.basic.Enumeration enumId="DaptMaintenance" description="Maintenance - can force I/O, adjust setpoints/recipes" enumTypeId="DeviceAccountPrivilegeTier"/>
+            <moqui.basic.Enumeration enumId="DaptAdmin" description="Administrator - can change network config, firmware, other accounts" enumTypeId="DeviceAccountPrivilegeTier"/>
+            <moqui.basic.Enumeration enumId="DaptVendorService" description="Vendor/Remote Service - external teleassistenza access, typically the highest-privilege tier" enumTypeId="DeviceAccountPrivilegeTier"/>
+        </seed-data>
+    </entity>
+
+</entities>

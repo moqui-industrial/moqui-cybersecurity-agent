@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Generic, reusable OT cybersecurity assessment project template - type="seed-initial"
+    (reference data, not a case), NOT case data like CyberSmoking1ProjectSeedData.xml. Same real
+    WorkEffort/WorkEffortAssoc/WikiPageWorkEffort pattern (HiveMind/data/HiveMindDemoData.xml),
+    genericized from the real CYBER_SMOKING1 project: milestone/task NAMES were already almost
+    entirely generic (case-specificity lived only in descriptions and dates) - this file strips
+    the case-specific description detail and every date (a template has no real schedule), and
+    adds the milestones/tasks this session's work (mechanical/safety crosswalk, code security
+    crosswalk, MCP tool verification) makes newly possible.
+
+    Instantiate a new case project by cloning this WorkEffort tree with the real, generic,
+    already-existing mantle.work.WorkEffortServices.clone#WorkEffort service (deep-clone,
+    idPrefix scheme) - see the cyber-project-template skill. Do not hand-write a new project file
+    per case going forward; clone this one.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <!-- ============ Wiki space template (deliverable placeholders) ============ -->
+    <moqui.resource.wiki.WikiSpace wikiSpaceId="TEMPLATE_OT_CYBER" description="OT Cybersecurity Assessment - Project Template"
+            restrictView="N" rootPageLocation="component://moqui-cybersecurity-agent/WikiSpace/TEMPLATE_OT_CYBER.md"
+            decoratorScreenLocation=""/>
+
+    <moqui.resource.wiki.WikiPage wikiPageId="TPL_ROOT" wikiSpaceId="TEMPLATE_OT_CYBER" pagePath=""/>
+    <moqui.resource.wiki.WikiPage wikiPageId="TPL_TARA" wikiSpaceId="TEMPLATE_OT_CYBER" pagePath="TARA Report"/>
+    <moqui.resource.wiki.WikiPage wikiPageId="TPL_BOM_PLM" wikiSpaceId="TEMPLATE_OT_CYBER" pagePath="BOM PLM Summary"/>
+    <moqui.resource.wiki.WikiPage wikiPageId="TPL_NORM_MATRIX" wikiSpaceId="TEMPLATE_OT_CYBER" pagePath="Norm Applicability Matrix"/>
+    <moqui.resource.wiki.WikiPage wikiPageId="TPL_CODE_FINDINGS" wikiSpaceId="TEMPLATE_OT_CYBER" pagePath="Code Security Findings"/>
+
+    <!-- ============ Project template ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortName="OT Cybersecurity Assessment (Template)"
+            workEffortTypeEnumId="WetProject" statusId="WeInPlanning"
+            description="Template riusabile per un assessment di cybersecurity OT completo (ISO/DIS 24882 TARA + crosswalk norma-prodotto/device/codice). Clonare con clone#WorkEffort per ogni nuovo caso, non modificare questo progetto direttamente."/>
+
+    <mantle.work.effort.WikiPageWorkEffort wikiPageId="TPL_TARA" workEffortId="TEMPLATE_OT_CYBER_ASSESSMENT"/>
+    <mantle.work.effort.WikiPageWorkEffort wikiPageId="TPL_BOM_PLM" workEffortId="TEMPLATE_OT_CYBER_ASSESSMENT"/>
+    <mantle.work.effort.WikiPageWorkEffort wikiPageId="TPL_NORM_MATRIX" workEffortId="TEMPLATE_OT_CYBER_ASSESSMENT"/>
+    <mantle.work.effort.WikiPageWorkEffort wikiPageId="TPL_CODE_FINDINGS" workEffortId="TEMPLATE_OT_CYBER_ASSESSMENT"/>
+
+    <!-- ============ Milestones ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="TPL-MS-01" workEffortName="Acquisizione Documenti e Dati Sorgente"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetMilestone" statusId="WeInPlanning"/>
+    <mantle.work.effort.WorkEffort workEffortId="TPL-MS-02" workEffortName="Grafo Normativo, PLM/BOM, PLC e Crosswalk"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetMilestone" statusId="WeInPlanning"/>
+    <mantle.work.effort.WorkEffort workEffortId="TPL-MS-03" workEffortName="TARA ISO/DIS 24882"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetMilestone" statusId="WeInPlanning"/>
+    <mantle.work.effort.WorkEffort workEffortId="TPL-MS-04" workEffortName="Tassonomia Minacce e Vulnerabilita Note"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetMilestone" statusId="WeInPlanning"/>
+    <mantle.work.effort.WorkEffort workEffortId="TPL-MS-05" workEffortName="Relazione Finale e Validazione"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetMilestone" statusId="WeInPlanning"/>
+
+    <!-- ============ Tasks - MS-01: Acquisizione Documenti e Dati Sorgente ============
+         Checklist completa da plm-bom-import skill §6: elettrico+software non bastano. -->
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-01" workEffortName="Acquisizione corpus normativo cybersecurity OT"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="Norme applicabili al caso (IEC 62443, ISO/DIS 24882, ISO 12100 + ISO/TR 22100-4, EN 40000, Regolamento Macchine UE, NIS2/CRA, Top 20 Secure PLC Coding Practices)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-01" toWorkEffortId="TPL-T-01" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-02" workEffortName="Acquisizione distinta base, schemi elettrici e topologia di rete"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="Distinta base elettrica (per plm-bom-import), schemi elettrici, mappa di rete (switch, IP/VLAN)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-01" toWorkEffortId="TPL-T-02" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-03" workEffortName="Acquisizione sorgenti PLC/CODESYS e firmware C/C++"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="Sorgenti PLC (IEC 61131/SCL/CODESYS) e/o firmware C/C++ del locale, per moqui-plc-knowledge (plc-code-security-analysis)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-01" toWorkEffortId="TPL-T-03" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-04" workEffortName="Acquisizione layout meccanico, P&amp;ID e analisi rischi ISO 12100"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="Distinta meccanica, P&amp;ID, fascicolo di analisi dei rischi ISO 12100 (masse, velocita, dispositivi di protezione) - senza questo la severita fisica reale non e' valutabile, vedi mechanical-safety-crosswalk."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-01" toWorkEffortId="TPL-T-04" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="4"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-05" workEffortName="Acquisizione architettura di accesso remoto, matrice comunicazioni e manuali operativi"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="Teleassistenza/VPN, matrice comunicazioni (chi parla con chi su quale porta/protocollo), manuali operativi/manutenzione, matrice ruoli e accessi (RBAC)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-01" toWorkEffortId="TPL-T-05" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="5"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-06" workEffortName="Acquisizione dati esterni CVE/CPE e tassonomia MITRE ATT&amp;CK for ICS"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="NVD REST API (CVE/CPE, gia' integrato) e corpus MITRE ATT&amp;CK for ICS (gia' caricato per intero, riusabile per ogni caso)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-01" toWorkEffortId="TPL-T-06" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="6"/>
+
+    <!-- ============ Tasks - MS-02: Grafo Normativo, PLM/BOM, PLC e Crosswalk ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-07" workEffortName="Costruzione e indicizzazione grafo normativo (se il caso richiede norme non ancora caricate)"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="tools/norm-indexer, load#NormGraph, index#NormDocuments - normalmente gia' fatto una volta per il corpus condiviso, ripetere solo per norme nuove."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-02" toWorkEffortId="TPL-T-07" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-08" workEffortName="Modellazione grafo PLM/BOM del locale (plm-bom-import)"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="Product/ProductAssoc/ProductCategory/ProductFeature reali dalla distinta base, Device/Asset/DeviceConnection dagli schemi elettrici."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-02" toWorkEffortId="TPL-T-08" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-09" workEffortName="Costruzione grafo PLC/software offline (plc-code-security-analysis)"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="parse_plc_sources.py / parse_c_firmware.py, generate_plc_graph.py, load#PlcOfflineGraph."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-02" toWorkEffortId="TPL-T-09" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-10" workEffortName="Crosswalk norma-prodotto e criticita BIA/zone-conduit"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="check#ProductCategoryCompliance sui prodotti reali, zone/conduit via DeviceGroup, check#DeviceGroupContinuityImpact."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-02" toWorkEffortId="TPL-T-10" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="4"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-11" workEffortName="Crosswalk sicurezza meccanica ISO 12100 / ISO-TR 22100-4"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="PftSafetyFunction sui prodotti reali (da T-04), check#DeviceSafetyExposure sui device con vettori reali (porte fisiche, accesso remoto)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-02" toWorkEffortId="TPL-T-11" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="5"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-12" workEffortName="Crosswalk sicurezza codice Top-20 / IEC 62443"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="check#CodeSecureCodingCompliance sul grafo PLC/C del locale (da T-09)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-02" toWorkEffortId="TPL-T-12" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="6"/>
+
+    <!-- ============ Tasks - MS-03: TARA ISO/DIS 24882 ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-13" workEffortName="Sistema di Interesse e Asset (Tappa 1)"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="CyberAsset reali con criticita C/I/A, vedi iso24882-risk-assessment."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-03" toWorkEffortId="TPL-T-13" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-14" workEffortName="Scenari di Danno e Minacce STRIDE (Tappa 2-3)"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="DamageScenario e ThreatScenario reali, classificazione STRIDE + MITRE ATT&amp;CK for ICS."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-03" toWorkEffortId="TPL-T-14" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-15" workEffortName="Probabilita, Rischio e Trattamento (Tappa 4-5)"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="check#ThreatScenarioRisk, soglia di accettazione e trattamento per ogni minaccia."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-03" toWorkEffortId="TPL-T-15" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-16" workEffortName="Requisiti di Cybersecurity (Tappa 6-7)"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="ProductFeatureGroup di requisito, verificati via check#ProductCategoryCompliance sui prodotti reali."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-03" toWorkEffortId="TPL-T-16" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="4"/>
+
+    <!-- ============ Tasks - MS-04: Tassonomia Minacce e Vulnerabilita Note ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-17" workEffortName="Classificazione Threat Scenario su tassonomia MITRE ATT&amp;CK for ICS"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="Tag reale e verificato su ogni ThreatScenario del caso (tassonomia gia' caricata per intero)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-04" toWorkEffortId="TPL-T-17" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-18" workEffortName="Ingestion CVE/CPE su prodotti reali"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="index#ProductVulnerabilities via NVD REST API sui prodotti con CPE dichiarato."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-04" toWorkEffortId="TPL-T-18" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+
+    <!-- ============ Tasks - MS-05: Relazione Finale e Validazione ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-19" workEffortName="Verifica strumenti MCP disponibili per il caso"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="Verifica via RPC/MCP di ogni servizio cyber_* registrato (moqui-mcp/service/org/moqui/mcp/McpServices.xml) contro i dati reali del caso, prima di scrivere la relazione."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-05" toWorkEffortId="TPL-T-19" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-20" workEffortName="Generazione relazione finale in Markdown"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="Ogni cifra riverificata dal database reale prima della stesura, mai riportata a memoria."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-05" toWorkEffortId="TPL-T-20" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="TPL-T-21" workEffortName="Collegamento relazione a WikiPage di progetto"
+            rootWorkEffortId="TEMPLATE_OT_CYBER_ASSESSMENT" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInPlanning"
+            description="Relazione copiata nella WikiPage TARA Report del progetto clonato, gia' collegata via WikiPageWorkEffort."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="TPL-MS-05" toWorkEffortId="TPL-T-21" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+
+</entity-facade-xml>

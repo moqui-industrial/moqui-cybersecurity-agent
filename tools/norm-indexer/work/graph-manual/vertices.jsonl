@@ -1,0 +1,11 @@
+{"graphId": "OtCyberNormGraph", "graphVertexId": "fa26254bfc62c1f5b8e1fccf8f40130b", "label": "UNI EN ISO 12100:2010 - Sicurezza del macchinario - Principi generali di progettazione - Valutazione del rischio e riduzione del rischio", "notBelongToEdge": "N"}
+{"graphId": "OtCyberNormGraph", "graphVertexId": "99b83edb666c45d8045efce19be41e65", "label": "ISO/TR 22100-4:2018 - Sicurezza del macchinario - Relazione con la ISO 12100 - Parte 4: Guida ai fabbricanti di macchine per la considerazione degli aspetti IT-security (cyber security) collegati alla sicurezza", "notBelongToEdge": "N"}
+{"graphId": "OtCyberNormGraph", "graphVertexId": "c4c1289f3ba47a71cc77a66d12a32f4f", "label": "Identificazione dei pericoli", "notBelongToEdge": "N"}
+{"graphId": "OtCyberNormGraph", "graphVertexId": "669956758a2401e3250ee0a98ef5343e", "label": "Progettazione dei sistemi di comando - Requisiti generali", "notBelongToEdge": "N"}
+{"graphId": "OtCyberNormGraph", "graphVertexId": "5243c291619b8d6d4228c878330f49ca", "label": "Guasto o malfunzionamento del sistema di comando", "notBelongToEdge": "N"}
+{"graphId": "OtCyberNormGraph", "graphVertexId": "0190f805a49120715bb284b352e1f003", "label": "Software", "notBelongToEdge": "N"}
+{"graphId": "OtCyberNormGraph", "graphVertexId": "7c76fd594e48b02b5b70b3dd01e65d0c", "label": "Scopo e Principio Fondamentale", "notBelongToEdge": "N"}
+{"graphId": "OtCyberNormGraph", "graphVertexId": "7582a6fd2587aae375e452b88f257919", "label": "Identificazione delle Vulnerabilita' e delle Connessioni (Vettori di Attacco)", "notBelongToEdge": "N"}
+{"graphId": "OtCyberNormGraph", "graphVertexId": "5998209c9a5cd49fc3e0af486669926d", "label": "Valutazione dell'Impatto sulla Sicurezza Fisica (Safety)", "notBelongToEdge": "N"}
+{"graphId": "OtCyberNormGraph", "graphVertexId": "f499ad8a27b5af5fd5105ddcbcd031b3", "label": "Integrazione delle Misure di Mitigazione (Security for Safety)", "notBelongToEdge": "N"}
+{"graphId": "OtCyberNormGraph", "graphVertexId": "310dc6ba331ade1b9cbe30048eee476c", "label": "Il Rimando agli Standard Specifici (L'Assist alla IEC 62443)", "notBelongToEdge": "N"}

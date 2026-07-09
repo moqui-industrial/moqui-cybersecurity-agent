@@ -1,0 +1,562 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Phase 2 validation data: a significant and relevant subset of a real
+    industrial machine's automation BOM (an HVAC curing/smoking cell for
+    salami production), anonymized per the project's binding anonymization
+    rule (see design-session/SESSION.md) - no real manufacturer/customer/
+    designer/commission identifiers appear here, only generic placeholders
+    ("OEM-A", "CUSTOMER-A") and manufacturer part numbers (which are public
+    catalog data, not client-identifying).
+
+    Real source files (kept as private local reference material, never
+    quoted verbatim with identifying data): /home/igor/development/projects/
+    cybersecurity/hvac-cell/{Distinta.csv, "Smoking 1 - QE1 rev10.pdf",
+    "QE MSS 311 (type 3 rev03).pdf"}.
+
+    Architecture modeled: one machine ("Smoking Cell 1") with two electrical
+    panels on a shared PROFINET network - a central panel (anonymized id
+    PANEL-MSS311) holding the actual PLC CPU, and a remote cell panel
+    (anonymized id PANEL-QE1) holding a Siemens ET 200SP remote I/O station
+    and two Danfoss VFDs driving the AHU fan and the fresh-air renewal fan.
+    Only devices with real network/communication capability get a Device
+    record (CPU, remote I/O, drives, switches); passive electrical BOM items
+    (power supply, breakers, fuses) stay as plain Product/Asset only, per the
+    "device model only for electronic/automation devices" scoping decision.
+
+    Extended (PLM/BOM perfection task): PANEL-QE1's full real BOM (47 distinct
+    parts, generated from Distinta.csv via a script - see skills/plm-bom-import)
+    is now modeled as Product+ProductCategoryMember for every part, a
+    PtPickAssembly Product PROD_PANEL_QE1 representing the panel's product
+    structure, and ProductAssoc (PatMfgBom) BOM lines with real aggregated
+    quantities. Selective ProductFeature (PftHardware) added only where the
+    source text states a real technical spec. No ProductFeature/PftSafetyFunction
+    rows exist for this file: EPLAN's 22 SAFETYRELATED_* columns are real but
+    empty in this export (verified, not assumed empty).
+
+    NOT auto-loaded by component.xml (this is case-specific real-world
+    validation data, not structural component seed data) - load explicitly,
+    e.g.:
+      curl -X POST http://localhost:8081/rpc/json -u john.doe:moqui \
+        -d '{"jsonrpc":"2.0","method":"org.moqui.EntityServices.load#Data",
+             "params":{"location":".../CyberHvacCellDemoSeedData.xml"},"id":1}'
+    or via ./gradlew load -Ptypes=demo (type="demo" below).
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="demo">
+
+    <!-- ============ Product Categories (norm-crosswalk classification, minimal set) ============ -->
+    <mantle.product.category.ProductCategory productCategoryId="PRODCAT_PLC_CPU" categoryName="Automation - PLC CPU" description="Programmable logic controller central processing units"/>
+    <mantle.product.category.ProductCategory productCategoryId="PRODCAT_REMOTE_IO" categoryName="Automation - Remote I/O" description="Distributed/remote I/O stations on an industrial fieldbus network"/>
+    <mantle.product.category.ProductCategory productCategoryId="PRODCAT_VFD" categoryName="Automation - Variable Frequency Drive" description="Variable frequency/speed drives for motors"/>
+    <mantle.product.category.ProductCategory productCategoryId="PRODCAT_NET_SWITCH" categoryName="Automation - Network Switch" description="Industrial network switches"/>
+
+    <!-- ============ Products (type/class level - real, public manufacturer part numbers) ============ -->
+    <mantle.product.Product productId="PROD_SIE_CPU1518" pseudoId="6ES7518-4AP00-0AB0"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="SIMATIC S7-1500 CPU 1518-4 PN/DP" description="Siemens SIMATIC S7-1500 CPU 1518-4 PN/DP"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_PLC_CPU" productId="PROD_SIE_CPU1518" fromDate="2026-01-01 00:00:00"/>
+
+    <mantle.product.Product productId="PROD_SIE_ET200SP_IM" pseudoId="6ES7155-6AA01-0BN0"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="SIMATIC ET 200SP IM155-6PN" description="Siemens SIMATIC ET 200SP, IM155-6PN PROFINET interface module"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_REMOTE_IO" productId="PROD_SIE_ET200SP_IM" fromDate="2026-01-01 00:00:00"/>
+
+    <mantle.product.Product productId="PROD_DAN_FC102" pseudoId="FC-102"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Danfoss VLT FC-102" description="Danfoss VLT FC-102 variable frequency drive with MCA 120 PROFINET communication card"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_VFD" productId="PROD_DAN_FC102" fromDate="2026-01-01 00:00:00"/>
+
+    <mantle.product.Product productId="PROD_SIE_XB208" pseudoId="6GK5208-0BA00-2AB2"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="SCALANCE XB208" description="Siemens SCALANCE XB208 industrial Ethernet switch, 8 ports"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_NET_SWITCH" productId="PROD_SIE_XB208" fromDate="2026-01-01 00:00:00"/>
+
+    <mantle.product.Product productId="PROD_SIE_XB008" pseudoId="6GK5008-0BA10-1AB2"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="SCALANCE XB008" description="Siemens SCALANCE XB008 industrial Ethernet switch, 8 ports (unmanaged)"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_NET_SWITCH" productId="PROD_SIE_XB008" fromDate="2026-01-01 00:00:00"/>
+
+    <!-- ============ New ProductCategory (functional grouping, QE1 BOM import) ============ -->
+    <mantle.product.category.ProductCategory productCategoryId="PRODCAT_ENCLOSURE_WIRING" categoryName="Enclosure &amp; Wiring Accessories"/>
+    <mantle.product.category.ProductCategory productCategoryId="PRODCAT_TERMINAL_BLOCK" categoryName="Terminal Blocks"/>
+    <mantle.product.category.ProductCategory productCategoryId="PRODCAT_CIRCUIT_PROTECTION" categoryName="Circuit Protection"/>
+    <mantle.product.category.ProductCategory productCategoryId="PRODCAT_CONTROL_RELAY" categoryName="Control Relays &amp; Contactors"/>
+    <mantle.product.category.ProductCategory productCategoryId="PRODCAT_POWER_SUPPLY" categoryName="Power Supplies &amp; Transformers"/>
+    <mantle.product.category.ProductCategory productCategoryId="PRODCAT_INSTRUMENTATION" categoryName="Instrumentation &amp; Signal Conditioning"/>
+    <mantle.product.category.ProductCategory productCategoryId="PRODCAT_MECHANICAL_ACTUATOR" categoryName="Mechanical Actuators"
+            description="Reserved for mechanical actuators (cutters, sealers, conveyors) once a mechanical BOM/P&amp;ID is available - empty for this case, no real mechanical BOM provided."/>
+
+    <!-- ============ New Products (QE1 real BOM, generated from Distinta.csv) ============ -->
+    <mantle.product.Product productId="PROD_RIT_TS8800752" pseudoId="RIT.8800752"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Rittal TS Cable duct for mounting plate, WHD: 60x2000x80 mm" description="TS Cable duct for mounting plate, WHD: 60x2000x80 mm"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_ENCLOSURE_WIRING" productId="PROD_RIT_TS8800752" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_RIT_TS8800750" pseudoId="RIT.8800750"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Rittal TS Cable duct for mounting plate, WHD: 30x2000x80 mm" description="TS Cable duct for mounting plate, WHD: 30x2000x80 mm"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_ENCLOSURE_WIRING" productId="PROD_RIT_TS8800750" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_RIT_SZ2313150" pseudoId="RIT.2313150"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Rittal SZ Support rail to EN 60 715, version TS 35/15, L: 2000 mm" description="SZ Support rail to EN 60 715, version TS 35/15, L: 2000 mm"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_ENCLOSURE_WIRING" productId="PROD_RIT_SZ2313150" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_FIN_7T81_2303" pseudoId="FIN.7T.81.0.000.2303"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="FIN Panel thermostat" description="Panel thermostat"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_INSTRUMENTATION" productId="PROD_FIN_7T81_2303" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_RIT_SZ2500110" pseudoId="RIT.2500110"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Rittal LED system light" description="LED system light"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_ENCLOSURE_WIRING" productId="PROD_RIT_SZ2500110" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_3NW7033" pseudoId="SIE.3NW7033"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens fuse holder for cylindrical cartridges, 10x38 mm, 3-pole, In: 32 A,..." description="fuse holder for cylindrical cartridges, 10x38 mm, 3-pole, In: 32 A, Un AC: 690 V"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CIRCUIT_PROTECTION" productId="PROD_SIE_3NW7033" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_3NW7013" pseudoId="SIE.3NW7013"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SENTRON, fuse holder for cylindrical cartridges, 10x38 mm, 1 pole, ..." description="SENTRON, fuse holder for cylindrical cartridges, 10x38 mm, 1 pole, In: 32 A, Un AC: 690 V"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CIRCUIT_PROTECTION" productId="PROD_SIE_3NW7013" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_3NW7023" pseudoId="SIE.3NW7023"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SENTRON, fuse holder for cylindrical cartridges, 10x38 mm, 2 poles,..." description="SENTRON, fuse holder for cylindrical cartridges, 10x38 mm, 2 poles, In: 32 A, Un AC: 690 V"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CIRCUIT_PROTECTION" productId="PROD_SIE_3NW7023" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_3NW7063" pseudoId="SIE.3NW7063"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens Cylindrical fuse holder, 10x38 mm, 3P+N, In: 32 A, Un AC: 690 V" description="Cylindrical fuse holder, 10x38 mm, 3P+N, In: 32 A, Un AC: 690 V"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CIRCUIT_PROTECTION" productId="PROD_SIE_3NW7063" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_WEI_VPU_AC_II" pseudoId="WEI.2591090000"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Weidmüller Surge arrester power engineering AC (type 2)" description="Surge arrester power engineering AC (type 2)"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CIRCUIT_PROTECTION" productId="PROD_WEI_VPU_AC_II" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_ET200SP_DI16" pseudoId="SIE.6ES7131-6BH01-0BA0"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SIMATIC ET 200SP DI 16x 24V DC ST, PU 1" description="SIMATIC ET 200SP DI 16x 24V DC ST, PU 1"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_REMOTE_IO" productId="PROD_SIE_ET200SP_DI16" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_ET200SP_BU_A0D" pseudoId="SIE.6ES7193-6BP00-0DA0"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SIMATIC ET 200SP BU type A0 BU15-P16+A0+2D" description="SIMATIC ET 200SP BU type A0 BU15-P16+A0+2D"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_REMOTE_IO" productId="PROD_SIE_ET200SP_BU_A0D" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_ET200SP_BU_A0B" pseudoId="SIE.6ES7193-6BP00-0BA0"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SIMATIC ET 200SP BU type A0 BU15-P16+A0+2B" description="SIMATIC ET 200SP BU type A0 BU15-P16+A0+2B"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_REMOTE_IO" productId="PROD_SIE_ET200SP_BU_A0B" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_ET200SP_DQ16" pseudoId="SIE.6ES7132-6BH01-0BA0"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SIMATIC ET 200SP DQ 16x24 VDC/0.5 A ST" description="SIMATIC ET 200SP DQ 16x24 VDC/0.5 A ST"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_REMOTE_IO" productId="PROD_SIE_ET200SP_DQ16" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_ET200SP_AI4_RTD" pseudoId="SIE.6ES7134-6JD00-0CA1"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SIMATIC ET 200SP AI 4xRTD/TC 2-/3-/4-wire HF" description="SIMATIC ET 200SP AI 4xRTD/TC 2-/3-/4-wire HF"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_REMOTE_IO" productId="PROD_SIE_ET200SP_AI4_RTD" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_ET200SP_BU_A1B" pseudoId="SIE.6ES7193-6BP00-0BA1"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SIMATIC ET 200SP BU type A1 BU15-P16+A0+2B/T" description="SIMATIC ET 200SP BU type A1 BU15-P16+A0+2B/T"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_REMOTE_IO" productId="PROD_SIE_ET200SP_BU_A1B" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_ET200SP_AI4_I" pseudoId="SIE.6ES7134-6GD01-0BA1"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SIMATIC ET 200SP AI 4xI 2-/4-wire ST" description="SIMATIC ET 200SP AI 4xI 2-/4-wire ST"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_REMOTE_IO" productId="PROD_SIE_ET200SP_AI4_I" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_ET200SP_AQ4" pseudoId="SIE.6ES7135-6HD00-0BA1"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SIMATIC ET 200SP AQ 4xU/I ST" description="SIMATIC ET 200SP AQ 4xU/I ST"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_REMOTE_IO" productId="PROD_SIE_ET200SP_AQ4" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_ET200SP_AI_EM" pseudoId="SIE.6ES7134-6PA01-0CU0"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SIMATIC ET 200SP AI Energy Meter CT HF" description="SIMATIC ET 200SP AI Energy Meter CT HF"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_REMOTE_IO" productId="PROD_SIE_ET200SP_AI_EM" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_ET200SP_BU_U0D" pseudoId="SIE.6ES7193-6BP00-0DU0"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SIMATIC ET 200SP BU type U0 BU20-P16+A0+2D PU 1" description="SIMATIC ET 200SP BU type U0 BU20-P16+A0+2D PU 1"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_REMOTE_IO" productId="PROD_SIE_ET200SP_BU_U0D" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_RIT_SK3238500" pseudoId="RIT.3238500"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Rittal TopTherm fan-and-filter units" description="TopTherm fan-and-filter units"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_ENCLOSURE_WIRING" productId="PROD_RIT_SK3238500" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_3LD3348" pseudoId="SIE.3LD3348-0TK51"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens Switch disconnector 3LD3, main switch" description="Switch disconnector 3LD3, main switch"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CIRCUIT_PROTECTION" productId="PROD_SIE_3LD3348" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_3LD9340" pseudoId="SIE.3LD9340-2C"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens neutral terminal through-type" description="neutral terminal through-type"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CIRCUIT_PROTECTION" productId="PROD_SIE_3LD9340" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_5SU1324_7FA10" pseudoId="SIE.5SU1324-7FA10"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens RCBO elm" description="RCBO elm"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CIRCUIT_PROTECTION" productId="PROD_SIE_5SU1324_7FA10" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_5SU1324_7FA16" pseudoId="SIE.5SU1324-7FA16"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens RCBO elm" description="RCBO elm"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CIRCUIT_PROTECTION" productId="PROD_SIE_5SU1324_7FA16" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_MDX_TAM3442" pseudoId="MDX.TAM3442-5AN00-0EA0"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="MDX 1-ph control circuit, safety isolating transformer 100 VA (S6: 310 VA)" description="1-ph control circuit, safety isolating transformer 100 VA (S6: 310 VA)"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_POWER_SUPPLY" productId="PROD_MDX_TAM3442" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_4NC5112" pseudoId="SIE.4NC5112-0CB21"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SENTRON Current transformer Bushing-type current transformers" description="SENTRON Current transformer Bushing-type current transformers"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_INSTRUMENTATION" productId="PROD_SIE_4NC5112" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_5TE6800" pseudoId="SIE.5TE6800"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens 5TE6 REG Socket Outlets, 16 A" description="5TE6 REG Socket Outlets, 16 A"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_ENCLOSURE_WIRING" productId="PROD_SIE_5TE6800" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_WEI_S2C_2_5" pseudoId="WEI.2674530000"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Weidmüller Feed-through terminal block" description="Feed-through terminal block"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_TERMINAL_BLOCK" productId="PROD_WEI_S2C_2_5" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_WEI_S2C_2_5_PE" pseudoId="WEI.2674560000"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Weidmüller Ground terminal block" description="Ground terminal block"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_TERMINAL_BLOCK" productId="PROD_WEI_S2C_2_5_PE" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_WEI_WDU_10" pseudoId="WEI.1020300000"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Weidmüller Feed-through terminal block" description="Feed-through terminal block"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_TERMINAL_BLOCK" productId="PROD_WEI_WDU_10" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_WEI_WPE_10_ZR" pseudoId="WEI.1042500000"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Weidmüller Ground terminal block" description="Ground terminal block"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_TERMINAL_BLOCK" productId="PROD_WEI_WPE_10_ZR" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_PXC_PLC_OPT_24DC" pseudoId="PXC.2900364"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Phoenix Contact Optocoupler (relay)" description="Optocoupler (relay)"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CONTROL_RELAY" productId="PROD_PXC_PLC_OPT_24DC" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_3RT2015_1SB41" pseudoId="SIE.3RT2015-1SB41"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens COUPLING CONT.,AC3:3KW 1NO DC24V,M.DIODE" description="COUPLING CONT.,AC3:3KW 1NO DC24V,M.DIODE"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CONTROL_RELAY" productId="PROD_SIE_3RT2015_1SB41" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_3RH2911" pseudoId="SIE.3RH2911-1FA22"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens AUX.SWITCH BLOCK,FRONT,2NO+2NC, CURR.PATH: 1NO, 1NC, 1NC, 1NO," description="AUX.SWITCH BLOCK,FRONT,2NO+2NC, CURR.PATH: 1NO, 1NC, 1NC, 1NO,"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CONTROL_RELAY" productId="PROD_SIE_3RH2911" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_3RT2015_1KB41" pseudoId="SIE.3RT2015-1KB41"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens COUPLING CONT.,AC3:3KW 1NO DC24V,M.DIODE" description="COUPLING CONT.,AC3:3KW 1NO DC24V,M.DIODE"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CONTROL_RELAY" productId="PROD_SIE_3RT2015_1KB41" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_WEI_TRS_24VDC" pseudoId="WEI.1122770000"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Weidmüller Standard all-or-nothing relay" description="Standard all-or-nothing relay"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CONTROL_RELAY" productId="PROD_WEI_TRS_24VDC" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_3RV2011_0EA15" pseudoId="SIE.3RV2011-0EA15"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens CIRCUIT-BREAKER SCREW CONNECTION 0.4A" description="CIRCUIT-BREAKER SCREW CONNECTION 0.4A"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CIRCUIT_PROTECTION" productId="PROD_SIE_3RV2011_0EA15" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_3RV2921_1M" pseudoId="SIE.3RV2921-1M"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens SIGNALING SWITCH,  FOR CIRCUIT-BREAKERS 3RV2." description="SIGNALING SWITCH,  FOR CIRCUIT-BREAKERS 3RV2."/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CIRCUIT_PROTECTION" productId="PROD_SIE_3RV2921_1M" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_SIE_3RV2011_1AA10" pseudoId="SIE.3RV2011-1AA10"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Siemens CIRCUIT-BREAKER SCREW CONNECTION 1.6A" description="CIRCUIT-BREAKER SCREW CONNECTION 1.6A"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_CIRCUIT_PROTECTION" productId="PROD_SIE_3RV2011_1AA10" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_WEI_ACT20M" pseudoId="WEI.1176010000"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Weidmüller Input isolator" description="Input isolator"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_INSTRUMENTATION" productId="PROD_WEI_ACT20M" fromDate="2026-01-01 00:00:00"/>
+
+    <!-- Real discrepancy, documented not hidden: the generic PROD_DAN_FC102 (pseudoId "FC-102") added in
+         Phase 2 is family-level and already referenced by ASSET_VFD_1/ASSET_VFD_2, MathModelRun history and
+         CyberProductCpeMatch - left untouched. The real Distinta.csv instead lists two distinct specific
+         Danfoss catalog configurations (3.0kW and 1.1kW) plus a separate PROFINET comm card (MCA 120), added
+         below as their own Product records and used in the BOM (ProductAssoc) - not merged into PROD_DAN_FC102. -->
+    <mantle.product.Product productId="PROD_DAN_FC102_3K0" pseudoId="DAN.131B4219"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Danfoss FC102, 3.0kW / 4.0HP, IP20, 3x 380-480 VAC" description="{{FC102, 3.0kW / 4.0HP, IP20, 3x 380-480 VAC}}"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_VFD" productId="PROD_DAN_FC102_3K0" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_DAN_MCA120" pseudoId="DAN.130B1135"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Danfoss VLT® PROFINET, uncoated" description="VLT® PROFINET, uncoated"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_VFD" productId="PROD_DAN_MCA120" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.Product productId="PROD_DAN_FC102_1K1" pseudoId="DAN.131B4207"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="Danfoss Static Frequency Converter = &lt; 1 kV" description="Static Frequency Converter = &lt; 1 kV"/>
+    <mantle.product.category.ProductCategoryMember productCategoryId="PRODCAT_VFD" productId="PROD_DAN_FC102_1K1" fromDate="2026-01-01 00:00:00"/>
+
+    <!-- ============ Selective ProductFeature (real technical specs found in source text) ============ -->
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3NW7033_1" productFeatureTypeEnumId="PftHardware"
+            description="poles: 3"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3NW7033_1" productId="PROD_SIE_3NW7033" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3NW7033_2" productFeatureTypeEnumId="PftHardware"
+            description="current: 32 A"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3NW7033_2" productId="PROD_SIE_3NW7033" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3NW7033_3" productFeatureTypeEnumId="PftHardware"
+            description="voltage: 690 V AC"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3NW7033_3" productId="PROD_SIE_3NW7033" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3NW7013_4" productFeatureTypeEnumId="PftHardware"
+            description="poles: 1"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3NW7013_4" productId="PROD_SIE_3NW7013" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3NW7013_5" productFeatureTypeEnumId="PftHardware"
+            description="current: 32 A"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3NW7013_5" productId="PROD_SIE_3NW7013" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3NW7013_6" productFeatureTypeEnumId="PftHardware"
+            description="voltage: 690 V AC"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3NW7013_6" productId="PROD_SIE_3NW7013" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3NW7023_7" productFeatureTypeEnumId="PftHardware"
+            description="poles: 2"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3NW7023_7" productId="PROD_SIE_3NW7023" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3NW7023_8" productFeatureTypeEnumId="PftHardware"
+            description="current: 32 A"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3NW7023_8" productId="PROD_SIE_3NW7023" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3NW7023_9" productFeatureTypeEnumId="PftHardware"
+            description="voltage: 690 V AC"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3NW7023_9" productId="PROD_SIE_3NW7023" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3NW7063_10" productFeatureTypeEnumId="PftHardware"
+            description="poles: 3P+N"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3NW7063_10" productId="PROD_SIE_3NW7063" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3NW7063_11" productFeatureTypeEnumId="PftHardware"
+            description="current: 32 A"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3NW7063_11" productId="PROD_SIE_3NW7063" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3NW7063_12" productFeatureTypeEnumId="PftHardware"
+            description="voltage: 690 V AC"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3NW7063_12" productId="PROD_SIE_3NW7063" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_ET200SP_DI16_13" productFeatureTypeEnumId="PftHardware"
+            description="channels: 16 DI 24V DC"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_ET200SP_DI16_13" productId="PROD_SIE_ET200SP_DI16" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_ET200SP_DQ16_14" productFeatureTypeEnumId="PftHardware"
+            description="channels: 16 DQ 24V DC/0.5A"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_ET200SP_DQ16_14" productId="PROD_SIE_ET200SP_DQ16" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_ET200SP_AI4_RTD_15" productFeatureTypeEnumId="PftHardware"
+            description="channels: 4 AI RTD/TC"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_ET200SP_AI4_RTD_15" productId="PROD_SIE_ET200SP_AI4_RTD" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_ET200SP_AI4_I_16" productFeatureTypeEnumId="PftHardware"
+            description="channels: 4 AI current"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_ET200SP_AI4_I_16" productId="PROD_SIE_ET200SP_AI4_I" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_ET200SP_AQ4_17" productFeatureTypeEnumId="PftHardware"
+            description="channels: 4 AQ U/I"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_ET200SP_AQ4_17" productId="PROD_SIE_ET200SP_AQ4" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_MDX_TAM3442_18" productFeatureTypeEnumId="PftHardware"
+            description="power: 100 VA"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_MDX_TAM3442_18" productId="PROD_MDX_TAM3442" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3RT2015_1SB41_19" productFeatureTypeEnumId="PftHardware"
+            description="power: 3 kW (AC3)"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3RT2015_1SB41_19" productId="PROD_SIE_3RT2015_1SB41" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3RT2015_1KB41_20" productFeatureTypeEnumId="PftHardware"
+            description="power: 3 kW (AC3)"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3RT2015_1KB41_20" productId="PROD_SIE_3RT2015_1KB41" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3RV2011_0EA15_21" productFeatureTypeEnumId="PftHardware"
+            description="current: 0.4 A"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3RV2011_0EA15_21" productId="PROD_SIE_3RV2011_0EA15" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_SIE_3RV2011_1AA10_22" productFeatureTypeEnumId="PftHardware"
+            description="current: 1.6 A"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_SIE_3RV2011_1AA10_22" productId="PROD_SIE_3RV2011_1AA10" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROD_DAN_FC102_3K0_23" productFeatureTypeEnumId="PftHardware"
+            description="power: 3.0 kW / 4.0 HP"/>
+    <mantle.product.feature.ProductFeatureAppl productFeatureId="FEAT_PROD_DAN_FC102_3K0_23" productId="PROD_DAN_FC102_3K0" applTypeEnumId="PfatStandard" fromDate="2026-01-01 00:00:00"/>
+
+    <!-- ============ BOM structure: PROD_PANEL_QE1 assembly (Distinta.csv, aggregated by distinct part) ============ -->
+    <mantle.product.Product productId="PROD_PANEL_QE1" productTypeEnumId="PtPickAssembly"
+            productName="Cell Panel (PANEL-QE1) Assembly" description="Product-structure (design/BOM) counterpart of ASSET_PANEL_QE1 - the real EPLAN parts list for this panel, 47 distinct components."/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_RIT_TS8800752" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="14" reason="U10, U11, U12, U13, U14, U16, U17, U2, U37, U5, U6, U7, U8, U9"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_RIT_TS8800750" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="5" reason="U15, U18, U19, U39, U40"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_RIT_SZ2313150" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="14" reason="U20, U21, U22, U23, U24, U26, U27, U28, U29, U30, U31, U32, U38, U43"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_FIN_7T81_2303" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="A1"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_RIT_SZ2500110" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="EA1"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_3NW7033" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="3" reason="F1, F11, F12"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_3NW7013" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="3" reason="F2, F3, F8"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_3NW7023" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="5" reason="F13, F4, F5, F7, F9"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_3NW7063" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="2" reason="F10, F14"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_WEI_VPU_AC_II" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="FA1"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_ET200SP_IM" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="2" reason="K1"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_ET200SP_DI16" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="2" reason="K2, K3"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_ET200SP_BU_A0D" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="K2"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_ET200SP_BU_A0B" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="6" reason="K3, K4, K6, K7, K7a, K8, K9"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_ET200SP_DQ16" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="K4"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_ET200SP_AI4_RTD" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="K5"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_ET200SP_BU_A1B" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="2" reason="K5, K7a"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_ET200SP_AI4_I" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="3" reason="K6, K7, K7a"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_ET200SP_AQ4" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="2" reason="K8, K9"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_ET200SP_AI_EM" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="K10"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_ET200SP_BU_U0D" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="K10"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_RIT_SK3238500" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="M1"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_3LD3348" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="Q1"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_3LD9340" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="Q1"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_5SU1324_7FA10" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="Q2"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_5SU1324_7FA16" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="Q3"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_XB208" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="SW1"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_SITOP8200" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="T1"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_MDX_TAM3442" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="T2"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_4NC5112" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="4" reason="V1, V2, V3, V4"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_5TE6800" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="X1"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_WEI_S2C_2_5" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="102" reason="X24Vac, X24Vdc, X400Vac, XCA"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_WEI_S2C_2_5_PE" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="3" reason="X400Vac"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_WEI_WDU_10" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="4" reason="XINP"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_WEI_WPE_10_ZR" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="XINP"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_PXC_PLC_OPT_24DC" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="10" reason="K11, K12, K13, K14, K15, K16, K17, K22, K23, K24"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_3RT2015_1SB41" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="2" reason="K18, K19"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_3RH2911" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="2" reason="K18, K19"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_3RT2015_1KB41" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="K20"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_WEI_TRS_24VDC" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="K21"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_3RV2011_0EA15" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="Q4"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_3RV2921_1M" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="2" reason="Q4, Q5"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_SIE_3RV2011_1AA10" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="Q5"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_WEI_ACT20M" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="TC1"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_DAN_FC102_3K0" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="U1"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_DAN_MCA120" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="2" reason="U1, U2"/>
+    <mantle.product.ProductAssoc productId="PROD_PANEL_QE1" toProductId="PROD_DAN_FC102_1K1" productAssocTypeEnumId="PatMfgBom"
+            fromDate="2026-01-01 00:00:00" quantity="1" reason="U2"/>
+
+    <mantle.product.Product productId="PROD_SIE_SITOP8200" pseudoId="6EP3436-8SB00-0AY0"
+            productTypeEnumId="PtAsset" assetTypeEnumId="AstTpEquipment" assetClassEnumId="AsClsMfgEquip"
+            productName="SITOP PSU8200" description="Siemens SITOP PSU8200 3ph 24V/20A power supply (no network capability; Product/Asset only, no Device record)"/>
+
+    <!-- ============ Assets (instance level - this specific anonymized machine) ============ -->
+    <!-- Top-level machine -->
+    <mantle.product.asset.Asset assetId="ASSET_MACHINE_1" assetName="Smoking Cell 1"
+            assetTypeEnumId="AstTpEquipment" classEnumId="AsClsMfgEquip" statusId="AstAvailable"
+            comments="Anonymized customer: CUSTOMER-A. Real identifying data intentionally omitted per project anonymization rule."/>
+
+    <!-- Central control panel (shared PROFINET master, holds the CPU) -->
+    <mantle.product.asset.Asset assetId="ASSET_PANEL_MSS311" parentAssetId="ASSET_MACHINE_1" assetName="Central Control Panel (PANEL-MSS311)"
+            assetTypeEnumId="AstTpEquipment" classEnumId="AsClsMfgEquip" statusId="AstAvailable"
+            comments="Anonymized panel id. Controls 2-3 smoking cells over PROFINET; only this cell's remote panel (PANEL-QE1) is modeled here."/>
+    <mantle.product.asset.Asset assetId="ASSET_CPU_1" parentAssetId="ASSET_PANEL_MSS311" productId="PROD_SIE_CPU1518"
+            assetName="PLC CPU" classEnumId="AsClsPLC" serialNumber="ANON-CPU-0001" statusId="AstInUse"/>
+    <mantle.product.asset.Asset assetId="ASSET_SW_MSS_1" parentAssetId="ASSET_PANEL_MSS311" productId="PROD_SIE_XB208"
+            assetName="Network Switch SW1 (MSS311)" classEnumId="AsClsSwitch" serialNumber="ANON-SW-0001" statusId="AstInUse"/>
+    <mantle.product.asset.Asset assetId="ASSET_SW_MSS_2" parentAssetId="ASSET_PANEL_MSS311" productId="PROD_SIE_XB008"
+            assetName="Network Switch SW2 (MSS311)" classEnumId="AsClsSwitch" serialNumber="ANON-SW-0002" statusId="AstInUse"/>
+
+    <!-- Remote cell panel (this cell's own I/O and drives) -->
+    <mantle.product.asset.Asset assetId="ASSET_PANEL_QE1" parentAssetId="ASSET_MACHINE_1" assetName="Cell Panel (PANEL-QE1)"
+            productId="PROD_PANEL_QE1" assetTypeEnumId="AstTpEquipment" classEnumId="AsClsMfgEquip" statusId="AstAvailable"/>
+    <mantle.product.asset.Asset assetId="ASSET_ET200SP_1" parentAssetId="ASSET_PANEL_QE1" productId="PROD_SIE_ET200SP_IM"
+            assetName="Remote I/O Station" classEnumId="AsClsRemoteIO" serialNumber="ANON-IO-0001" statusId="AstInUse"/>
+    <mantle.product.asset.Asset assetId="ASSET_VFD_1" parentAssetId="ASSET_PANEL_QE1" productId="PROD_DAN_FC102"
+            assetName="VFD - AHU Fan Drive" classEnumId="AsClsDrive" serialNumber="ANON-VFD-0001" statusId="AstInUse"/>
+    <mantle.product.asset.Asset assetId="ASSET_VFD_2" parentAssetId="ASSET_PANEL_QE1" productId="PROD_DAN_FC102"
+            assetName="VFD - Fresh Air Renewal Fan Drive" classEnumId="AsClsDrive" serialNumber="ANON-VFD-0002" statusId="AstInUse"/>
+    <mantle.product.asset.Asset assetId="ASSET_SW_QE1_1" parentAssetId="ASSET_PANEL_QE1" productId="PROD_SIE_XB208"
+            assetName="Network Switch SW1 (QE1)" classEnumId="AsClsSwitch" serialNumber="ANON-SW-0003" statusId="AstInUse"/>
+    <mantle.product.asset.Asset assetId="ASSET_SITOP_1" parentAssetId="ASSET_PANEL_QE1" productId="PROD_SIE_SITOP8200"
+            assetName="24V Power Supply" serialNumber="ANON-PSU-0001" statusId="AstInUse"/>
+
+    <!-- ============ Devices (only automation/network-relevant items get a Device record) ============ -->
+    <moqui.device.Device deviceId="DG_PANEL_MSS311" deviceTypeEnumId="DtDeviceGroup" assetId="ASSET_PANEL_MSS311" description="Central control panel device group"/>
+    <moqui.device.DeviceGroup deviceId="DG_PANEL_MSS311" groupName="Central Control Panel (PANEL-MSS311)"/>
+
+    <moqui.device.Device deviceId="DEV_CPU_1" deviceTypeEnumId="DtPLC" assetId="ASSET_CPU_1" description="PLC CPU"/>
+    <moqui.device.PhysicalDevice deviceId="DEV_CPU_1" deviceName="PLC CPU" version="1518-4 PN/DP"/>
+    <moqui.device.DeviceGroupMember deviceId="DG_PANEL_MSS311" memberDeviceId="DEV_CPU_1" purposeEnumId="DgmpProcessPLC" sequenceNum="1"/>
+
+    <moqui.device.Device deviceId="DEV_SW_MSS_1" deviceTypeEnumId="DtIndustrialAccessSwitch" assetId="ASSET_SW_MSS_1" description="Network switch SW1 (MSS311)"/>
+    <moqui.device.PhysicalDevice deviceId="DEV_SW_MSS_1" deviceName="SW1 (MSS311)" version="XB208"/>
+    <moqui.device.DeviceGroupMember deviceId="DG_PANEL_MSS311" memberDeviceId="DEV_SW_MSS_1" sequenceNum="2"/>
+
+    <moqui.device.Device deviceId="DEV_SW_MSS_2" deviceTypeEnumId="DtIndustrialAccessSwitch" assetId="ASSET_SW_MSS_2" description="Network switch SW2 (MSS311)"/>
+    <moqui.device.PhysicalDevice deviceId="DEV_SW_MSS_2" deviceName="SW2 (MSS311)" version="XB008"/>
+    <moqui.device.DeviceGroupMember deviceId="DG_PANEL_MSS311" memberDeviceId="DEV_SW_MSS_2" sequenceNum="3"/>
+
+    <moqui.device.Device deviceId="DG_PANEL_QE1" deviceTypeEnumId="DtDeviceGroup" assetId="ASSET_PANEL_QE1" description="Cell panel device group"/>
+    <moqui.device.DeviceGroup deviceId="DG_PANEL_QE1" groupName="Cell Panel (PANEL-QE1)"/>
+
+    <moqui.device.Device deviceId="DEV_ET200SP_1" deviceTypeEnumId="DtSmartRemoteIO" assetId="ASSET_ET200SP_1" description="Remote I/O station"/>
+    <moqui.device.PhysicalDevice deviceId="DEV_ET200SP_1" deviceName="Remote I/O Station" version="ET200SP IM155-6PN"/>
+    <moqui.device.DeviceGroupMember deviceId="DG_PANEL_QE1" memberDeviceId="DEV_ET200SP_1" purposeEnumId="DgmpRemoteIO" sequenceNum="1"/>
+
+    <moqui.device.Device deviceId="DEV_VFD_1" deviceTypeEnumId="DtDrive" assetId="ASSET_VFD_1" description="AHU fan VFD"/>
+    <moqui.device.PhysicalDevice deviceId="DEV_VFD_1" deviceName="AHU Fan VFD" version="VLT FC-102"/>
+    <moqui.device.DeviceGroupMember deviceId="DG_PANEL_QE1" memberDeviceId="DEV_VFD_1" purposeEnumId="DgmpDrive" sequenceNum="2"/>
+
+    <moqui.device.Device deviceId="DEV_VFD_2" deviceTypeEnumId="DtDrive" assetId="ASSET_VFD_2" description="Fresh-air renewal fan VFD"/>
+    <moqui.device.PhysicalDevice deviceId="DEV_VFD_2" deviceName="Fresh Air Renewal Fan VFD" version="VLT FC-102"/>
+    <moqui.device.DeviceGroupMember deviceId="DG_PANEL_QE1" memberDeviceId="DEV_VFD_2" purposeEnumId="DgmpDrive" sequenceNum="3"/>
+
+    <moqui.device.Device deviceId="DEV_SW_QE1_1" deviceTypeEnumId="DtIndustrialAccessSwitch" assetId="ASSET_SW_QE1_1" description="Network switch SW1 (QE1)"/>
+    <moqui.device.PhysicalDevice deviceId="DEV_SW_QE1_1" deviceName="SW1 (QE1)" version="XB208"/>
+    <moqui.device.DeviceGroupMember deviceId="DG_PANEL_QE1" memberDeviceId="DEV_SW_QE1_1" sequenceNum="4"/>
+
+    <!-- ============ Zone/conduit (IEC 62443-3-2): DG_PANEL_MSS311 and DG_PANEL_QE1 are the two
+         zones; the conduit between them is modeled as the boundary switch's dual DeviceGroup
+         membership. Per the real schematic (QE MSS 311 panel, page 9): SW2 (XB008) is wired as
+         "Ethernet da SW1" (fed from SW1), i.e. SW1 (XB208, DEV_SW_MSS_1) is the upstream/more
+         capable switch inside PANEL-MSS311. The schematic's text extraction does not show which
+         physical port carries the inter-panel PROFINET link to PANEL-QE1 (that's a drawn
+         connection, lost in text extraction) - DEV_SW_MSS_1 is used here as the most plausible
+         boundary device based on its upstream role and higher capability, an explicit assumption,
+         not a confirmed wiring fact. ============ -->
+    <moqui.device.DeviceGroupMember deviceId="DG_PANEL_QE1" memberDeviceId="DEV_SW_MSS_1" purposeEnumId="DgmpZoneBoundary" sequenceNum="5"
+            description="Assumed zone-boundary device (see comment above) - not a confirmed wiring fact from the schematic text extraction"/>
+
+    <!-- ============ Device Connections (PROFINET network endpoints) ============ -->
+    <moqui.device.DeviceConnection connectionName="CPU1-PN" deviceId="DEV_CPU_1" connectionTypeEnumId="DctDirectConnection"
+            purposeEnumId="DcpOperations" driverEnumId="DcdProfinet" transportEnumId="DctrTcp"
+            description="PROFINET connection for the central PLC CPU"/>
+    <moqui.device.DeviceConnection connectionName="ET200SP1-PN" deviceId="DEV_ET200SP_1" connectionTypeEnumId="DctDirectConnection"
+            purposeEnumId="DcpOperations" driverEnumId="DcdProfinet" transportEnumId="DctrTcp"
+            description="PROFINET connection for the remote I/O station, uplinked to the CPU via the local and central switches"/>
+    <moqui.device.DeviceConnection connectionName="VFD1-PN" deviceId="DEV_VFD_1" connectionTypeEnumId="DctDirectConnection"
+            purposeEnumId="DcpOperations" driverEnumId="DcdProfinet" transportEnumId="DctrTcp"
+            description="PROFINET connection via the VFD's MCA 120 communication card"/>
+    <moqui.device.DeviceConnection connectionName="VFD2-PN" deviceId="DEV_VFD_2" connectionTypeEnumId="DctDirectConnection"
+            purposeEnumId="DcpOperations" driverEnumId="DcdProfinet" transportEnumId="DctrTcp"
+            description="PROFINET connection via the VFD's MCA 120 communication card"/>
+
+    <!-- ============ Content (points to the real, non-anonymized local reference files - paths only, no content copied here) ============ -->
+    <mantle.product.asset.AssetContent assetContentId="ACNT_QE1_SCHEMATIC" assetId="ASSET_PANEL_QE1" contentTypeEnumId="AcntElectricalSchematic"
+            contentLocation="/home/igor/development/projects/cybersecurity/hvac-cell/Smoking 1 - QE1 rev10.pdf"
+            description="Electrical schematic for the cell panel (112 pages, EPLAN export)"/>
+    <mantle.product.asset.AssetContent assetContentId="ACNT_QE1_BOM" assetId="ASSET_PANEL_QE1" contentTypeEnumId="AcntBillOfMaterials"
+            contentLocation="/home/igor/development/projects/cybersecurity/hvac-cell/Distinta.csv"
+            description="EPLAN parts list (BOM) for the cell panel, UTF-16LE CSV"/>
+    <mantle.product.asset.AssetContent assetContentId="ACNT_MSS311_SCHEMATIC" assetId="ASSET_PANEL_MSS311" contentTypeEnumId="AcntElectricalSchematic"
+            contentLocation="/home/igor/development/projects/cybersecurity/hvac-cell/QE MSS 311 (type 3 rev03).pdf"
+            description="Electrical schematic for the central control panel (105 pages, EPLAN export)"/>
+
+</entity-facade-xml>

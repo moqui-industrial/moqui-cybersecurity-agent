@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This software is in the public domain under CC0 1.0 Universal plus a
+     Grant of Patent License.
+
+     To the extent possible under law, the author(s) have dedicated all
+     copyright and related and neighboring rights to this software to the
+     public domain worldwide. This software is distributed without any warranty.
+
+     You should have received a copy of the CC0 Public Domain Dedication
+     along with this software (see the LICENSE.md file). If not, see
+     <https://creativecommons.org/publicdomain/zero/1.0/>. -->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="get" noun="MachineAssetTree" authenticate="true" allow-remote="true">
+        <description>Return the Asset hierarchy under a top-level Asset, with each Asset's linked
+            Device (if any, via the Device.assetId extension), DeviceConnection endpoints, and
+            AssetContent records. Read-only verification/browsing service for the Phase 2
+            PLM/BOM machine acquisition graph.</description>
+        <in-parameters>
+            <parameter name="topAssetId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="assets" type="List"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                List allAssets = ec.entity.find('mantle.product.asset.Asset').list()
+                Map<String, List> childrenByParent = [:]
+                allAssets.each { a ->
+                    String parentId = a.parentAssetId as String
+                    if (parentId) childrenByParent.computeIfAbsent(parentId, { [] }).add(a)
+                }
+
+                Closure buildNode
+                buildNode = { assetValue ->
+                    String assetId = assetValue.assetId as String
+                    def deviceValue = ec.entity.find('moqui.device.Device').condition('assetId', assetId).one()
+                    List connections = deviceValue ?
+                            ec.entity.find('moqui.device.DeviceConnection').condition('deviceId', deviceValue.deviceId).list() : []
+                    List contents = ec.entity.find('mantle.product.asset.AssetContent').condition('assetId', assetId).list()
+                    List children = (childrenByParent[assetId] ?: []).collect { buildNode(it) }
+                    return [
+                        assetId        : assetId,
+                        assetName      : assetValue.assetName,
+                        productId      : assetValue.productId,
+                        serialNumber   : assetValue.serialNumber,
+                        statusId       : assetValue.statusId,
+                        device         : deviceValue ? [deviceId: deviceValue.deviceId, deviceTypeEnumId: deviceValue.deviceTypeEnumId] : null,
+                        connections    : connections.collect { [connectionName: it.connectionName, driverEnumId: it.driverEnumId, transportEnumId: it.transportEnumId] },
+                        content        : contents.collect { [assetContentId: it.assetContentId, contentTypeEnumId: it.contentTypeEnumId, contentLocation: it.contentLocation] },
+                        children       : children
+                    ]
+                }
+
+                def topAsset = ec.entity.find('mantle.product.asset.Asset').condition('assetId', topAssetId).one()
+                assets = topAsset ? [buildNode(topAsset)] : []
+            ]]></script>
+        </actions>
+    </service>
+
+</services>

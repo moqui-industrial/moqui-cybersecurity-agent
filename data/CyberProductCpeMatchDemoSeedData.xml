@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Real CPE declarations for two already-modeled real products, both confirmed via a real
+    NVD CPE dictionary lookup (services.nvd.nist.gov/rest/json/cpes/2.0?keywordSearch=...)
+    before being written here - never an invented/guessed CPE string.
+
+    Both PROD_SIE_CPU1518 and PROD_SIE_XB208 turned out to have real, non-zero CVE counts
+    when actually ingested via index#ProductVulnerabilities (13 and 10 respectively) - an
+    initial assumption that the XB208 would be the "zero CVE" negative-case example (based on
+    an informal keyword search, not the exact-CPE-match method the service actually uses) was
+    wrong and corrected after running the real ingestion, not left uncorrected in this comment.
+
+    The genuine negative case in this real dataset is PROD_DAN_FC102 (Danfoss VLT FC-102):
+    verified via the same NVD CPE dictionary lookup that **no CPE entry exists for it at all**
+    (a real, niche industrial product NVD has never catalogued) - so it deliberately has NO
+    CyberProductCpeMatch row here. index#ProductVulnerabilities for it correctly returns zero
+    results immediately (the CPE-match loop has nothing to iterate), not an error - the honest
+    "nothing to check" case, distinct from "checked and found nothing".
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="demo">
+
+    <org.moqui.cyber.CyberProductCpeMatch productId="PROD_SIE_CPU1518"
+            cpeName="cpe:2.3:h:siemens:simatic_s7-1500:-:*:*:*:*:*:*:*"
+            comments="Real CPE confirmed via NVD CPE dictionary lookup; hardware-level match (not firmware-version-specific). Live ingestion: 13 real CVEs (e.g. CVE-2014-0160/Heartbleed, via an embedded OpenSSL library)."/>
+
+    <org.moqui.cyber.CyberProductCpeMatch productId="PROD_SIE_XB208"
+            cpeName="cpe:2.3:h:siemens:scalance_xb208:-:*:*:*:*:*:*:*"
+            comments="Real CPE confirmed via NVD CPE dictionary lookup. Live ingestion: 10 real CVEs - corrects an earlier assumption (informal keyword search) that this would be the zero-CVE case."/>
+
+</entity-facade-xml>

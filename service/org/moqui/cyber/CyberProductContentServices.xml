@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="attach" noun="ProductContentFromPath" authenticate="true" allow-remote="true">
+        <description>Product/PLM document attachment, Case 1 (single product): a document that
+            applies to exactly one real Product (e.g. its own CE certificate, its own datasheet) -
+            NEVER call this for a document that covers an entire product family (see
+            attach#ProductFamilyContentFromPath instead; the calling agent must have already asked
+            the user which case applies, per the product-content-attachment skill).
+
+            Adapts the real mantle.product.ProductServices.create#ProductContent (mantle-usl,
+            reused as-is for the entity-create step) to a source file that already exists on a
+            local/shared filesystem path (e.g. the LibreChat upload bind mount) instead of a
+            multipart FileItem - reads the bytes directly via ResourceFacade, same
+            dbresource://mantle/content/product/... path convention as the real
+            save#ProductContentFile.
+
+            Seventh reuse of math-model-run-tracking: not a pure calculation, but an action whose
+            outcome (which document, on which product, when) is worth a MathModelRun history.</description>
+        <in-parameters>
+            <parameter name="productId" required="true"><description>The real mantle.product.Product this document belongs to.</description></parameter>
+            <parameter name="sourceFilePath" required="true"><description>The uploaded file's name as shown in the chat attachment (preferred), or an absolute path on the shared filesystem if actually known. Never file content/base64. If this is not a real, existing path, it is resolved by filename against the configured LibreChat uploads directory (cyber.librechat.uploads.root) - do not guess a path (e.g. a model provider's own sandbox path such as /mnt/data); just pass the plain filename the user attached.</description></parameter>
+            <parameter name="productContentTypeEnumId" required="true"><description>Real ProductContentType value, e.g. PcntCeCertificate/PcntPedCertificate/PcntUlCsaCertificate/PcntCertificate/PcntDatasheet/PcntCatalog.</description></parameter>
+            <parameter name="description"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="productContentId"/>
+            <parameter name="contentLocation"/>
+            <parameter name="mathModelRunId"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+
+                // Finds a file uploaded through LibreChat (fileStrategy: local) by its original
+                // filename. LibreChat prefixes stored files with "<fileId>__", and nests them under
+                // a per-user directory, so an exact top-level match never works - always search
+                // recursively and match on either the exact name or the "__<name>" suffix. Picks the
+                // most recently modified match if the same filename was uploaded more than once.
+                Closure<File> findUploadedFile = { File root, String targetName ->
+                    File found = null
+                    long foundModified = -1L
+                    if (root.exists()) {
+                        root.eachFileRecurse { File f ->
+                            if (f.isFile() && (f.name == targetName || f.name.endsWith('__' + targetName))) {
+                                if (f.lastModified() > foundModified) { found = f; foundModified = f.lastModified() }
+                            }
+                        }
+                    }
+                    return found
+                }
+
+                def runValue = ec.entity.makeValue('moqui.math.MathModelRun')
+                        .setAll([mathModelId: 'MM_PRODUCT_CONTENT_ATTACH',
+                                 startTime: ec.user.nowTimestamp,
+                                 parameters: JsonOutput.toJson([productId: productId, sourceFilePath: sourceFilePath,
+                                         productContentTypeEnumId: productContentTypeEnumId]),
+                                 hasError: 'N'])
+                runValue.setSequencedIdPrimary()
+                runValue.create()
+                mathModelRunId = runValue.mathModelRunId
+
+                try {
+                    File sourceFile = new File(sourceFilePath as String)
+                    String filename = sourceFile.getName()
+                    if (!sourceFile.exists()) {
+                        String uploadsRoot = ec.user.getPreference('cyber.librechat.uploads.root')
+                        File resolved = uploadsRoot ? findUploadedFile(new File(uploadsRoot as String), filename) : null
+                        if (resolved == null) throw new IllegalArgumentException("Could not find '${filename}' as a real path or under the configured LibreChat uploads directory (cyber.librechat.uploads.root=${uploadsRoot}). Pass the plain attachment filename, not a guessed path.")
+                        sourceFile = resolved
+                    }
+
+                    Map createResult = ec.service.sync().name('create#mantle.product.ProductContent')
+                            .parameters([productId: productId, productContentTypeEnumId: productContentTypeEnumId,
+                                    description: description]).call()
+                    productContentId = createResult.productContentId
+
+                    String contentRoot = ec.user.getPreference('mantle.content.large.root') ?: 'dbresource://mantle/content'
+                    contentLocation = "${contentRoot}/product/${productId}/content_${productContentId}/${filename}"
+                    def docRr = ec.resource.getLocationReference(contentLocation as String)
+                    def fileStream = sourceFile.newInputStream()
+                    try { docRr.putStream(fileStream) } finally { fileStream.close() }
+
+                    ec.service.sync().name('update#mantle.product.ProductContent')
+                            .parameters([productContentId: productContentId, contentLocation: contentLocation]).call()
+
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, results: JsonOutput.toJson(
+                                    [productContentId: productContentId, contentLocation: contentLocation])])
+                            .update()
+                } catch (Throwable t) {
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, hasError: 'Y', errors: t.toString()])
+                            .update()
+                    throw t
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+    <service verb="attach" noun="ProductFamilyContentFromPath" authenticate="true" allow-remote="true">
+        <description>Product/PLM document attachment, Case 2 (product family): a document that
+            applies to an entire family of real Products (e.g. one catalog covering several power
+            ratings of the same contactor line) - NEVER call this for a document specific to one
+            product (see attach#ProductContentFromPath instead; the calling agent must have already
+            asked the user which case applies).
+
+            Finds an existing mantle.product.category.ProductCategory for the family by exact
+            categoryName match; creates one on the fly if none exists (as part of this same call,
+            not a separate manual step - the real mantle.product.category.ProductCategory entity,
+            standard entity-auto create). Ensures a mantle.product.category.ProductCategoryMember
+            row for every given productId (idempotent - skips products already members), so the
+            family the document is being attached to is actually populated with its real products,
+            not just an empty category. Then adapts the real mantle.product.ProductServices.
+            create#ProductCategoryContent to a source file already on a local/shared filesystem
+            path, same pattern as attach#ProductContentFromPath.
+
+            Eighth reuse of math-model-run-tracking.</description>
+        <in-parameters>
+            <parameter name="sourceFilePath" required="true"><description>The uploaded file's name as shown in the chat attachment (preferred), or an absolute path on the shared filesystem if actually known. Never file content/base64. If this is not a real, existing path, it is resolved by filename against the configured LibreChat uploads directory (cyber.librechat.uploads.root) - do not guess a path (e.g. a model provider's own sandbox path such as /mnt/data); just pass the plain filename the user attached.</description></parameter>
+            <parameter name="categoryContentTypeEnumId" required="true"><description>Real ProductCategoryContentType value, e.g. PcctCeCertificate/PcctPedCertificate/PcctUlCsaCertificate/PcctCertificate/PcctDatasheet/PcctCatalog.</description></parameter>
+            <parameter name="description"/>
+            <parameter name="productCategoryId"><description>An existing family ProductCategory. Omit to search-or-create by name instead.</description></parameter>
+            <parameter name="newCategoryName"><description>Required if productCategoryId is omitted and no existing category matches - the real family name, e.g. "ABB MS132 Contactors".</description></parameter>
+            <parameter name="newCategoryDescription"/>
+            <parameter name="productIds" type="List" required="true"><description>The real Products that belong to this family - membership is ensured (created if missing) for every one of them.</description></parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="productCategoryId"/>
+            <parameter name="productCategoryContentId"/>
+            <parameter name="contentLocation"/>
+            <parameter name="membersEnsured" type="Integer"/>
+            <parameter name="mathModelRunId"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+
+                // See attach#ProductContentFromPath for why this is needed: LibreChat prefixes
+                // stored files with "<fileId>__" and nests them per-user, and some model providers
+                // report their own sandbox path instead of anything Moqui can read directly.
+                Closure<File> findUploadedFile = { File root, String targetName ->
+                    File found = null
+                    long foundModified = -1L
+                    if (root.exists()) {
+                        root.eachFileRecurse { File f ->
+                            if (f.isFile() && (f.name == targetName || f.name.endsWith('__' + targetName))) {
+                                if (f.lastModified() > foundModified) { found = f; foundModified = f.lastModified() }
+                            }
+                        }
+                    }
+                    return found
+                }
+
+                def runValue = ec.entity.makeValue('moqui.math.MathModelRun')
+                        .setAll([mathModelId: 'MM_PRODUCT_FAMILY_CONTENT_ATTACH',
+                                 startTime: ec.user.nowTimestamp,
+                                 parameters: JsonOutput.toJson([sourceFilePath: sourceFilePath,
+                                         categoryContentTypeEnumId: categoryContentTypeEnumId,
+                                         productCategoryId: productCategoryId, newCategoryName: newCategoryName,
+                                         productIds: productIds]),
+                                 hasError: 'N'])
+                runValue.setSequencedIdPrimary()
+                runValue.create()
+                mathModelRunId = runValue.mathModelRunId
+
+                try {
+                    File sourceFile = new File(sourceFilePath as String)
+                    String filename = sourceFile.getName()
+                    if (!sourceFile.exists()) {
+                        String uploadsRoot = ec.user.getPreference('cyber.librechat.uploads.root')
+                        File resolved = uploadsRoot ? findUploadedFile(new File(uploadsRoot as String), filename) : null
+                        if (resolved == null) throw new IllegalArgumentException("Could not find '${filename}' as a real path or under the configured LibreChat uploads directory (cyber.librechat.uploads.root=${uploadsRoot}). Pass the plain attachment filename, not a guessed path.")
+                        sourceFile = resolved
+                    }
+
+                    String effectiveCategoryId = productCategoryId as String
+                    if (!effectiveCategoryId) {
+                        if (!newCategoryName) throw new IllegalArgumentException("Either productCategoryId or newCategoryName is required.")
+                        def existingCategory = ec.entity.find('mantle.product.category.ProductCategory')
+                                .condition('categoryName', newCategoryName).one()
+                        if (existingCategory) {
+                            effectiveCategoryId = existingCategory.productCategoryId as String
+                        } else {
+                            Map categoryResult = ec.service.sync().name('create#mantle.product.category.ProductCategory')
+                                    .parameters([categoryName: newCategoryName, description: newCategoryDescription]).call()
+                            effectiveCategoryId = categoryResult.productCategoryId as String
+                        }
+                    }
+                    productCategoryId = effectiveCategoryId
+
+                    int membersEnsuredCount = 0
+                    (productIds as List).each { pid ->
+                        def existingMember = ec.entity.find('mantle.product.category.ProductCategoryMember')
+                                .condition('productCategoryId', effectiveCategoryId).condition('productId', pid).one()
+                        if (!existingMember) {
+                            ec.service.sync().name('create#mantle.product.category.ProductCategoryMember')
+                                    .parameters([productCategoryId: effectiveCategoryId, productId: pid,
+                                            fromDate: ec.user.nowTimestamp]).call()
+                            membersEnsuredCount++
+                        }
+                    }
+                    membersEnsured = membersEnsuredCount
+
+                    Map contentResult = ec.service.sync().name('create#mantle.product.category.ProductCategoryContent')
+                            .parameters([productCategoryId: effectiveCategoryId, categoryContentTypeEnumId: categoryContentTypeEnumId,
+                                    description: description]).call()
+                    productCategoryContentId = contentResult.productCategoryContentId
+
+                    String contentRoot = ec.user.getPreference('mantle.content.large.root') ?: 'dbresource://mantle/content'
+                    contentLocation = "${contentRoot}/productCategory/${effectiveCategoryId}/content_${productCategoryContentId}/${filename}"
+                    def docRr = ec.resource.getLocationReference(contentLocation as String)
+                    def fileStream = sourceFile.newInputStream()
+                    try { docRr.putStream(fileStream) } finally { fileStream.close() }
+
+                    ec.service.sync().name('update#mantle.product.category.ProductCategoryContent')
+                            .parameters([productCategoryContentId: productCategoryContentId, contentLocation: contentLocation]).call()
+
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, results: JsonOutput.toJson(
+                                    [productCategoryId: effectiveCategoryId, productCategoryContentId: productCategoryContentId,
+                                     contentLocation: contentLocation, membersEnsured: membersEnsuredCount])])
+                            .update()
+                } catch (Throwable t) {
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, hasError: 'Y', errors: t.toString()])
+                            .update()
+                    throw t
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+</services>

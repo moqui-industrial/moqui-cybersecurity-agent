@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Phase 5, Tappa 1 (System of Interest + Asset), first real validating scope:
+    the same real Smoking Cell 1 (PANEL-MSS311/PANEL-QE1) already modeled in
+    Phase 2/4/BIA. Deliberately limited to this one cell for now - other
+    corridors/cells follow the identical pattern once this one is confirmed
+    (checkpoint, per the "one point at a time" discipline - see
+    design-session/SESSION.md).
+
+    Cross-referencing convention: a CyberAsset vertex that has a real physical
+    counterpart stores that counterpart's real ID as plain textValue via
+    CyberAssetDeviceRefParam/CyberAssetDeviceConnectionRefParam (soft
+    cross-reference, no FK) - same "separate graphs, cross-referenced by ID,
+    never merged" principle already used for the PLC-to-norm crosswalk graph
+    (CyberPlcNormCrosswalkDemoSeedData.xml). A vertex with neither reference is
+    a purely logical asset (data flow/config) with no existing entity
+    counterpart to point at.
+
+    C/I/A criticality ratings below are a first pass grounded only in each
+    device's already-documented real function (Phase 2 BOM/schematics) - they
+    are part of what this Tappa's checkpoint should confirm or correct, not a
+    final judgment.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="demo">
+
+    <moqui.math.Graph graphId="CyberRiskAssessmentSmokingCells" graphTypeEnumId="GtDirected"
+            name="Cyber Risk Assessment - Smoking/Maturing Cells" loopsAllowed="N"
+            description="ISO/DIS 24882 System of Interest: CyberAsset/DamageScenario/ThreatScenario vertices, kept separate from the PLM/PLC/normative graphs - cross-referenced by real ID, never merged."/>
+
+    <!-- New ParameterDefs for the two soft cross-references described above. -->
+    <moqui.math.ParameterDef parameterDefId="CyberAssetDeviceRefParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberAssetDeviceRef" parameterName="Asset Device Cross-Reference" description="textValue = moqui.device.Device.deviceId of the real physical/logical device this Asset represents, when one exists."/>
+    <moqui.math.ParameterDef parameterDefId="CyberAssetDeviceConnectionRefParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberRiskGraph" parameterCode="cyberAssetDeviceConnectionRef" parameterName="Asset DeviceConnection Cross-Reference" description="textValue = moqui.device.DeviceConnection.connectionName of the real data flow this Asset represents, when one exists."/>
+
+    <!-- Tappa 5: per-engagement Risk Acceptance Threshold (ISO/DIS 24882 cap 5.8) - Parameter
+         attached at graphId level only (no graphVertexId), since it applies to the whole
+         engagement, not one ThreatScenario. Proposed at the skill/reference-document's own
+         stated typical practice (Score <= 2); user confirmed rather than a stricter
+         food-safety-specific value, after being offered that alternative explicitly. -->
+    <moqui.math.Parameter parameterId="CRAT_SMOKING_CELLS" parameterDefId="CyberRiskAcceptanceThresholdParam" graphId="CyberRiskAssessmentSmokingCells" numericValue="2"/>
+    <moqui.math.Parameter parameterId="CRAT_SMOKING_CELLS_RAT" parameterDefId="CyberRiskTreatmentRationaleParam" graphId="CyberRiskAssessmentSmokingCells"
+            textValue="Threshold set to the typical practice value (Score &lt;= 2) stated by the tara-iso24882 skill/reference TARA, not a stricter food-safety-specific value - offered as an explicit alternative to the user, who confirmed the typical value for this engagement."/>
+
+    <!-- ============ Category C - HW/SW components (real Device already modeled) ============ -->
+    <moqui.math.GraphVertex graphVertexId="CVA_C_01" graphId="CyberRiskAssessmentSmokingCells" label="PLC CPU"/>
+    <moqui.math.Parameter parameterId="CVA_C_01_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_01" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_C_01_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_01" textValue="A-01"/>
+    <moqui.math.Parameter parameterId="CVA_C_01_REF" parameterDefId="CyberAssetDeviceRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_01" textValue="DEV_CPU_1"/>
+    <moqui.math.Parameter parameterId="CVA_C_01_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_01" parameterEnumId="CacHwSwComponent"/>
+    <moqui.math.Parameter parameterId="CVA_C_01_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_01" parameterEnumId="CascLow"/>
+    <moqui.math.Parameter parameterId="CVA_C_01_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_01" parameterEnumId="CascCritical"/>
+    <moqui.math.Parameter parameterId="CVA_C_01_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_01" parameterEnumId="CascCritical"/>
+
+    <moqui.math.GraphVertex graphVertexId="CVA_C_02" graphId="CyberRiskAssessmentSmokingCells" label="Remote I/O Station"/>
+    <moqui.math.Parameter parameterId="CVA_C_02_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_02" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_C_02_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_02" textValue="A-02"/>
+    <moqui.math.Parameter parameterId="CVA_C_02_REF" parameterDefId="CyberAssetDeviceRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_02" textValue="DEV_ET200SP_1"/>
+    <moqui.math.Parameter parameterId="CVA_C_02_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_02" parameterEnumId="CacHwSwComponent"/>
+    <moqui.math.Parameter parameterId="CVA_C_02_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_02" parameterEnumId="CascLow"/>
+    <moqui.math.Parameter parameterId="CVA_C_02_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_02" parameterEnumId="CascHigh"/>
+    <moqui.math.Parameter parameterId="CVA_C_02_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_02" parameterEnumId="CascHigh"/>
+
+    <moqui.math.GraphVertex graphVertexId="CVA_C_03" graphId="CyberRiskAssessmentSmokingCells" label="AHU Fan VFD"/>
+    <moqui.math.Parameter parameterId="CVA_C_03_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_03" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_C_03_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_03" textValue="A-03"/>
+    <moqui.math.Parameter parameterId="CVA_C_03_REF" parameterDefId="CyberAssetDeviceRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_03" textValue="DEV_VFD_1"/>
+    <moqui.math.Parameter parameterId="CVA_C_03_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_03" parameterEnumId="CacHwSwComponent"/>
+    <moqui.math.Parameter parameterId="CVA_C_03_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_03" parameterEnumId="CascLow"/>
+    <moqui.math.Parameter parameterId="CVA_C_03_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_03" parameterEnumId="CascHigh"/>
+    <moqui.math.Parameter parameterId="CVA_C_03_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_03" parameterEnumId="CascHigh"/>
+
+    <moqui.math.GraphVertex graphVertexId="CVA_C_04" graphId="CyberRiskAssessmentSmokingCells" label="Fresh Air Renewal Fan VFD"/>
+    <moqui.math.Parameter parameterId="CVA_C_04_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_04" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_C_04_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_04" textValue="A-04"/>
+    <moqui.math.Parameter parameterId="CVA_C_04_REF" parameterDefId="CyberAssetDeviceRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_04" textValue="DEV_VFD_2"/>
+    <moqui.math.Parameter parameterId="CVA_C_04_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_04" parameterEnumId="CacHwSwComponent"/>
+    <moqui.math.Parameter parameterId="CVA_C_04_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_04" parameterEnumId="CascLow"/>
+    <moqui.math.Parameter parameterId="CVA_C_04_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_04" parameterEnumId="CascHigh"/>
+    <moqui.math.Parameter parameterId="CVA_C_04_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_04" parameterEnumId="CascHigh"/>
+
+    <!-- Switches: also the physical carriers of the zone/conduit relationship already
+         modeled via DeviceGroupMember (device-group-zone-modeling skill) - DEV_SW_MSS_1
+         is the one with the DgmpZoneBoundary membership. -->
+    <moqui.math.GraphVertex graphVertexId="CVA_C_05" graphId="CyberRiskAssessmentSmokingCells" label="Network Switch SW1 (MSS311, zone boundary)"/>
+    <moqui.math.Parameter parameterId="CVA_C_05_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_05" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_C_05_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_05" textValue="A-05"/>
+    <moqui.math.Parameter parameterId="CVA_C_05_REF" parameterDefId="CyberAssetDeviceRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_05" textValue="DEV_SW_MSS_1"/>
+    <moqui.math.Parameter parameterId="CVA_C_05_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_05" parameterEnumId="CacHwSwComponent"/>
+    <moqui.math.Parameter parameterId="CVA_C_05_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_05" parameterEnumId="CascMedium"/>
+    <moqui.math.Parameter parameterId="CVA_C_05_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_05" parameterEnumId="CascHigh"/>
+    <moqui.math.Parameter parameterId="CVA_C_05_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_05" parameterEnumId="CascCritical"/>
+
+    <moqui.math.GraphVertex graphVertexId="CVA_C_06" graphId="CyberRiskAssessmentSmokingCells" label="Network Switch SW2 (MSS311)"/>
+    <moqui.math.Parameter parameterId="CVA_C_06_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_06" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_C_06_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_06" textValue="A-06"/>
+    <moqui.math.Parameter parameterId="CVA_C_06_REF" parameterDefId="CyberAssetDeviceRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_06" textValue="DEV_SW_MSS_2"/>
+    <moqui.math.Parameter parameterId="CVA_C_06_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_06" parameterEnumId="CacHwSwComponent"/>
+    <moqui.math.Parameter parameterId="CVA_C_06_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_06" parameterEnumId="CascMedium"/>
+    <moqui.math.Parameter parameterId="CVA_C_06_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_06" parameterEnumId="CascHigh"/>
+    <moqui.math.Parameter parameterId="CVA_C_06_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_06" parameterEnumId="CascHigh"/>
+
+    <moqui.math.GraphVertex graphVertexId="CVA_C_07" graphId="CyberRiskAssessmentSmokingCells" label="Network Switch SW1 (QE1)"/>
+    <moqui.math.Parameter parameterId="CVA_C_07_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_07" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_C_07_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_07" textValue="A-07"/>
+    <moqui.math.Parameter parameterId="CVA_C_07_REF" parameterDefId="CyberAssetDeviceRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_07" textValue="DEV_SW_QE1_1"/>
+    <moqui.math.Parameter parameterId="CVA_C_07_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_07" parameterEnumId="CacHwSwComponent"/>
+    <moqui.math.Parameter parameterId="CVA_C_07_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_07" parameterEnumId="CascMedium"/>
+    <moqui.math.Parameter parameterId="CVA_C_07_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_07" parameterEnumId="CascHigh"/>
+    <moqui.math.Parameter parameterId="CVA_C_07_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_C_07" parameterEnumId="CascCritical"/>
+
+    <!-- ============ Category A - data flows (real DeviceConnection already modeled) ============ -->
+    <moqui.math.GraphVertex graphVertexId="CVA_A_01" graphId="CyberRiskAssessmentSmokingCells" label="PROFINET flow - PLC CPU"/>
+    <moqui.math.Parameter parameterId="CVA_A_01_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_01" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_A_01_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_01" textValue="A-08"/>
+    <moqui.math.Parameter parameterId="CVA_A_01_REF" parameterDefId="CyberAssetDeviceConnectionRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_01" textValue="CPU1-PN"/>
+    <moqui.math.Parameter parameterId="CVA_A_01_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_01" parameterEnumId="CacDataFlow"/>
+    <moqui.math.Parameter parameterId="CVA_A_01_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_01" parameterEnumId="CascLow"/>
+    <moqui.math.Parameter parameterId="CVA_A_01_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_01" parameterEnumId="CascCritical"/>
+    <moqui.math.Parameter parameterId="CVA_A_01_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_01" parameterEnumId="CascHigh"/>
+
+    <moqui.math.GraphVertex graphVertexId="CVA_A_02" graphId="CyberRiskAssessmentSmokingCells" label="PROFINET flow - Remote I/O"/>
+    <moqui.math.Parameter parameterId="CVA_A_02_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_02" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_A_02_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_02" textValue="A-09"/>
+    <moqui.math.Parameter parameterId="CVA_A_02_REF" parameterDefId="CyberAssetDeviceConnectionRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_02" textValue="ET200SP1-PN"/>
+    <moqui.math.Parameter parameterId="CVA_A_02_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_02" parameterEnumId="CacDataFlow"/>
+    <moqui.math.Parameter parameterId="CVA_A_02_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_02" parameterEnumId="CascLow"/>
+    <moqui.math.Parameter parameterId="CVA_A_02_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_02" parameterEnumId="CascHigh"/>
+    <moqui.math.Parameter parameterId="CVA_A_02_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_02" parameterEnumId="CascHigh"/>
+
+    <moqui.math.GraphVertex graphVertexId="CVA_A_03" graphId="CyberRiskAssessmentSmokingCells" label="PROFINET flow - AHU Fan VFD"/>
+    <moqui.math.Parameter parameterId="CVA_A_03_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_03" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_A_03_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_03" textValue="A-10"/>
+    <moqui.math.Parameter parameterId="CVA_A_03_REF" parameterDefId="CyberAssetDeviceConnectionRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_03" textValue="VFD1-PN"/>
+    <moqui.math.Parameter parameterId="CVA_A_03_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_03" parameterEnumId="CacDataFlow"/>
+    <moqui.math.Parameter parameterId="CVA_A_03_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_03" parameterEnumId="CascLow"/>
+    <moqui.math.Parameter parameterId="CVA_A_03_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_03" parameterEnumId="CascHigh"/>
+    <moqui.math.Parameter parameterId="CVA_A_03_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_03" parameterEnumId="CascHigh"/>
+
+    <moqui.math.GraphVertex graphVertexId="CVA_A_04" graphId="CyberRiskAssessmentSmokingCells" label="PROFINET flow - Fresh Air Renewal Fan VFD"/>
+    <moqui.math.Parameter parameterId="CVA_A_04_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_04" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_A_04_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_04" textValue="A-11"/>
+    <moqui.math.Parameter parameterId="CVA_A_04_REF" parameterDefId="CyberAssetDeviceConnectionRefParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_04" textValue="VFD2-PN"/>
+    <moqui.math.Parameter parameterId="CVA_A_04_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_04" parameterEnumId="CacDataFlow"/>
+    <moqui.math.Parameter parameterId="CVA_A_04_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_04" parameterEnumId="CascLow"/>
+    <moqui.math.Parameter parameterId="CVA_A_04_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_04" parameterEnumId="CascHigh"/>
+    <moqui.math.Parameter parameterId="CVA_A_04_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_A_04" parameterEnumId="CascHigh"/>
+
+    <!-- ============ Category B - data-at-rest/config (purely logical, no existing entity) ============ -->
+    <moqui.math.GraphVertex graphVertexId="CVA_B_01" graphId="CyberRiskAssessmentSmokingCells" label="Temperature/humidity control logic and setpoints (PLC CPU)"/>
+    <moqui.math.Parameter parameterId="CVA_B_01_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_B_01" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_B_01_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_B_01" textValue="A-12"/>
+    <moqui.math.Parameter parameterId="CVA_B_01_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_B_01" parameterEnumId="CacDataAtRest"/>
+    <moqui.math.Parameter parameterId="CVA_B_01_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_B_01" parameterEnumId="CascMedium"/>
+    <moqui.math.Parameter parameterId="CVA_B_01_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_B_01" parameterEnumId="CascCritical"/>
+    <moqui.math.Parameter parameterId="CVA_B_01_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_B_01" parameterEnumId="CascHigh"/>
+
+    <moqui.math.GraphVertex graphVertexId="CVA_B_02" graphId="CyberRiskAssessmentSmokingCells" label="VFD speed/motor parameter configuration"/>
+    <moqui.math.Parameter parameterId="CVA_B_02_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_B_02" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_B_02_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_B_02" textValue="A-13"/>
+    <moqui.math.Parameter parameterId="CVA_B_02_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_B_02" parameterEnumId="CacDataAtRest"/>
+    <moqui.math.Parameter parameterId="CVA_B_02_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_B_02" parameterEnumId="CascLow"/>
+    <moqui.math.Parameter parameterId="CVA_B_02_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_B_02" parameterEnumId="CascHigh"/>
+    <moqui.math.Parameter parameterId="CVA_B_02_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_B_02" parameterEnumId="CascMedium"/>
+
+    <!-- ============ Category D - external interface. Real, confirmed from the
+         factory network diagram (Corridor 1 IT/OT boundary: managed switch with
+         Layer 3 routing + firewall, supplied by the plant's own IT department) -
+         no specific make/model visible in the diagram, so none is asserted. Not
+         linked to a fabricated Device record. ============ -->
+    <moqui.math.GraphVertex graphVertexId="CVA_D_01" graphId="CyberRiskAssessmentSmokingCells" label="Corridor 1 IT/OT boundary switch (L3 + firewall)"/>
+    <moqui.math.Parameter parameterId="CVA_D_01_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_D_01" textValue="CyberAsset"/>
+    <moqui.math.Parameter parameterId="CVA_D_01_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_D_01" textValue="A-14"/>
+    <moqui.math.Parameter parameterId="CVA_D_01_CAT" parameterDefId="CyberAssetCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_D_01" parameterEnumId="CacExternalInterface"/>
+    <moqui.math.Parameter parameterId="CVA_D_01_C" parameterDefId="CyberAssetConfidentialityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_D_01" parameterEnumId="CascMedium"/>
+    <moqui.math.Parameter parameterId="CVA_D_01_I" parameterDefId="CyberAssetIntegrityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_D_01" parameterEnumId="CascCritical"/>
+    <moqui.math.Parameter parameterId="CVA_D_01_A" parameterDefId="CyberAssetAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CVA_D_01" parameterEnumId="CascCritical"/>
+
+    <!-- ============ Tappa 2: Damage Scenario (ISO/DIS 24882 cap 5.3/5.5) ============
+         Six scenarios, drafted then cross-checked by independently re-deriving the same
+         point using the real tara-iso24882 skill's own methodology (see
+         design-session/SESSION.md) - two corrections surfaced by that cross-check and
+         confirmed by the user before writing these records:
+         (1) Safety impact for SD-S-01/SD-S-02 raised from Major to Severe: no evidence of
+             a compensating control (e.g. independent lab verification) exists for this real
+             cell, so the conservative HACCP-consistent reading (uncontrolled cure/smoke
+             temperature or a skipped CIP wash both risk pathogen proliferation) applies,
+             per the skill's own "no assumption without evidence" rule.
+         (2) SD-A-02 no longer assumes graceful degradation via ring redundancy: the real
+             factory network diagram's own revision history (BIG FACTORY-IT network_Rev10.pdf)
+             shows Rev10's most recent change is "Eliminato ring switches", superseding the
+             earlier "Da stella ad anello"/"Ring topology" revisions - so ring redundancy is
+             NOT assumed for this corridor in the current revision, even though some VLAN2/MRP
+             RING labels are still visible elsewhere in the same diagram (treated as a stale
+             leftover, not overriding the explicit, most-recent revision-history entry). -->
+
+    <moqui.math.GraphVertex graphVertexId="CDS_01" graphId="CyberRiskAssessmentSmokingCells" label="Uncontrolled cure/smoke temperature-humidity"/>
+    <moqui.math.Parameter parameterId="CDS_01_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_01" textValue="DamageScenario"/>
+    <moqui.math.Parameter parameterId="CDS_01_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_01" textValue="SD-S-01"/>
+    <moqui.math.Parameter parameterId="CDS_01_CAT" parameterDefId="CyberDamageScenarioCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_01" parameterEnumId="DscSafety"/>
+    <moqui.math.Parameter parameterId="CDS_01_IS" parameterDefId="CyberImpactSafetyParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_01" parameterEnumId="CilSevere"/>
+    <moqui.math.Parameter parameterId="CDS_01_IF" parameterDefId="CyberImpactFinancialParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_01" parameterEnumId="CilMajor"/>
+    <moqui.math.Parameter parameterId="CDS_01_IP" parameterDefId="CyberImpactPrivacyParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_01" parameterEnumId="CilNegligible"/>
+    <moqui.math.Parameter parameterId="CDS_01_IA" parameterDefId="CyberImpactAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_01" parameterEnumId="CilModerate"/>
+    <moqui.math.Parameter parameterId="CDS_01_IO" parameterDefId="CyberImpactOverallParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_01" parameterEnumId="CilSevere"/>
+    <moqui.math.Parameter parameterId="CDS_01_RAT" parameterDefId="CyberDamageScenarioRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_01"
+            textValue="Tampering of temperature/humidity sensors, VFD commands or the B-01 setpoint logic could allow the cure/smoke cycle to run outside safe time-temperature bounds. Confirmed Severe (not Major): uncontrolled curing/smoking temperature is a real HACCP critical-control-point risk (e.g. pathogen proliferation in low-acidity cured meats), and no compensating control (independent lab verification, human oversight) is documented for this real cell."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_01_B01" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_01" toVertexId="CVA_B_01" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_01_C03" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_01" toVertexId="CVA_C_03" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_01_C04" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_01" toVertexId="CVA_C_04" label="INVOLVES_ASSET"/>
+
+    <moqui.math.GraphVertex graphVertexId="CDS_02" graphId="CyberRiskAssessmentSmokingCells" label="Loss of PLC to remote I/O communication"/>
+    <moqui.math.Parameter parameterId="CDS_02_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_02" textValue="DamageScenario"/>
+    <moqui.math.Parameter parameterId="CDS_02_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_02" textValue="SD-A-01"/>
+    <moqui.math.Parameter parameterId="CDS_02_CAT" parameterDefId="CyberDamageScenarioCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_02" parameterEnumId="DscAvailability"/>
+    <moqui.math.Parameter parameterId="CDS_02_IS" parameterDefId="CyberImpactSafetyParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_02" parameterEnumId="CilNegligible"/>
+    <moqui.math.Parameter parameterId="CDS_02_IF" parameterDefId="CyberImpactFinancialParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_02" parameterEnumId="CilModerate"/>
+    <moqui.math.Parameter parameterId="CDS_02_IP" parameterDefId="CyberImpactPrivacyParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_02" parameterEnumId="CilNegligible"/>
+    <moqui.math.Parameter parameterId="CDS_02_IA" parameterDefId="CyberImpactAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_02" parameterEnumId="CilMajor"/>
+    <moqui.math.Parameter parameterId="CDS_02_IO" parameterDefId="CyberImpactOverallParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_02" parameterEnumId="CilMajor"/>
+    <moqui.math.Parameter parameterId="CDS_02_RAT" parameterDefId="CyberDamageScenarioRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_02"
+            textValue="Loss of the PROFINET link between the PLC CPU and the remote I/O station halts process visibility/control for the batch in progress. No safety, privacy or lasting financial consequence beyond the stopped batch - Overall = Major, driven by Availability."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_02_C01" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_02" toVertexId="CVA_C_01" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_02_C02" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_02" toVertexId="CVA_C_02" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_02_A02" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_02" toVertexId="CVA_A_02" label="INVOLVES_ASSET"/>
+
+    <moqui.math.GraphVertex graphVertexId="CDS_03" graphId="CyberRiskAssessmentSmokingCells" label="CIP wash interlock bypass"/>
+    <moqui.math.Parameter parameterId="CDS_03_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_03" textValue="DamageScenario"/>
+    <moqui.math.Parameter parameterId="CDS_03_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_03" textValue="SD-S-02"/>
+    <moqui.math.Parameter parameterId="CDS_03_CAT" parameterDefId="CyberDamageScenarioCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_03" parameterEnumId="DscSafety"/>
+    <moqui.math.Parameter parameterId="CDS_03_IS" parameterDefId="CyberImpactSafetyParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_03" parameterEnumId="CilSevere"/>
+    <moqui.math.Parameter parameterId="CDS_03_IF" parameterDefId="CyberImpactFinancialParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_03" parameterEnumId="CilModerate"/>
+    <moqui.math.Parameter parameterId="CDS_03_IP" parameterDefId="CyberImpactPrivacyParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_03" parameterEnumId="CilNegligible"/>
+    <moqui.math.Parameter parameterId="CDS_03_IA" parameterDefId="CyberImpactAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_03" parameterEnumId="CilNegligible"/>
+    <moqui.math.Parameter parameterId="CDS_03_IO" parameterDefId="CyberImpactOverallParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_03" parameterEnumId="CilSevere"/>
+    <moqui.math.Parameter parameterId="CDS_03_RAT" parameterDefId="CyberDamageScenarioRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_03"
+            textValue="Bypassing or falsifying the CIP (Clean-In-Place) duct-wash interlock before the next cycle is a hygienic/HACCP critical-control-point failure, same conservative reasoning as SD-S-01 - confirmed Severe. Linked only to CVA_C_01 (the PLC CPU running the control logic): the CIP interlock logic itself has no dedicated Category-B asset yet in this Tappa 1 scope (CVA_B_01 covers temperature/humidity setpoints specifically) - a gap to fill if CIP-specific Threat Scenarios are added later, not silently folded into CVA_B_01."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_03_C01" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_03" toVertexId="CVA_C_01" label="INVOLVES_ASSET"/>
+
+    <moqui.math.GraphVertex graphVertexId="CDS_04" graphId="CyberRiskAssessmentSmokingCells" label="Unauthorized VFD parameter tampering"/>
+    <moqui.math.Parameter parameterId="CDS_04_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_04" textValue="DamageScenario"/>
+    <moqui.math.Parameter parameterId="CDS_04_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_04" textValue="SD-F-01"/>
+    <moqui.math.Parameter parameterId="CDS_04_CAT" parameterDefId="CyberDamageScenarioCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_04" parameterEnumId="DscFinancial"/>
+    <moqui.math.Parameter parameterId="CDS_04_IS" parameterDefId="CyberImpactSafetyParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_04" parameterEnumId="CilNegligible"/>
+    <moqui.math.Parameter parameterId="CDS_04_IF" parameterDefId="CyberImpactFinancialParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_04" parameterEnumId="CilMajor"/>
+    <moqui.math.Parameter parameterId="CDS_04_IP" parameterDefId="CyberImpactPrivacyParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_04" parameterEnumId="CilNegligible"/>
+    <moqui.math.Parameter parameterId="CDS_04_IA" parameterDefId="CyberImpactAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_04" parameterEnumId="CilModerate"/>
+    <moqui.math.Parameter parameterId="CDS_04_IO" parameterDefId="CyberImpactOverallParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_04" parameterEnumId="CilMajor"/>
+    <moqui.math.Parameter parameterId="CDS_04_RAT" parameterDefId="CyberDamageScenarioRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_04"
+            textValue="Unauthorized modification of VFD speed/motor parameters (CVA_B_02) degrades airflow control quality and wastes energy, and can indirectly affect the cure/smoke environment - Financial Major drives Overall Major."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_04_B02" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_04" toVertexId="CVA_B_02" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_04_C03" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_04" toVertexId="CVA_C_03" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_04_C04" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_04" toVertexId="CVA_C_04" label="INVOLVES_ASSET"/>
+
+    <moqui.math.GraphVertex graphVertexId="CDS_05" graphId="CyberRiskAssessmentSmokingCells" label="Network conduit/boundary switch failure or attack"/>
+    <moqui.math.Parameter parameterId="CDS_05_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_05" textValue="DamageScenario"/>
+    <moqui.math.Parameter parameterId="CDS_05_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_05" textValue="SD-A-02"/>
+    <moqui.math.Parameter parameterId="CDS_05_CAT" parameterDefId="CyberDamageScenarioCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_05" parameterEnumId="DscAvailability"/>
+    <moqui.math.Parameter parameterId="CDS_05_IS" parameterDefId="CyberImpactSafetyParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_05" parameterEnumId="CilNegligible"/>
+    <moqui.math.Parameter parameterId="CDS_05_IF" parameterDefId="CyberImpactFinancialParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_05" parameterEnumId="CilModerate"/>
+    <moqui.math.Parameter parameterId="CDS_05_IP" parameterDefId="CyberImpactPrivacyParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_05" parameterEnumId="CilNegligible"/>
+    <moqui.math.Parameter parameterId="CDS_05_IA" parameterDefId="CyberImpactAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_05" parameterEnumId="CilMajor"/>
+    <moqui.math.Parameter parameterId="CDS_05_IO" parameterDefId="CyberImpactOverallParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_05" parameterEnumId="CilMajor"/>
+    <moqui.math.Parameter parameterId="CDS_05_RAT" parameterDefId="CyberDamageScenarioRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_05"
+            textValue="Treated as a direct stop, not graceful degradation: the real factory network diagram's revision history (Rev10, most recent change) reads 'Eliminato ring switches', superseding the earlier ring-topology revisions, so MRP ring redundancy is not assumed for this corridor in the current revision. Overall = Major (same class as SD-A-01); note this switch may carry traffic for more than just this one cell (broader blast radius), which is flagged here as a note, not used to escalate severity without further evidence."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_05_C05" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_05" toVertexId="CVA_C_05" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_05_D01" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_05" toVertexId="CVA_D_01" label="INVOLVES_ASSET"/>
+
+    <moqui.math.GraphVertex graphVertexId="CDS_06" graphId="CyberRiskAssessmentSmokingCells" label="Exfiltration of process/recipe parameters"/>
+    <moqui.math.Parameter parameterId="CDS_06_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_06" textValue="DamageScenario"/>
+    <moqui.math.Parameter parameterId="CDS_06_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_06" textValue="SD-P-01"/>
+    <moqui.math.Parameter parameterId="CDS_06_CAT" parameterDefId="CyberDamageScenarioCategoryParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_06" parameterEnumId="DscPrivacy"/>
+    <moqui.math.Parameter parameterId="CDS_06_IS" parameterDefId="CyberImpactSafetyParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_06" parameterEnumId="CilNegligible"/>
+    <moqui.math.Parameter parameterId="CDS_06_IF" parameterDefId="CyberImpactFinancialParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_06" parameterEnumId="CilModerate"/>
+    <moqui.math.Parameter parameterId="CDS_06_IP" parameterDefId="CyberImpactPrivacyParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_06" parameterEnumId="CilMajor"/>
+    <moqui.math.Parameter parameterId="CDS_06_IA" parameterDefId="CyberImpactAvailabilityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_06" parameterEnumId="CilNegligible"/>
+    <moqui.math.Parameter parameterId="CDS_06_IO" parameterDefId="CyberImpactOverallParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_06" parameterEnumId="CilMajor"/>
+    <moqui.math.Parameter parameterId="CDS_06_RAT" parameterDefId="CyberDamageScenarioRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CDS_06"
+            textValue="Exfiltration of temperature/humidity recipe parameters or VFD configuration via diagnostic access exposes process know-how (IP/commercial), categorized as Privacy/IP - Overall = Major, no safety or availability consequence."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_06_B01" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_06" toVertexId="CVA_B_01" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CDS_06_B02" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CDS_06" toVertexId="CVA_B_02" label="INVOLVES_ASSET"/>
+
+    <!-- ============ Tappa 3: Threat Scenario STRIDE (ISO/DIS 24882 cap 5.4/5.6) ============
+         Grounded in real, directly-queried IEC 62443-3-3 text (not assumed): SR 7.1 "Denial
+         of service protection" and SR 5.2 "Zone boundary protection" for the switch/network
+         threats (TH-06/TH-07); the norm's own Annex A description of field-level industrial
+         communication ("industry standard fieldbuses... usually do not use the TCP/IP stack")
+         for the no-native-authentication rationale behind the PROFINET spoofing/tampering
+         threats (TH-01/TH-02/TH-05). No Repudiation (R) scenario: this Tappa 1 scope has no
+         logging/audit-trail asset yet - a real gap, not silently worked around. -->
+
+    <moqui.math.GraphVertex graphVertexId="CTS_01" graphId="CyberRiskAssessmentSmokingCells" label="Spoofing of temperature/humidity/VFD status on PROFINET"/>
+    <moqui.math.Parameter parameterId="CTS_01_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01" textValue="ThreatScenario"/>
+    <moqui.math.Parameter parameterId="CTS_01_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01" textValue="TH-01"/>
+    <moqui.math.Parameter parameterId="CTS_01_ST" parameterDefId="CyberStrideTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01" parameterEnumId="StrSpoofing"/>
+    <moqui.math.Parameter parameterId="CTS_01_PRE" parameterDefId="CyberThreatScenarioPreconditionParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01"
+            textValue="Access to the local PROFINET network; standard industrial fieldbuses (per IEC 62443-3-3 Annex A) commonly carry no native message authentication, so a node presenting plausible sensor/VFD status frames can be accepted as genuine."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_01_B01" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_01" toVertexId="CVA_B_01" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_01_C03" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_01" toVertexId="CVA_C_03" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_01_C04" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_01" toVertexId="CVA_C_04" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_01_A03" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_01" toVertexId="CVA_A_03" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_01_A04" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_01" toVertexId="CVA_A_04" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_01_CDS01" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_01" toVertexId="CDS_01" label="REALIZES_DAMAGE_SCENARIO"/>
+
+    <moqui.math.GraphVertex graphVertexId="CTS_02" graphId="CyberRiskAssessmentSmokingCells" label="Tampering of VFD setpoints via PROFINET"/>
+    <moqui.math.Parameter parameterId="CTS_02_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02" textValue="ThreatScenario"/>
+    <moqui.math.Parameter parameterId="CTS_02_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02" textValue="TH-02"/>
+    <moqui.math.Parameter parameterId="CTS_02_ST" parameterDefId="CyberStrideTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02" parameterEnumId="StrTampering"/>
+    <moqui.math.Parameter parameterId="CTS_02_PRE" parameterDefId="CyberThreatScenarioPreconditionParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02"
+            textValue="Network access to the PROFINET segment, or compromise of an already-present node, sufficient to write cyclic/acyclic process values directly to the VFD."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_02_C03" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_02" toVertexId="CVA_C_03" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_02_C04" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_02" toVertexId="CVA_C_04" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_02_B02" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_02" toVertexId="CVA_B_02" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_02_CDS01" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_02" toVertexId="CDS_01" label="REALIZES_DAMAGE_SCENARIO"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_02_CDS04" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_02" toVertexId="CDS_04" label="REALIZES_DAMAGE_SCENARIO"/>
+
+    <moqui.math.GraphVertex graphVertexId="CTS_03" graphId="CyberRiskAssessmentSmokingCells" label="Flooding of PLC-to-remote-I/O PROFINET link"/>
+    <moqui.math.Parameter parameterId="CTS_03_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03" textValue="ThreatScenario"/>
+    <moqui.math.Parameter parameterId="CTS_03_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03" textValue="TH-03"/>
+    <moqui.math.Parameter parameterId="CTS_03_ST" parameterDefId="CyberStrideTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03" parameterEnumId="StrDenialOfService"/>
+    <moqui.math.Parameter parameterId="CTS_03_PRE" parameterDefId="CyberThreatScenarioPreconditionParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03"
+            textValue="Physical or network access to the local segment (diagnostic port, switch port) sufficient to saturate traffic or inject malformed frames toward the CPU's communication processor."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_03_C01" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_03" toVertexId="CVA_C_01" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_03_C02" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_03" toVertexId="CVA_C_02" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_03_A02" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_03" toVertexId="CVA_A_02" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_03_CDS02" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_03" toVertexId="CDS_02" label="REALIZES_DAMAGE_SCENARIO"/>
+
+    <moqui.math.GraphVertex graphVertexId="CTS_04" graphId="CyberRiskAssessmentSmokingCells" label="Tampering of CIP interlock logic in PLC program"/>
+    <moqui.math.Parameter parameterId="CTS_04_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_04" textValue="ThreatScenario"/>
+    <moqui.math.Parameter parameterId="CTS_04_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_04" textValue="TH-04"/>
+    <moqui.math.Parameter parameterId="CTS_04_ST" parameterDefId="CyberStrideTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_04" parameterEnumId="StrTampering"/>
+    <moqui.math.Parameter parameterId="CTS_04_PRE" parameterDefId="CyberThreatScenarioPreconditionParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_04"
+            textValue="Weakly-authenticated engineering/online access to the PLC (e.g. default or shared programming credentials) sufficient to modify the interlock condition directly in the running program or memory."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_04_C01" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_04" toVertexId="CVA_C_01" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_04_CDS03" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_04" toVertexId="CDS_03" label="REALIZES_DAMAGE_SCENARIO"/>
+
+    <moqui.math.GraphVertex graphVertexId="CTS_05" graphId="CyberRiskAssessmentSmokingCells" label="Tampering of VFD parameter configuration"/>
+    <moqui.math.Parameter parameterId="CTS_05_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05" textValue="ThreatScenario"/>
+    <moqui.math.Parameter parameterId="CTS_05_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05" textValue="TH-05"/>
+    <moqui.math.Parameter parameterId="CTS_05_ST" parameterDefId="CyberStrideTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05" parameterEnumId="StrTampering"/>
+    <moqui.math.Parameter parameterId="CTS_05_PRE" parameterDefId="CyberThreatScenarioPreconditionParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05"
+            textValue="Physical access to the VFD's local keypad, or network access via PROFINET acyclic (parameter) services, without independent verification of the change."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_05_B02" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_05" toVertexId="CVA_B_02" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_05_C03" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_05" toVertexId="CVA_C_03" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_05_C04" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_05" toVertexId="CVA_C_04" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_05_CDS04" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_05" toVertexId="CDS_04" label="REALIZES_DAMAGE_SCENARIO"/>
+
+    <moqui.math.GraphVertex graphVertexId="CTS_06" graphId="CyberRiskAssessmentSmokingCells" label="Denial of Service against the zone boundary switch"/>
+    <moqui.math.Parameter parameterId="CTS_06_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06" textValue="ThreatScenario"/>
+    <moqui.math.Parameter parameterId="CTS_06_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06" textValue="TH-06"/>
+    <moqui.math.Parameter parameterId="CTS_06_ST" parameterDefId="CyberStrideTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06" parameterEnumId="StrDenialOfService"/>
+    <moqui.math.Parameter parameterId="CTS_06_PRE" parameterDefId="CyberThreatScenarioPreconditionParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06"
+            textValue="Network access to the corridor segment sufficient to cause a broadcast storm or MAC flooding against the boundary switch. Relevant real norm anchor: IEC 62443-3-3 SR 7.1 (Denial of service protection)."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_06_C05" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_06" toVertexId="CVA_C_05" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_06_D01" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_06" toVertexId="CVA_D_01" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_06_CDS05" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_06" toVertexId="CDS_05" label="REALIZES_DAMAGE_SCENARIO"/>
+
+    <moqui.math.GraphVertex graphVertexId="CTS_07" graphId="CyberRiskAssessmentSmokingCells" label="Elevation of privilege on switch management interface"/>
+    <moqui.math.Parameter parameterId="CTS_07_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07" textValue="ThreatScenario"/>
+    <moqui.math.Parameter parameterId="CTS_07_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07" textValue="TH-07"/>
+    <moqui.math.Parameter parameterId="CTS_07_ST" parameterDefId="CyberStrideTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07" parameterEnumId="StrElevationOfPrivilege"/>
+    <moqui.math.Parameter parameterId="CTS_07_PRE" parameterDefId="CyberThreatScenarioPreconditionParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07"
+            textValue="Network-reachable switch management interface with default/weak credentials, allowing VLAN reconfiguration or port shutdown. Relevant real norm anchor: IEC 62443-3-3 SR 5.2 (Zone boundary protection)."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_07_C05" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_07" toVertexId="CVA_C_05" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_07_CDS05" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_07" toVertexId="CDS_05" label="REALIZES_DAMAGE_SCENARIO"/>
+
+    <moqui.math.GraphVertex graphVertexId="CTS_08" graphId="CyberRiskAssessmentSmokingCells" label="Information disclosure of process/recipe parameters"/>
+    <moqui.math.Parameter parameterId="CTS_08_VT" parameterDefId="CyberRiskVertexTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08" textValue="ThreatScenario"/>
+    <moqui.math.Parameter parameterId="CTS_08_LID" parameterDefId="CyberRiskLogicalIdParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08" textValue="TH-08"/>
+    <moqui.math.Parameter parameterId="CTS_08_ST" parameterDefId="CyberStrideTypeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08" parameterEnumId="StrInfoDisclosure"/>
+    <moqui.math.Parameter parameterId="CTS_08_PRE" parameterDefId="CyberThreatScenarioPreconditionParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08"
+            textValue="Network access to the PLC's diagnostic/engineering port without independent authentication, sufficient to read process/recipe parameters."/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_08_B01" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_08" toVertexId="CVA_B_01" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_08_B02" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_08" toVertexId="CVA_B_02" label="INVOLVES_ASSET"/>
+    <moqui.math.GraphEdge graphEdgeId="EDGE_CTS_08_CDS06" graphId="CyberRiskAssessmentSmokingCells" edgeTypeEnumId="GetDirected" isDirected="Y" isLoop="N" fromVertexId="CTS_08" toVertexId="CDS_06" label="REALIZES_DAMAGE_SCENARIO"/>
+
+    <!-- ============ Tappa 4: Likelihood sub-scores (ISO/DIS 24882 Table 5) ============
+         The 5 attack-potential parameters per Threat Scenario, analyst-assigned (like the
+         Impact ratings), not computed - check#ThreatScenarioRisk (Tappa 4 service) reads
+         these numericValue fields, sums them, and writes back the computed
+         likelihoodSum/likelihoodRating/riskRating Parameters on each vertex. -->
+
+    <!-- TH-01: 1+3+3+4+4=15 (Medium) -->
+    <moqui.math.Parameter parameterId="CTS_01_ET" parameterDefId="CyberElapsedTimeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01" numericValue="1" parameterEnumId="CetOneWeek"/>
+    <moqui.math.Parameter parameterId="CTS_01_SE" parameterDefId="CyberSpecialistExpertiseParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01" numericValue="3" parameterEnumId="CseProficient"/>
+    <moqui.math.Parameter parameterId="CTS_01_KS" parameterDefId="CyberKnowledgeOfSoIParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01" numericValue="3" parameterEnumId="CkRestricted"/>
+    <moqui.math.Parameter parameterId="CTS_01_WO" parameterDefId="CyberWindowOfOpportunityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01" numericValue="4" parameterEnumId="CwoModerate"/>
+    <moqui.math.Parameter parameterId="CTS_01_EQ" parameterDefId="CyberEquipmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01" numericValue="4" parameterEnumId="CeqSpecialized"/>
+
+    <!-- TH-02: 1+3+3+4+4=15 (Medium) -->
+    <moqui.math.Parameter parameterId="CTS_02_ET" parameterDefId="CyberElapsedTimeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02" numericValue="1" parameterEnumId="CetOneWeek"/>
+    <moqui.math.Parameter parameterId="CTS_02_SE" parameterDefId="CyberSpecialistExpertiseParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02" numericValue="3" parameterEnumId="CseProficient"/>
+    <moqui.math.Parameter parameterId="CTS_02_KS" parameterDefId="CyberKnowledgeOfSoIParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02" numericValue="3" parameterEnumId="CkRestricted"/>
+    <moqui.math.Parameter parameterId="CTS_02_WO" parameterDefId="CyberWindowOfOpportunityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02" numericValue="4" parameterEnumId="CwoModerate"/>
+    <moqui.math.Parameter parameterId="CTS_02_EQ" parameterDefId="CyberEquipmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02" numericValue="4" parameterEnumId="CeqSpecialized"/>
+
+    <!-- TH-03: 0+3+3+4+4=14 (Medium) -->
+    <moqui.math.Parameter parameterId="CTS_03_ET" parameterDefId="CyberElapsedTimeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03" numericValue="0" parameterEnumId="CetOneDay"/>
+    <moqui.math.Parameter parameterId="CTS_03_SE" parameterDefId="CyberSpecialistExpertiseParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03" numericValue="3" parameterEnumId="CseProficient"/>
+    <moqui.math.Parameter parameterId="CTS_03_KS" parameterDefId="CyberKnowledgeOfSoIParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03" numericValue="3" parameterEnumId="CkRestricted"/>
+    <moqui.math.Parameter parameterId="CTS_03_WO" parameterDefId="CyberWindowOfOpportunityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03" numericValue="4" parameterEnumId="CwoModerate"/>
+    <moqui.math.Parameter parameterId="CTS_03_EQ" parameterDefId="CyberEquipmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03" numericValue="4" parameterEnumId="CeqSpecialized"/>
+
+    <!-- TH-04: 4+6+7+4+4=25 (Very Low) -->
+    <moqui.math.Parameter parameterId="CTS_04_ET" parameterDefId="CyberElapsedTimeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_04" numericValue="4" parameterEnumId="CetOneMonth"/>
+    <moqui.math.Parameter parameterId="CTS_04_SE" parameterDefId="CyberSpecialistExpertiseParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_04" numericValue="6" parameterEnumId="CseExpert"/>
+    <moqui.math.Parameter parameterId="CTS_04_KS" parameterDefId="CyberKnowledgeOfSoIParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_04" numericValue="7" parameterEnumId="CkConfidential"/>
+    <moqui.math.Parameter parameterId="CTS_04_WO" parameterDefId="CyberWindowOfOpportunityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_04" numericValue="4" parameterEnumId="CwoModerate"/>
+    <moqui.math.Parameter parameterId="CTS_04_EQ" parameterDefId="CyberEquipmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_04" numericValue="4" parameterEnumId="CeqSpecialized"/>
+
+    <!-- TH-05: 1+3+3+4+0=11 (High) -->
+    <moqui.math.Parameter parameterId="CTS_05_ET" parameterDefId="CyberElapsedTimeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05" numericValue="1" parameterEnumId="CetOneWeek"/>
+    <moqui.math.Parameter parameterId="CTS_05_SE" parameterDefId="CyberSpecialistExpertiseParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05" numericValue="3" parameterEnumId="CseProficient"/>
+    <moqui.math.Parameter parameterId="CTS_05_KS" parameterDefId="CyberKnowledgeOfSoIParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05" numericValue="3" parameterEnumId="CkRestricted"/>
+    <moqui.math.Parameter parameterId="CTS_05_WO" parameterDefId="CyberWindowOfOpportunityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05" numericValue="4" parameterEnumId="CwoModerate"/>
+    <moqui.math.Parameter parameterId="CTS_05_EQ" parameterDefId="CyberEquipmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05" numericValue="0" parameterEnumId="CeqStandard"/>
+
+    <!-- TH-06: 0+3+3+4+4=14 (Medium) -->
+    <moqui.math.Parameter parameterId="CTS_06_ET" parameterDefId="CyberElapsedTimeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06" numericValue="0" parameterEnumId="CetOneDay"/>
+    <moqui.math.Parameter parameterId="CTS_06_SE" parameterDefId="CyberSpecialistExpertiseParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06" numericValue="3" parameterEnumId="CseProficient"/>
+    <moqui.math.Parameter parameterId="CTS_06_KS" parameterDefId="CyberKnowledgeOfSoIParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06" numericValue="3" parameterEnumId="CkRestricted"/>
+    <moqui.math.Parameter parameterId="CTS_06_WO" parameterDefId="CyberWindowOfOpportunityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06" numericValue="4" parameterEnumId="CwoModerate"/>
+    <moqui.math.Parameter parameterId="CTS_06_EQ" parameterDefId="CyberEquipmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06" numericValue="4" parameterEnumId="CeqSpecialized"/>
+
+    <!-- TH-07: 1+3+3+4+0=11 (High) -->
+    <moqui.math.Parameter parameterId="CTS_07_ET" parameterDefId="CyberElapsedTimeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07" numericValue="1" parameterEnumId="CetOneWeek"/>
+    <moqui.math.Parameter parameterId="CTS_07_SE" parameterDefId="CyberSpecialistExpertiseParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07" numericValue="3" parameterEnumId="CseProficient"/>
+    <moqui.math.Parameter parameterId="CTS_07_KS" parameterDefId="CyberKnowledgeOfSoIParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07" numericValue="3" parameterEnumId="CkRestricted"/>
+    <moqui.math.Parameter parameterId="CTS_07_WO" parameterDefId="CyberWindowOfOpportunityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07" numericValue="4" parameterEnumId="CwoModerate"/>
+    <moqui.math.Parameter parameterId="CTS_07_EQ" parameterDefId="CyberEquipmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07" numericValue="0" parameterEnumId="CeqStandard"/>
+
+    <!-- TH-08: 1+3+3+4+0=11 (High) -->
+    <moqui.math.Parameter parameterId="CTS_08_ET" parameterDefId="CyberElapsedTimeParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08" numericValue="1" parameterEnumId="CetOneWeek"/>
+    <moqui.math.Parameter parameterId="CTS_08_SE" parameterDefId="CyberSpecialistExpertiseParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08" numericValue="3" parameterEnumId="CseProficient"/>
+    <moqui.math.Parameter parameterId="CTS_08_KS" parameterDefId="CyberKnowledgeOfSoIParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08" numericValue="3" parameterEnumId="CkRestricted"/>
+    <moqui.math.Parameter parameterId="CTS_08_WO" parameterDefId="CyberWindowOfOpportunityParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08" numericValue="4" parameterEnumId="CwoModerate"/>
+    <moqui.math.Parameter parameterId="CTS_08_EQ" parameterDefId="CyberEquipmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08" numericValue="0" parameterEnumId="CeqStandard"/>
+
+    <!-- ============ Tappa 5: Risk Treatment (ISO/DIS 24882 cap 5.8) ============
+         Applying the CRAT_SMOKING_CELLS threshold (<=2) above to each threat's Risk Rating
+         (written by check#ThreatScenarioRisk, Tappa 4): 7 of 8 threats exceed it and are
+         Mitigated; TH-04 alone scores at/below it and is Accepted, with its own justification.
+         No Share/Avoid: no supplier/insurance agreement evidence exists for Share, and none of
+         the involved functions can be removed without losing needed process capability for
+         Avoid - not proposed without real basis for either. -->
+
+    <moqui.math.Parameter parameterId="CTS_01_RT" parameterDefId="CyberRiskTreatmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01" parameterEnumId="CrtMitigate"/>
+    <moqui.math.Parameter parameterId="CTS_01_RTR" parameterDefId="CyberRiskTreatmentRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_01" textValue="Risk Rating 4 exceeds the engagement threshold (2); mitigation required per Clause 5.8."/>
+
+    <moqui.math.Parameter parameterId="CTS_02_RT" parameterDefId="CyberRiskTreatmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02" parameterEnumId="CrtMitigate"/>
+    <moqui.math.Parameter parameterId="CTS_02_RTR" parameterDefId="CyberRiskTreatmentRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_02" textValue="Risk Rating 4 exceeds the engagement threshold (2); mitigation required per Clause 5.8."/>
+
+    <moqui.math.Parameter parameterId="CTS_03_RT" parameterDefId="CyberRiskTreatmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03" parameterEnumId="CrtMitigate"/>
+    <moqui.math.Parameter parameterId="CTS_03_RTR" parameterDefId="CyberRiskTreatmentRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_03" textValue="Risk Rating 3 exceeds the engagement threshold (2); mitigation required per Clause 5.8."/>
+
+    <moqui.math.Parameter parameterId="CTS_04_RT" parameterDefId="CyberRiskTreatmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_04" parameterEnumId="CrtAccept"/>
+    <moqui.math.Parameter parameterId="CTS_04_RTR" parameterDefId="CyberRiskTreatmentRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_04" textValue="Risk Rating 1 is at or below the engagement threshold (2): residual risk accepted. Justification: exploitation requires Confidential knowledge of this specific PLC program plus Expert programming skill, not a generic/repeatable attack path - a defensible low-likelihood case despite Severe potential impact."/>
+
+    <moqui.math.Parameter parameterId="CTS_05_RT" parameterDefId="CyberRiskTreatmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05" parameterEnumId="CrtMitigate"/>
+    <moqui.math.Parameter parameterId="CTS_05_RTR" parameterDefId="CyberRiskTreatmentRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_05" textValue="Risk Rating 4 exceeds the engagement threshold (2); mitigation required per Clause 5.8."/>
+
+    <moqui.math.Parameter parameterId="CTS_06_RT" parameterDefId="CyberRiskTreatmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06" parameterEnumId="CrtMitigate"/>
+    <moqui.math.Parameter parameterId="CTS_06_RTR" parameterDefId="CyberRiskTreatmentRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_06" textValue="Risk Rating 3 exceeds the engagement threshold (2); mitigation required per Clause 5.8."/>
+
+    <moqui.math.Parameter parameterId="CTS_07_RT" parameterDefId="CyberRiskTreatmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07" parameterEnumId="CrtMitigate"/>
+    <moqui.math.Parameter parameterId="CTS_07_RTR" parameterDefId="CyberRiskTreatmentRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_07" textValue="Risk Rating 4 exceeds the engagement threshold (2); mitigation required per Clause 5.8."/>
+
+    <moqui.math.Parameter parameterId="CTS_08_RT" parameterDefId="CyberRiskTreatmentParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08" parameterEnumId="CrtMitigate"/>
+    <moqui.math.Parameter parameterId="CTS_08_RTR" parameterDefId="CyberRiskTreatmentRationaleParam" graphId="CyberRiskAssessmentSmokingCells" graphVertexId="CTS_08" textValue="Risk Rating 4 exceeds the engagement threshold (2); mitigation required per Clause 5.8."/>
+
+</entity-facade-xml>

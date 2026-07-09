@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Project Management traceability for the Cyber Security assessment of "Smoking Cell 1"
+    (the real, already-modeled HVAC curing/smoking cell), using the exact real pattern found
+    in HiveMind's own demo data (HiveMind/data/HiveMindDemoData.xml) - mantle.work.effort.WorkEffort
+    for Project/Milestone/Task, WorkEffortAssoc (WeatMilestone) to link tasks to milestones,
+    WorkEffortParty for assignment, mantle.work.effort.WikiPageWorkEffort to link the final
+    report (as a moqui.resource.wiki.WikiPage) to the project. No new entity - full reuse of
+    the existing HiveMind/mantle-udm work-effort and wiki stack.
+
+    Dates match the real session record (design-session/SESSION.md), not invented: document
+    acquisition and Phases 1-3 on 2026-07-03, Phase 4 crosswalk/BIA/zone-conduit and the first
+    3 project skills on 2026-07-04, the full Phase 5 TARA (Tappe 1-7) plus the ATT&CK/CVE work
+    on 2026-07-05, this report and project setup on 2026-07-08.
+
+    The final report copied into the linked WikiPage is the exact same content already written
+    to design-session/reports/CyberSecurity_TARA_SmokingCell1_v1.md (copied, not
+    re-derived) - see WikiSpace/CYBERSEC/Smoking Cell 1 - TARA.md in this component.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="demo">
+
+    <!-- ============ Wiki space + pages (final report) ============ -->
+    <moqui.resource.wiki.WikiSpace wikiSpaceId="CYBERSEC" description="Cyber Security - Locale Smoking 1"
+            restrictView="N" rootPageLocation="component://moqui-cybersecurity-agent/WikiSpace/CYBERSEC.md"
+            decoratorScreenLocation=""/>
+    <moqui.resource.wiki.WikiSpaceUser wikiSpaceId="CYBERSEC" userId="EX_JOHN_DOE"
+            receiveNotifications="Y" allowAdmin="Y" allowView="Y" allowUpdate="Y"/>
+
+    <moqui.resource.wiki.WikiPage wikiPageId="CYBERSEC" wikiSpaceId="CYBERSEC" pagePath="" createdByUserId="EX_JOHN_DOE"/>
+    <moqui.resource.wiki.WikiPageHistory wikiPageId="CYBERSEC" historySeqId="01" userId="EX_JOHN_DOE" changeDateTime="2026-07-08 09:00:00"/>
+
+    <moqui.resource.wiki.WikiPage wikiPageId="CYBERSEC_TARA" wikiSpaceId="CYBERSEC"
+            pagePath="Smoking Cell 1 - TARA" createdByUserId="EX_JOHN_DOE"/>
+    <moqui.resource.wiki.WikiPageHistory wikiPageId="CYBERSEC_TARA" historySeqId="01" userId="EX_JOHN_DOE" changeDateTime="2026-07-08 09:30:00"/>
+
+    <!-- ============ Project ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="CYBER_SMOKING1" workEffortName="Cyber Security - Locale Smoking 1"
+            workEffortTypeEnumId="WetProject" statusId="WeInProgress"
+            estimatedStartDate="2026-07-03 08:00:00" estimatedCompletionDate="2026-07-08 18:00:00"
+            description="Prima valutazione end-to-end del rischio di cybersecurity (TARA, ISO/DIS 24882) su un locale reale (cella di affumicatura/stagionatura), a validazione dell'intera pipeline moqui-cybersecurity-agent."/>
+    <mantle.work.effort.WorkEffortParty workEffortId="CYBER_SMOKING1" partyId="EX_JOHN_DOE" roleTypeId="Manager"
+            fromDate="2026-07-03 08:00:00" statusId="WeptAssigned"/>
+
+    <!-- Link the final report (WikiPage) to the project, as requested. -->
+    <mantle.work.effort.WikiPageWorkEffort wikiPageId="CYBERSEC_TARA" workEffortId="CYBER_SMOKING1"/>
+
+    <!-- ============ Milestones ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="CS1-MS-01" workEffortName="Acquisizione Documenti e Dati Sorgente"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetMilestone" statusId="WeClosed"
+            estimatedStartDate="2026-07-03 08:00:00" estimatedCompletionDate="2026-07-05 18:00:00"/>
+    <mantle.work.effort.WorkEffort workEffortId="CS1-MS-02" workEffortName="Grafo Normativo, PLM/BOM, PLC e Crosswalk (Fasi 1-4)"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetMilestone" statusId="WeClosed"
+            estimatedStartDate="2026-07-03 08:00:00" estimatedCompletionDate="2026-07-04 18:00:00"/>
+    <mantle.work.effort.WorkEffort workEffortId="CS1-MS-03" workEffortName="TARA ISO/DIS 24882 - Locale Smoking 1 (Fase 5)"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetMilestone" statusId="WeClosed"
+            estimatedStartDate="2026-07-05 08:00:00" estimatedCompletionDate="2026-07-05 18:00:00"/>
+    <mantle.work.effort.WorkEffort workEffortId="CS1-MS-04" workEffortName="Tassonomia Minacce e Vulnerabilita Note"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetMilestone" statusId="WeClosed"
+            estimatedStartDate="2026-07-05 08:00:00" estimatedCompletionDate="2026-07-05 18:00:00"/>
+    <mantle.work.effort.WorkEffort workEffortId="CS1-MS-05" workEffortName="Relazione Finale e Validazione"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetMilestone" statusId="WeInProgress"
+            estimatedStartDate="2026-07-08 08:00:00" estimatedCompletionDate="2026-07-08 18:00:00"/>
+
+    <!-- ============ Tasks - MS-01: Acquisizione Documenti e Dati Sorgente ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-01" workEffortName="Acquisizione corpus normativo cybersecurity OT"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-03 08:00:00" estimatedCompletionDate="2026-07-03 12:00:00"
+            description="11 documenti normativi (serie IEC 62443, ISO/DIS 24882, EN 50742, EN 40000, Regolamento Macchine UE 2023/1230, NIS2, Top 20 Secure PLC Coding Practices)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-01" toWorkEffortId="CS1-T-01" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-03 08:00:00" sequenceNum="1"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-02" workEffortName="Acquisizione distinta base e schemi elettrici del locale"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-03 08:00:00" estimatedCompletionDate="2026-07-03 14:00:00"
+            description="Distinta base EPLAN (CSV) e due schemi elettrici (pannello centrale e pannello remoto)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-01" toWorkEffortId="CS1-T-02" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-03 08:00:00" sequenceNum="2"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-03" workEffortName="Acquisizione sorgenti PLC/CODESYS e firmware C di riferimento"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-03 08:00:00" estimatedCompletionDate="2026-07-03 16:00:00"
+            description="Corpus di test IEC 61131/CODESYS e firmware IoT reale, per l'estensione del parser PLC/software."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-01" toWorkEffortId="CS1-T-03" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-03 08:00:00" sequenceNum="3"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-04" workEffortName="Acquisizione relazione TARA di riferimento e Agent Skill esterna"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-05 08:00:00" estimatedCompletionDate="2026-07-05 10:00:00"
+            description="Documento TARA reale (macchina diversa, uso esclusivamente metodologico) e skill esterna tara-iso24882, usati come riferimento/cross-check, mai come fonte di dati di caso."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-01" toWorkEffortId="CS1-T-04" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-05 08:00:00" sequenceNum="4"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-05" workEffortName="Acquisizione schema di rete di stabilimento"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-05 08:00:00" estimatedCompletionDate="2026-07-05 09:00:00"
+            description="Schema di rete IT/OT multi-corridoio dello stabilimento in cui e' inserito il locale, incluso lo storico revisioni."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-01" toWorkEffortId="CS1-T-05" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-05 08:00:00" sequenceNum="5"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-06" workEffortName="Acquisizione dati esterni CVE/CPE e tassonomia MITRE ATT&amp;CK for ICS"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-05 14:00:00" estimatedCompletionDate="2026-07-05 16:00:00"
+            description="NVD REST API (CVE/CPE) e corpus STIX pubblico MITRE ATT&amp;CK for ICS (12 tattiche, 97 tecniche)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-01" toWorkEffortId="CS1-T-06" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-05 14:00:00" sequenceNum="6"/>
+
+    <!-- ============ Tasks - MS-02: Grafo Normativo, PLM/BOM, PLC e Crosswalk (Fasi 1-4) ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-07" workEffortName="Costruzione e indicizzazione grafo normativo"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-03 09:00:00" estimatedCompletionDate="2026-07-03 18:00:00"
+            description="Parsing del corpus normativo in clausole, Graph/GraphVertex/GraphEdge, embedding ed indicizzazione OpenSearch (Fase 1)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-02" toWorkEffortId="CS1-T-07" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-03 09:00:00" sequenceNum="1"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-08" workEffortName="Modellazione grafo PLM/BOM del locale"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-03 14:00:00" estimatedCompletionDate="2026-07-03 18:00:00"
+            description="Device/Asset/DeviceConnection reali del locale a partire dalla distinta base e dagli schemi elettrici (Fase 2)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-02" toWorkEffortId="CS1-T-08" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-03 14:00:00" sequenceNum="2"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-09" workEffortName="Costruzione grafo PLC/software offline"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-03 16:00:00" estimatedCompletionDate="2026-07-03 20:00:00"
+            description="Fork del parser PLC, estensione dialetto CODESYS e nuovo parser firmware C (Fase 3)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-02" toWorkEffortId="CS1-T-09" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-03 16:00:00" sequenceNum="3"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-10" workEffortName="Crosswalk norma-prodotto e criticita BIA/zone-conduit"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-04 08:00:00" estimatedCompletionDate="2026-07-04 18:00:00"
+            description="ProductCategory/ProductFeature per il crosswalk sistematico (Fase 4), zone/conduit via DeviceGroup e criticita BIA."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-02" toWorkEffortId="CS1-T-10" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-04 08:00:00" sequenceNum="4"/>
+
+    <!-- ============ Tasks - MS-03: TARA ISO/DIS 24882 (Fase 5) ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-11" workEffortName="Sistema di Interesse e Asset (Tappa 1)"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-05 09:00:00" estimatedCompletionDate="2026-07-05 10:30:00"
+            description="14 CyberAsset (categorie A/B/C/D) con criticita C/I/A."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-03" toWorkEffortId="CS1-T-11" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-05 09:00:00" sequenceNum="1"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-12" workEffortName="Scenari di Danno e Minacce STRIDE (Tappa 2-3)"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-05 10:30:00" estimatedCompletionDate="2026-07-05 12:30:00"
+            description="6 DamageScenario e 8 ThreatScenario, cross-check con la skill tara-iso24882."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-03" toWorkEffortId="CS1-T-12" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-05 10:30:00" sequenceNum="2"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-13" workEffortName="Probabilita, Rischio e Trattamento (Tappa 4-5)"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-05 12:30:00" estimatedCompletionDate="2026-07-05 13:30:00"
+            description="check#ThreatScenarioRisk, soglia di accettazione e trattamento (7 Mitigare, 1 Accettare)."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-03" toWorkEffortId="CS1-T-13" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-05 12:30:00" sequenceNum="3"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-14" workEffortName="Requisiti di Cybersecurity (Tappa 6-7)"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-05 13:30:00" estimatedCompletionDate="2026-07-05 14:00:00"
+            description="3 ProductFeatureGroup di requisito, verificati via check#ProductCategoryCompliance sui prodotti reali."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-03" toWorkEffortId="CS1-T-14" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-05 13:30:00" sequenceNum="4"/>
+
+    <!-- ============ Tasks - MS-04: Tassonomia Minacce e Vulnerabilita Note ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-15" workEffortName="Tassonomia MITRE ATT&amp;CK for ICS e classificazione Threat Scenario"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-05 16:00:00" estimatedCompletionDate="2026-07-05 17:00:00"
+            description="Import completo tassonomia (script), tag reale e verificato sugli 8 ThreatScenario."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-04" toWorkEffortId="CS1-T-15" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-05 16:00:00" sequenceNum="1"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-16" workEffortName="Ingestion CVE/CPE su prodotti reali"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-05 17:00:00" estimatedCompletionDate="2026-07-05 18:00:00"
+            description="index#ProductVulnerabilities via NVD REST API - 23 CVE reali ingerite su 2 prodotti."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-04" toWorkEffortId="CS1-T-16" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-05 17:00:00" sequenceNum="2"/>
+
+    <!-- ============ Tasks - MS-05: Relazione Finale e Validazione ============ -->
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-17" workEffortName="Generazione relazione finale in Markdown"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeClosed" estimatedStartDate="2026-07-08 08:30:00" estimatedCompletionDate="2026-07-08 09:00:00"
+            description="Relazione a 12 sezioni, ogni cifra riverificata dal database reale prima della stesura."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-05" toWorkEffortId="CS1-T-17" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-08 08:30:00" sequenceNum="1"/>
+
+    <mantle.work.effort.WorkEffort workEffortId="CS1-T-18" workEffortName="Collegamento relazione a WikiPage di progetto"
+            rootWorkEffortId="CYBER_SMOKING1" workEffortTypeEnumId="WetTask"
+            purposeEnumId="WepTask" statusId="WeInProgress" estimatedStartDate="2026-07-08 09:00:00" estimatedCompletionDate="2026-07-08 09:30:00"
+            description="Progetto CYBER_SMOKING1 con milestone/task tracciati, relazione copiata come WikiPage e collegata al progetto."/>
+    <mantle.work.effort.WorkEffortAssoc workEffortId="CS1-MS-05" toWorkEffortId="CS1-T-18" workEffortAssocTypeEnumId="WeatMilestone" fromDate="2026-07-08 09:00:00" sequenceNum="2"/>
+
+</entity-facade-xml>

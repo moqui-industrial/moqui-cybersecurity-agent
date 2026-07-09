@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="check" noun="DeviceSafetyExposure" authenticate="true" allow-remote="true">
+        <description>ISO 12100 / ISO-TR 22100-4 mechanical-safety crosswalk: answers TR 22100-4
+            clause 3's guiding question ("can a cyber compromise through this connection reach a
+            Safety function or cause a dangerous movement?") for a real Device, generically -
+            joins the Device's real attack-vector connections (moqui.device.DeviceConnection with
+            a physical-port driver - DcdUsbPhysical/DcdSerialPhysical/DcdSdCardPhysical - or a
+            DcpMaintenance/DcpDiagnostics purpose, plus any org.moqui.cyber.
+            CyberDeviceCommunicationFlow rows) against the linked Product's real
+            ProductFeature/PftSafetyFunction rows (ISO 12100 6.2.11.4 safety functions, or the
+            EPLAN SAFETYRELATED_* parameters from the plm-bom-import skill). No data is invented:
+            a Device with no real vector or no real safety-function ProductFeature on record
+            correctly returns that absence as a fact, not a fabricated "safe"/"exposed" verdict.
+
+            This is a MmtCodeDefinedFunction MathModel (MM_DEVICE_SAFETY_EXPOSURE, see
+            CyberMachineGraphMetadataSeedData.xml), fifth reuse of the math-model-run-tracking
+            pattern: a rule-based join, not a pure calculation, but its outcome is worth tracking
+            the same way as check#ProductCategoryCompliance/check#DeviceGroupContinuityImpact.</description>
+        <in-parameters>
+            <parameter name="deviceId" required="true"><description>The Device to check.</description></parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="status"/>
+            <parameter name="vectors" type="List"/>
+            <parameter name="safetyFeatures" type="List"/>
+            <parameter name="mathModelRunId"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+                import org.moqui.entity.EntityCondition
+
+                def runValue = ec.entity.makeValue('moqui.math.MathModelRun')
+                        .setAll([mathModelId: 'MM_DEVICE_SAFETY_EXPOSURE',
+                                 startTime: ec.user.nowTimestamp, parameters: JsonOutput.toJson([deviceId: deviceId]),
+                                 hasError: 'N'])
+                runValue.setSequencedIdPrimary()
+                runValue.create()
+                mathModelRunId = runValue.mathModelRunId
+
+                try {
+                    List physicalPortDrivers = ['DcdUsbPhysical', 'DcdSerialPhysical', 'DcdSdCardPhysical']
+                    List remoteAccessPurposes = ['DcpMaintenance', 'DcpDiagnostics']
+
+                    List<Map> vectorList = []
+                    ec.entity.find('moqui.device.DeviceConnection').condition('deviceId', deviceId).list().each { conn ->
+                        boolean isPhysicalPort = physicalPortDrivers.contains(conn.driverEnumId as String)
+                        boolean isRemoteAccess = remoteAccessPurposes.contains(conn.purposeEnumId as String)
+                        if (isPhysicalPort || isRemoteAccess) {
+                            vectorList.add([connectionName: conn.connectionName, driverEnumId: conn.driverEnumId,
+                                    purposeEnumId: conn.purposeEnumId,
+                                    vectorType: isPhysicalPort ? 'PHYSICAL_PORT' : 'REMOTE_ACCESS'])
+                        }
+                    }
+                    def flowOrCond = ec.entity.conditionFactory.makeCondition(
+                            [sourceDeviceId: deviceId, destDeviceId: deviceId] as Map,
+                            EntityCondition.ComparisonOperator.EQUALS, EntityCondition.JoinOperator.OR)
+                    ec.entity.find('org.moqui.cyber.CyberDeviceCommunicationFlow')
+                            .condition(flowOrCond)
+                            .list().each { flow ->
+                        vectorList.add([communicationFlowId: flow.communicationFlowId, protocolEnumId: flow.protocolEnumId,
+                                port: flow.port, vectorType: 'COMMUNICATION_FLOW'])
+                    }
+                    vectors = vectorList
+
+                    List<Map> safetyFeatureList = []
+                    def deviceValue = ec.entity.find('moqui.device.Device').condition('deviceId', deviceId).one()
+                    String assetId = deviceValue?.assetId as String
+                    String productId = assetId ? (ec.entity.find('mantle.product.asset.Asset')
+                            .condition('assetId', assetId).one()?.productId as String) : null
+                    if (productId) {
+                        ec.entity.find('mantle.product.feature.ProductFeatureAppl')
+                                .condition('productId', productId).list().each { appl ->
+                            def feature = ec.entity.find('mantle.product.feature.ProductFeature')
+                                    .condition('productFeatureId', appl.productFeatureId).one()
+                            if (feature?.productFeatureTypeEnumId == 'PftSafetyFunction') {
+                                safetyFeatureList.add([productFeatureId: feature.productFeatureId, description: feature.description])
+                            }
+                        }
+                    }
+                    safetyFeatures = safetyFeatureList
+
+                    if (vectorList && safetyFeatureList) {
+                        status = 'REQUIRES_MITIGATION_REVIEW'
+                    } else if (vectorList) {
+                        status = 'NO_SAFETY_FUNCTION_ON_RECORD'
+                    } else {
+                        status = 'NO_EXPOSURE_VECTOR_ON_RECORD'
+                    }
+
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, results: JsonOutput.toJson(
+                                    [deviceId: deviceId, status: status, vectors: vectors, safetyFeatures: safetyFeatures])])
+                            .update()
+                } catch (Throwable t) {
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, hasError: 'Y', errors: t.toString()])
+                            .update()
+                    throw t
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+</services>

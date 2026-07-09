@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "required": ["id", "clauseId", "logicalId", "documentId", "clauseNumber", "provenanceClass"],
+  "properties": {
+    "id": {"type": "string"},
+    "clauseId": {"type": "string"},
+    "logicalId": {"type": "string"},
+    "documentId": {"type": "string"},
+    "clauseNumber": {"type": "string"},
+    "title": {"type": "string"},
+    "text": {"type": "string"},
+    "startLine": {"type": "integer"},
+    "endLine": {"type": "integer"},
+    "parentClauseNumber": {"type": ["string", "null"]},
+    "provenanceClass": {"type": "string"}
+  }
+}

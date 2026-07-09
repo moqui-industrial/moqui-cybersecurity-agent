@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This software is in the public domain under CC0 1.0 Universal plus a
+     Grant of Patent License.
+
+     To the extent possible under law, the author(s) have dedicated all
+     copyright and related and neighboring rights to this software to the
+     public domain worldwide. This software is distributed without any warranty.
+
+     You should have received a copy of the CC0 Public Domain Dedication
+     along with this software (see the LICENSE.md file). If not, see
+     <https://creativecommons.org/publicdomain/zero/1.0/>. -->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="load" noun="NormGraph" authenticate="true" allow-remote="true" transaction-timeout="3600">
+        <description>Load offline-generated normative graph JSONL files (from tools/norm-indexer) into
+            moqui.math.Graph/GraphVertex/GraphEdge, with vertex/edge metadata materialized as
+            moqui.math.Parameter rows keyed by the CyberNorm* ParameterDef records.
+            Mirrors the load#ArtifactGraph pattern in moqui-mcp, adapted to the separate
+            vertex-metadata.jsonl/edge-metadata.jsonl files produced by generate_norm_graph.py.</description>
+        <in-parameters>
+            <parameter name="verticesFilePath" required="true"/>
+            <parameter name="edgesFilePath" required="true"/>
+            <parameter name="graphId"/>
+            <parameter name="graphName"/>
+            <parameter name="graphDescription"/>
+            <parameter name="clearExisting" type="Boolean"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="loadedVertexCount" type="Integer"/>
+            <parameter name="loadedEdgeCount" type="Integer"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import groovy.json.JsonSlurper
+
+                String effectiveGraphId = (graphId ?: 'OtCyberNormGraph').toString()
+                String effectiveGraphName = (graphName ?: 'OT Cybersecurity Normative Graph').toString()
+                String effectiveGraphDescription = (graphDescription ?:
+                        'Normative graph of OT cybersecurity clauses generated from norm PDF sources.').toString()
+
+                File verticesFile = new File(verticesFilePath as String)
+                File edgesFile = new File(edgesFilePath as String)
+                if (!verticesFile.exists()) throw new IllegalArgumentException("Norm graph vertices file not found: ${verticesFilePath}")
+                if (!edgesFile.exists()) throw new IllegalArgumentException("Norm graph edges file not found: ${edgesFilePath}")
+
+                // vertex-metadata.jsonl / edge-metadata.jsonl live alongside the vertices/edges files,
+                // as produced by generate_norm_graph.py.
+                File vertexMetadataFile = new File(verticesFile.parentFile, 'vertex-metadata.jsonl')
+                File edgeMetadataFile = new File(edgesFile.parentFile, 'edge-metadata.jsonl')
+
+                if (Boolean.TRUE.equals(clearExisting)) {
+                    ec.entity.find('moqui.math.Parameter').condition('graphId', effectiveGraphId).deleteAll()
+                    ec.entity.find('moqui.math.GraphEdge').condition('graphId', effectiveGraphId).deleteAll()
+                    ec.entity.find('moqui.math.GraphVertex').condition('graphId', effectiveGraphId).deleteAll()
+                }
+
+                def graphValue = ec.entity.find('moqui.math.Graph').condition('graphId', effectiveGraphId).one()
+                if (graphValue) graphValue = graphValue.cloneValue()
+                if (!graphValue) {
+                    graphValue = ec.entity.makeValue('moqui.math.Graph')
+                    graphValue.graphId = effectiveGraphId
+                    graphValue.create()
+                } else {
+                    if (!graphValue.name) graphValue.name = effectiveGraphName
+                    if (!graphValue.description) graphValue.description = effectiveGraphDescription
+                    graphValue.update()
+                }
+
+                // attribute key -> ParameterDef id, one map for vertices and one for edges (see
+                // data/CyberNormGraphMetadataSeedData.xml for the full ParameterDef catalog).
+                Map<String, String> vertexParameterDefByKey = [
+                        vertexType      : 'CyberNormVertexTypeParam',
+                        logicalId       : 'CyberNormLogicalIdParam',
+                        documentId      : 'CyberNormDocumentIdParam',
+                        documentFamily  : 'CyberNormDocumentFamilyParam',
+                        documentTitle   : 'CyberNormDocumentTitleParam',
+                        edition         : 'CyberNormEditionParam',
+                        clauseNumber    : 'CyberNormClauseNumberParam',
+                        clauseTitle     : 'CyberNormClauseTitleParam',
+                        clauseText      : 'CyberNormClauseTextParam',
+                        sourceFile      : 'CyberNormSourceFileParam',
+                        page            : 'CyberNormPageParam',
+                        provenanceClass : 'CyberNormProvenanceClassParam'
+                ]
+                Map<String, String> edgeParameterDefByKey = [
+                        provenanceClass : 'CyberNormProvenanceClassParam',
+                        confidence      : 'CyberNormConfidenceParam',
+                        rationale       : 'CyberNormRationaleParam'
+                ]
+
+                Closure<Void> storeParameter = { String parameterDefId, Object rawValue, String graphVertexId, String graphEdgeId ->
+                    if (rawValue == null) return
+                    String textValue = rawValue.toString()
+                    if (!textValue) return
+                    String source = "${effectiveGraphId}|${graphVertexId ?: ''}|${graphEdgeId ?: ''}|${parameterDefId}"
+                    String parameterId = java.security.MessageDigest.getInstance('SHA-1').digest(source.getBytes('UTF-8')).encodeHex().toString()
+                    def parameterValue = ec.entity.find('moqui.math.Parameter').condition('parameterId', parameterId).one()
+                    boolean isNew = parameterValue == null
+                    if (isNew) {
+                        parameterValue = ec.entity.makeValue('moqui.math.Parameter')
+                        parameterValue.parameterId = parameterId
+                    } else {
+                        parameterValue = parameterValue.cloneValue()
+                    }
+                    parameterValue.parameterDefId = parameterDefId
+                    parameterValue.graphId = effectiveGraphId
+                    parameterValue.graphVertexId = graphVertexId
+                    parameterValue.graphEdgeId = graphEdgeId
+                    parameterValue.textValue = textValue
+                    if (isNew) parameterValue.create() else parameterValue.update()
+                }
+
+                JsonSlurper slurper = new JsonSlurper()
+                loadedVertexCount = 0
+                loadedEdgeCount = 0
+
+                verticesFile.eachLine('UTF-8') { String line ->
+                    String trimmed = line?.trim()
+                    if (!trimmed) return
+                    Map row = slurper.parseText(trimmed) as Map
+                    def vertexValue = ec.entity.find('moqui.math.GraphVertex')
+                            .condition('graphId', row.graphId)
+                            .condition('graphVertexId', row.graphVertexId)
+                            .one()
+                    boolean isNew = vertexValue == null
+                    if (isNew) {
+                        vertexValue = ec.entity.makeValue('moqui.math.GraphVertex')
+                        vertexValue.graphId = row.graphId
+                        vertexValue.graphVertexId = row.graphVertexId
+                    } else {
+                        vertexValue = vertexValue.cloneValue()
+                    }
+                    // GraphVertex.label is VARCHAR(63); truncate here (not in the Python
+                    // generator) so the JSONL/graph.json exports keep the full label for
+                    // debugging, same convention as moqui-mcp's load#ArtifactGraph normalizeLabel.
+                    String rawLabel = (row.label ?: '').toString()
+                    vertexValue.label = rawLabel.length() > 63 ? (rawLabel.substring(0, 60) + '...') : rawLabel
+                    vertexValue.notBelongToEdge = row.notBelongToEdge ?: 'N'
+                    if (isNew) vertexValue.create() else vertexValue.update()
+                    loadedVertexCount++
+                }
+
+                if (vertexMetadataFile.exists()) {
+                    vertexMetadataFile.eachLine('UTF-8') { String line ->
+                        String trimmed = line?.trim()
+                        if (!trimmed) return
+                        Map row = slurper.parseText(trimmed) as Map
+                        Map attributes = (row.attributes ?: [:]) as Map
+                        attributes.each { key, value ->
+                            String parameterDefId = vertexParameterDefByKey[key as String]
+                            if (parameterDefId) storeParameter(parameterDefId, value, row.graphVertexId as String, null)
+                        }
+                    }
+                }
+
+                edgesFile.eachLine('UTF-8') { String line ->
+                    String trimmed = line?.trim()
+                    if (!trimmed) return
+                    Map row = slurper.parseText(trimmed) as Map
+                    def edgeValue = ec.entity.find('moqui.math.GraphEdge')
+                            .condition('graphId', row.graphId)
+                            .condition('graphEdgeId', row.graphEdgeId)
+                            .one()
+                    boolean isNew = edgeValue == null
+                    if (isNew) {
+                        edgeValue = ec.entity.makeValue('moqui.math.GraphEdge')
+                        edgeValue.graphId = row.graphId
+                        edgeValue.graphEdgeId = row.graphEdgeId
+                    } else {
+                        edgeValue = edgeValue.cloneValue()
+                    }
+                    edgeValue.edgeTypeEnumId = row.edgeTypeEnumId
+                    edgeValue.fromVertexId = row.fromVertexId
+                    edgeValue.toVertexId = row.toVertexId
+                    edgeValue.isDirected = row.isDirected ?: 'Y'
+                    edgeValue.isLoop = row.isLoop ?: 'N'
+                    edgeValue.label = row.label
+                    if (isNew) edgeValue.create() else edgeValue.update()
+                    loadedEdgeCount++
+                }
+
+                if (edgeMetadataFile.exists()) {
+                    edgeMetadataFile.eachLine('UTF-8') { String line ->
+                        String trimmed = line?.trim()
+                        if (!trimmed) return
+                        Map row = slurper.parseText(trimmed) as Map
+                        Map attributes = (row.attributes ?: [:]) as Map
+                        attributes.each { key, value ->
+                            String parameterDefId = edgeParameterDefByKey[key as String]
+                            if (parameterDefId) storeParameter(parameterDefId, value, null, row.graphEdgeId as String)
+                        }
+                    }
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+    <service verb="search" noun="NormClauses" authenticate="true" allow-remote="true">
+        <description>Search normative clauses materialized in the CyberNormVertexMeta pivot view.
+            OpenSearch/DataDocument-backed retrieval is a later milestone (Phase 6); this first version
+            queries the Moqui-persisted graph directly so the graph is usable as soon as it is loaded,
+            same "search#Artifacts as legacy direct path" precedent used in moqui-mcp.</description>
+        <in-parameters>
+            <parameter name="queryText" required="true"/>
+            <parameter name="documentId"/>
+            <parameter name="limit" type="Integer" default="8"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="results" type="List"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                def find = ec.entity.find('moqui.cyber.graph.CyberNormVertexMeta')
+                        .condition('vertexType', 'NormClause')
+                        .condition('clauseText', 'like', "%${queryText}%")
+                        .orderBy('clauseNumber')
+                if (documentId) find = find.condition('documentId', documentId)
+                List candidates = find.list()
+                int effectiveLimit = (limit ?: 8) as int
+                results = candidates.take(effectiveLimit).collect { row ->
+                    [
+                        graphVertexId : row.graphVertexId,
+                        logicalId     : row.logicalId,
+                        documentId    : row.documentId,
+                        clauseNumber  : row.clauseNumber,
+                        clauseTitle   : row.clauseTitle,
+                        sourceFile    : row.sourceFile,
+                        provenanceClass: row.provenanceClass,
+                        snippet       : row.clauseText ? (row.clauseText.length() > 300 ? row.clauseText.substring(0, 300) + '...' : row.clauseText) : ''
+                    ]
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+    <service verb="find" noun="NormClausesByDocument" authenticate="true" allow-remote="true">
+        <description>Systematic, paginated listing of every NormClause vertex of one document, ordered by
+            clauseNumber, with full untruncated clauseText - unlike search#NormClauses (a text-match search
+            returning a 300-char snippet), this is for methodically walking an entire document
+            clause-by-clause during vocabulary extraction (norm-product-classification skill, Workflow A),
+            where the full clause text is needed to judge whether it defines a component type/category or
+            a testable requirement.</description>
+        <in-parameters>
+            <parameter name="documentId" required="true"/>
+            <parameter name="offset" type="Integer" default="0"/>
+            <parameter name="limit" type="Integer" default="50"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="clauses" type="List"/>
+            <parameter name="totalCount" type="Integer"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                def find = ec.entity.find('moqui.cyber.graph.CyberNormVertexMeta')
+                        .condition('vertexType', 'NormClause')
+                        .condition('documentId', documentId)
+                        .orderBy('clauseNumber')
+                List allClauses = find.list()
+                totalCount = allClauses.size()
+                int effectiveOffset = (offset ?: 0) as int
+                int effectiveLimit = (limit ?: 50) as int
+                clauses = allClauses.drop(effectiveOffset).take(effectiveLimit).collect { row ->
+                    [
+                        graphVertexId  : row.graphVertexId,
+                        logicalId      : row.logicalId,
+                        documentId     : row.documentId,
+                        clauseNumber   : row.clauseNumber,
+                        clauseTitle    : row.clauseTitle,
+                        clauseText     : row.clauseText,
+                        sourceFile     : row.sourceFile,
+                        provenanceClass: row.provenanceClass
+                    ]
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+    <service verb="find" noun="NormClauseReferences" authenticate="true" allow-remote="true">
+        <description>Read-only: given one clause's graphVertexId, returns every REFERENCES/
+            HARMONIZES_WITH edge touching it (in either direction), each resolved to the real
+            documentId/clauseNumber/clauseTitle of the other endpoint - not just the raw edge.
+            Wraps moqui.cyber.graph.CyberNormEdgeMeta (CyberNormGraphExtensions.xml), built in Phase
+            1 but never queried by any service until now (776 REFERENCES + 8 HARMONIZES_WITH edges
+            already sit in OtCyberNormGraph, unused).
+
+            This is the concrete signal for deciding ProductFeatureGroup granularity during
+            vocabulary extraction (norm-product-classification skill, Workflow A): a clause that
+            references, or is referenced by, several others (even across different documents) is
+            real evidence those clauses belong in one ProductFeatureGroup together - not an
+            arbitrary editorial choice. Confirmed on real data: IEC 62443-3-3's Annex B and EN
+            40000-1-3's Annex ZA are both real correspondence/mapping tables the norms themselves
+            wrote, and both show up as the highest-out-degree REFERENCES clauses in the whole
+            graph.</description>
+        <in-parameters>
+            <parameter name="graphVertexId" required="true"/>
+            <parameter name="graphId" default="OtCyberNormGraph"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="references" type="List"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                String effectiveGraphId = (graphId ?: 'OtCyberNormGraph').toString()
+
+                Closure<Map> resolveVertex = { String vertexId ->
+                    def meta = ec.entity.find('moqui.cyber.graph.CyberNormVertexMeta')
+                            .condition('graphVertexId', vertexId).one()
+                    [graphVertexId: vertexId, documentId: meta?.documentId,
+                            clauseNumber: meta?.clauseNumber, clauseTitle: meta?.clauseTitle]
+                }
+
+                // CyberNormEdgeMeta (the view-entity) is unusable here: its "relationType" alias is a
+                // name-alias (not a field= remap), which Moqui's EntityFind.condition() rejects
+                // ("Field relationType not found on entity..., cannot add condition") AND which
+                // EntityFind.selectFields() also rejects the same way ("not a valid field name") -
+                // both confirmed by direct testing, not assumed. Separately, even a plain .list() with
+                // no field restriction triggers a genuine Moqui view-entity bug: FGV (the from-vertex
+                // GraphVertex join, used only for the view's fromLabel alias) ends up referenced in the
+                // generated SELECT but silently dropped from the FROM/JOIN clause (self-join of the
+                // same target entity, GraphVertex, under two different aliases FGV/TGV), causing
+                // "Column FGV.LABEL not found". Working around this by never touching the view-entity
+                // for this query - fetching plain moqui.math.GraphEdge rows directly instead (no join,
+                // "label" is a real field, no alias problem), then resolving confidence via a direct
+                // moqui.math.Parameter lookup per edge (small counts - a handful of edges per clause,
+                // not worth a join).
+                List relationTypes = ['REFERENCES', 'HARMONIZES_WITH']
+                Closure<String> resolveConfidence = { String edgeId ->
+                    ec.entity.find('moqui.math.Parameter')
+                            .condition('graphId', effectiveGraphId)
+                            .condition('graphEdgeId', edgeId)
+                            .condition('parameterDefId', 'CyberNormConfidenceParam')
+                            .one()?.textValue
+                }
+                List edgesOut = ec.entity.find('moqui.math.GraphEdge')
+                        .condition('graphId', effectiveGraphId)
+                        .condition('fromVertexId', graphVertexId)
+                        .condition('label', 'in', relationTypes)
+                        .list()
+                List edgesIn = ec.entity.find('moqui.math.GraphEdge')
+                        .condition('graphId', effectiveGraphId)
+                        .condition('toVertexId', graphVertexId)
+                        .condition('label', 'in', relationTypes)
+                        .list()
+
+                references = []
+                edgesOut.each { e ->
+                    references << [direction: 'outgoing', relationType: e.label,
+                            confidence: resolveConfidence(e.graphEdgeId as String), clause: resolveVertex(e.toVertexId as String)]
+                }
+                edgesIn.each { e ->
+                    references << [direction: 'incoming', relationType: e.label,
+                            confidence: resolveConfidence(e.graphEdgeId as String), clause: resolveVertex(e.fromVertexId as String)]
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+    <service verb="index" noun="NormDocuments" authenticate="true" allow-remote="true" transaction-timeout="3600">
+        <description>Index norm clauses materialized in CyberNormVertexMeta into OpenSearch, with embeddings,
+            reusing moqui-mcp's existing ElasticBackendAdapter and get#QueryEmbedding service exactly as-is
+            (same embedding provider/model/dimensions, same L1/L2 cache) instead of duplicating that logic.</description>
+        <in-parameters>
+            <parameter name="indexName" default="moqui_cyber_norms_v1"/>
+            <parameter name="documentId"/>
+            <parameter name="forceReindex" type="Boolean"/>
+            <parameter name="limit" type="Integer"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="indexedCount" type="Integer"/>
+            <parameter name="failedCount" type="Integer"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.moqui.agent.search.ElasticBackendAdapter
+                import groovy.json.JsonSlurper
+
+                def clausesFind = ec.entity.find('moqui.cyber.graph.CyberNormVertexMeta')
+                        .condition('vertexType', 'NormClause')
+                        .orderBy('clauseNumber')
+                if (documentId) clausesFind = clausesFind.condition('documentId', documentId)
+                List clauses = clausesFind.list()
+                if (limit) clauses = clauses.take(limit as int)
+
+                String effectiveIndex = (indexName ?: 'moqui_cyber_norms_v1').toString()
+                def adapter = new ElasticBackendAdapter(ec)
+                if (Boolean.TRUE.equals(forceReindex) && adapter.indexExists(effectiveIndex)) {
+                    adapter.deleteIndex(effectiveIndex)
+                }
+                if (!adapter.indexExists(effectiveIndex)) {
+                    File mappingFile = new File(ec.factory.getRuntimePath() + '/component/moqui-cybersecurity-agent/tools/norm-indexer/opensearch-mapping-cyber-norms.json')
+                    Map mappingSpec = new JsonSlurper().parseText(mappingFile.text) as Map
+                    adapter.createIndex(effectiveIndex, mappingSpec)
+                }
+
+                indexedCount = 0
+                failedCount = 0
+                List<Map> batch = []
+                int batchSize = 50
+
+                Closure flushBatch = {
+                    if (!batch) return
+                    try {
+                        adapter.bulkIndex(effectiveIndex, batch)
+                        indexedCount += batch.size()
+                    } catch (Throwable t) {
+                        failedCount += batch.size()
+                        ec.logger.error("Failed to bulk index ${batch.size()} norm clause documents", t)
+                    }
+                    batch = []
+                }
+
+                clauses.each { row ->
+                    try {
+                        // get#QueryEmbedding rejects '<'/'>' (HTML-safety validation on its queryText
+                        // parameter), which real standard clauses legitimately contain (e.g. "< 5",
+                        // inequality/range text). Strip them before embedding; this only affects what
+                        // gets embedded, not the stored clauseText.
+                        String textToEmbed = ((row.clauseText ?: row.clauseTitle ?: row.clauseNumber) as String)
+                                .replaceAll(/[<>]/, ' ')
+                        // Isolate each embedding-cache lookup in its own transaction: get#QueryEmbedding
+                        // writes to ArtifactQueryEmbeddingCache, and a single collision/error there (e.g.
+                        // two clauses in different documents sharing byte-identical boilerplate text and
+                        // the same cache key) would otherwise mark the whole batch's transaction
+                        // rollback-only, cascading failure to every remaining clause.
+                        Map embeddingResult = ec.service.sync().name('org.moqui.agent.AgentDocumentServices.get#QueryEmbedding')
+                                .parameters([queryText: textToEmbed])
+                                .requireNewTransaction(true).call()
+                        if (ec.message.hasError()) ec.message.clearErrors()
+                        if (!embeddingResult?.embedding) throw new IllegalStateException("Empty embedding result")
+                        batch.add([
+                            doc_id        : row.graphVertexId,
+                            graphVertexId : row.graphVertexId,
+                            logicalId     : row.logicalId,
+                            documentId    : row.documentId,
+                            documentFamily: row.documentFamily,
+                            documentTitle : row.documentTitle,
+                            edition       : row.edition,
+                            clauseNumber  : row.clauseNumber,
+                            clauseTitle   : row.clauseTitle,
+                            clauseText    : row.clauseText,
+                            sourceFile    : row.sourceFile,
+                            provenanceClass: row.provenanceClass,
+                            embedding     : embeddingResult.embedding
+                        ])
+                        if (batch.size() >= batchSize) flushBatch()
+                    } catch (Throwable t) {
+                        failedCount++
+                        ec.logger.error("Failed to embed/index norm clause ${row.graphVertexId}", t)
+                        if (ec.message.hasError()) ec.message.clearErrors()
+                    }
+                }
+                flushBatch()
+            ]]></script>
+        </actions>
+    </service>
+
+    <service verb="search" noun="NormClausesSemantic" authenticate="true" allow-remote="true">
+        <description>Hybrid BM25 + kNN semantic search over the OpenSearch norm-clause index built by
+            index#NormDocuments. Falls back gracefully with a clear error if the index/embedding is not
+            available yet -- callers should use search#NormClauses (direct entity query) until the
+            OpenSearch index has actually been populated.</description>
+        <in-parameters>
+            <parameter name="queryText" required="true"/>
+            <parameter name="indexName" default="moqui_cyber_norms_v1"/>
+            <parameter name="documentId"/>
+            <parameter name="limit" type="Integer" default="8"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="results" type="List"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.moqui.agent.search.ElasticBackendAdapter
+
+                String effectiveIndex = (indexName ?: 'moqui_cyber_norms_v1').toString()
+                def adapter = new ElasticBackendAdapter(ec)
+                if (!adapter.indexExists(effectiveIndex)) {
+                    throw new IllegalStateException("Index ${effectiveIndex} does not exist yet; run index#NormDocuments first.")
+                }
+                Map embeddingResult = ec.service.sync().name('org.moqui.agent.AgentDocumentServices.get#QueryEmbedding')
+                        .parameters([queryText: queryText]).call()
+                List queryVector = embeddingResult.embedding as List
+
+                List<Map> shouldClauses = [
+                    [match: [clauseText: [query: queryText]]],
+                    [knn: [embedding: [vector: queryVector, k: (limit ?: 8)]]]
+                ]
+                Map boolQuery = [bool: [should: shouldClauses]]
+                if (documentId) boolQuery.bool.filter = [[term: [documentId: documentId]]]
+
+                Map querySpec = [
+                    size : (limit ?: 8),
+                    query: boolQuery,
+                    _source: ['graphVertexId', 'logicalId', 'documentId', 'clauseNumber', 'clauseTitle', 'clauseText', 'sourceFile', 'provenanceClass']
+                ]
+                Map searchResult = adapter.search(effectiveIndex, querySpec)
+                List hits = ((searchResult.hits ?: [:]).hits ?: []) as List
+                results = hits.collect { hit ->
+                    Map source = (hit.source ?: hit._source ?: [:]) as Map
+                    [
+                        graphVertexId : source.graphVertexId,
+                        logicalId     : source.logicalId,
+                        documentId    : source.documentId,
+                        clauseNumber  : source.clauseNumber,
+                        clauseTitle   : source.clauseTitle,
+                        sourceFile    : source.sourceFile,
+                        provenanceClass: source.provenanceClass,
+                        score         : hit.score ?: hit._score,
+                        snippet       : source.clauseText ? ((source.clauseText as String).length() > 300 ? (source.clauseText as String).substring(0, 300) + '...' : source.clauseText) : ''
+                    ]
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+</services>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This software is in the public domain under CC0 1.0 Universal plus a
+     Grant of Patent License.
+
+     To the extent possible under law, the author(s) have dedicated all
+     copyright and related and neighboring rights to this software to the
+     public domain worldwide. This software is distributed without any warranty.
+
+     You should have received a copy of the CC0 Public Domain Dedication
+     along with this software (see the LICENSE.md file). If not, see
+     <https://creativecommons.org/publicdomain/zero/1.0/>. -->
+
+<component xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/moqui-conf-3.xsd"
+          name="moqui-cybersecurity-agent" version="0.1.0">
+
+    <!-- Phase 1: normative graph (moqui-math, moqui-mcp).
+         Phase 2 (PLM/BOM machine acquisition) adds mantle-udm (Product/Asset/
+         ProductCategory/Content) and moqui-device (Device/PhysicalDevice/
+         DeviceConnection/DeviceContent). -->
+    <depends-on name="moqui-math"/>
+    <depends-on name="moqui-mcp"/>
+    <depends-on name="mantle-udm"/>
+    <depends-on name="moqui-device"/>
+    <!-- Phase 3 (PLC/software graph): moqui-plc-knowledge is a separate component
+         (forked from moqui-source-knowledge, generalized beyond the Siemens SCL
+         dialect) that owns PLC/firmware source parsing and its own Graph/GraphVertex/
+         GraphEdge data. This component only adds crosswalk edges from PLC vertices to
+         NormClause vertices and the Device<->ProjectVersion bridge; it never merges
+         the two graphs. -->
+    <depends-on name="moqui-plc-knowledge"/>
+
+    <service-factory load-path="service/"/>
+    <entity-factory load-path="entity/"
+            load-data="data/CyberNormGraphMetadataSeedData.xml,data/CyberMachineGraphMetadataSeedData.xml"/>
+</component>

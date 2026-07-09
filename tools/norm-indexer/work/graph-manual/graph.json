@@ -1,0 +1,10 @@
+{
+  "description": "OT cybersecurity normative graph generated from norm PDF sources.",
+  "graphId": "OtCyberNormGraph",
+  "graphOrder": 11,
+  "graphTypeEnumId": "GtDirected",
+  "isWeighted": "N",
+  "loopsAllowed": "N",
+  "name": "OT Cybersecurity Normative Graph",
+  "size": 9
+}

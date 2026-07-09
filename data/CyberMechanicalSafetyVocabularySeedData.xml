@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    ISO 12100 clause 6.2.11.4 safety-function vocabulary, reusable across every future machine -
+    the same treatment already given to other norm-derived vocabularies (e.g. FEAT_ZONE_BOUNDARY_
+    MONITORING in CyberNormProductClassificationDemoSeedData.xml). type="seed-initial" (not
+    "demo"): pure reference vocabulary, no ProductFeatureAppl instance in this file - no real
+    Product in this project has this data yet (Smoking Cell 1 has no mechanical BOM), and
+    inventing an application here would be exactly the fabricated data this project avoids. See
+    the mechanical-safety-crosswalk skill and check#DeviceSafetyExposure
+    (service/org/moqui/cyber/CyberMechanicalSafetyServices.xml) for how these get applied once a
+    real machine has real safety-function evidence (e.g. a documented interlock, an E-stop
+    circuit, a relief valve).
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NO_UNEXPECTED_START" productFeatureTypeEnumId="PftSafetyFunction"
+            description="ISO 12100 6.2.11.4: the machine must not start unexpectedly, including as a result of a control-system malfunction or logical compromise."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PARAMETER_INTEGRITY" productFeatureTypeEnumId="PftSafetyFunction"
+            description="ISO 12100 6.2.11.4: machine parameters must not undergo uncontrolled variation where such variation could generate a hazard."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_STOP_NOT_IMPEDED" productFeatureTypeEnumId="PftSafetyFunction"
+            description="ISO 12100 6.2.11.4: a stop command, once given, must not be prevented from taking effect."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NO_EJECTION" productFeatureTypeEnumId="PftSafetyFunction"
+            description="ISO 12100 6.2.11.4: no moving element must fall or be ejected as a result of a control-system fault or compromise."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PROTECTIVE_DEVICE_INTEGRITY" productFeatureTypeEnumId="PftSafetyFunction"
+            description="ISO 12100 6.2.11.4: protective devices (light curtains, limit switches, interlocks) must not lose their effectiveness as a result of a control-system fault or compromise."/>
+
+</entity-facade-xml>

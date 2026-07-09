@@ -1,0 +1,135 @@
+{
+  "documents": [
+    {
+      "documentId": "TOP20-SECURE-PLC-CODING-V1",
+      "sourceFile": "Top_20_Secure_PLC_Coding_Practices_V1.0.pdf",
+      "title": "Secure PLC Coding Practices: Top 20 List",
+      "documentFamily": "numbered-list",
+      "edition": "1.0 (2021-06-15)",
+      "designator": null,
+      "ocrSource": false
+    },
+    {
+      "documentId": "IEC-62443-3-2",
+      "sourceFile": "norm/EN 62443-3-2_ValutazioneDelRischiodiSicurezzzaNelProgettoDiSistema.pdf",
+      "title": "Sicurezza dei sistemi di automazione industriale e controllo - Parte 3-2: Valutazione del rischio di sicurezza nel progetto di sistema",
+      "documentFamily": "en-iec-hierarchical",
+      "edition": "2021-04",
+      "designator": "IEC-62443-3-2",
+      "ocrSource": false
+    },
+    {
+      "documentId": "IEC-62443-3-3",
+      "sourceFile": "norm/EN 62443-3-3_RequisitiSicurezzaInformaticaLivelliDiSicurezzaInformaticaDiSistema.pdf",
+      "title": "Sicurezza dei sistemi di automazione industriale e controllo - Parte 3-3: Requisiti di sicurezza informatica e livelli di sicurezza informatica di sistema",
+      "documentFamily": "en-iec-hierarchical",
+      "edition": "unknown",
+      "designator": "IEC-62443-3-3",
+      "ocrSource": false
+    },
+    {
+      "documentId": "IEC-62443-4-1",
+      "sourceFile": "norm/ENC 62443-4-1_Prescrizioni per un ciclo di vita sicuro per lo sviluppo di un prodotto.pdf",
+      "title": "Prescrizioni per un ciclo di vita sicuro per lo sviluppo di un prodotto",
+      "documentFamily": "en-iec-hierarchical",
+      "edition": "unknown",
+      "designator": "IEC-62443-4-1",
+      "ocrSource": false
+    },
+    {
+      "documentId": "IEC-62443-4-2",
+      "sourceFile": "norm/EN 62443-4-2_RequisitiDiSicurezza_IACS.pdf",
+      "title": "Requisiti di sicurezza per componenti IACS",
+      "documentFamily": "en-iec-hierarchical",
+      "edition": "unknown",
+      "designator": "IEC-62443-4-2",
+      "ocrSource": false
+    },
+    {
+      "documentId": "EU-REG-2023-1230",
+      "sourceFile": "norm/CELEX_32023R1230_IT_TXT.pdf",
+      "title": "Regolamento (UE) 2023/1230 relativo alle macchine",
+      "documentFamily": "eu-regulation-article",
+      "edition": "2023",
+      "designator": null,
+      "ocrSource": false
+    },
+    {
+      "documentId": "EU-REG-2024-2847-CRA",
+      "sourceFile": "OJ_L_202402847_IT_TXT.pdf",
+      "title": "Regolamento (UE) 2024/2847 - requisiti orizzontali di cibersicurezza per i prodotti con elementi digitali (Cyber Resilience Act)",
+      "documentFamily": "eu-regulation-article",
+      "edition": "2024",
+      "designator": null,
+      "ocrSource": false,
+      "note": "Corrected after content spot-check: this is the Cyber Resilience Act (CRA), not the NIS2 directive - see EU-DIR-2022-2555-NIS2 below, added separately once its real PDF became available. sourceFile is a project-root-relative path (the PDF lives at the project root, not under norm/ - verified via find, not assumed)."
+    },
+    {
+      "documentId": "EU-DIR-2022-2555-NIS2",
+      "sourceFile": "norm/CELEX_32022L2555_EN_TXT.pdf",
+      "title": "Directive (EU) 2022/2555 (NIS2) - measures for a high common level of cybersecurity across the Union",
+      "documentFamily": "eu-regulation-article",
+      "edition": "2022",
+      "designator": null,
+      "ocrSource": false,
+      "note": "Real PDF confirmed present under norm/ (English text, unlike the Italian text used for the other two EU acts - the segmenter is regex-based on Article numbering, not language-dependent, so this is not expected to need special handling)."
+    },
+    {
+      "documentId": "EN-40000-1-2",
+      "sourceFile": "norm/EN40000 1-2_ocr.pdf",
+      "title": "Cybersecurity requirements for products with digital elements - Part 1-2: Principles for cyber resilience",
+      "documentFamily": "en-iec-hierarchical",
+      "edition": "prEN 40000-1-2, October 2025",
+      "designator": "EN-40000-1-2",
+      "ocrSource": true
+    },
+    {
+      "documentId": "EN-40000-1-3",
+      "sourceFile": "norm/EN40000 1-3_ocr.pdf",
+      "title": "Cybersecurity requirements for products with digital elements - Part 1-3",
+      "documentFamily": "en-iec-hierarchical",
+      "edition": "prEN 40000-1-3",
+      "designator": "EN-40000-1-3",
+      "ocrSource": true
+    },
+    {
+      "documentId": "BS-EN-50742-2025",
+      "sourceFile": "norm/BS EN 50742-2025.pdf",
+      "title": "BS EN 50742-2025 (Draft for Public Comment)",
+      "documentFamily": "line-numbered-draft",
+      "edition": "2025 DPC",
+      "designator": "EN-50742",
+      "ocrSource": false,
+      "note": "BSI 'Draft for Public Comment' form prefixes every paragraph with a sequential review line number (1, 2, 3, ...) unrelated to clause numbering, which collides with both the numbered-list and en-iec-hierarchical heading regexes (a real clause number like '6.4' appears only inside the comment-resolution table, gets misdetected as a heading, and swallows the rest of the document as its body -- verified: produced exactly 1 clause with 153233 characters of text). Root cause confirmed precisely (2026-07-08, time-boxed check): every extracted line is literally prefixed with the DPC line number and padding, e.g. ' 99   2   Normative references' for what should segment as heading '2 Normative references' -- the real heading text IS present and usually well-formed, just offset by a variable-width numeric prefix that breaks the anchored ^\\s* start-of-line match. A real fix needs a new documentFamily (e.g. 'en-iec-hierarchical-dpc') that strips a leading '^\\s*\\d+\\s+' prefix before reusing the existing en-iec-hierarchical heading regex - a plausible, scoped fix, not attempted here (out of this pass's time-box; the existing 10-document corpus was not worth risking to chase one more, and this document was never part of the original 11 configured before this session)."
+    },
+    {
+      "documentId": "ISO-DIS-24882",
+      "sourceFile": "norm/ISO_DIS_24882(en).pdf",
+      "title": "ISO/DIS 24882",
+      "documentFamily": "en-iec-hierarchical",
+      "edition": "DIS",
+      "designator": "ISO-24882",
+      "ocrSource": false
+    },
+    {
+      "documentId": "ISO-12100-2010",
+      "sourceFile": null,
+      "title": "UNI EN ISO 12100:2010 - Sicurezza del macchinario - Principi generali di progettazione - Valutazione del rischio e riduzione del rischio",
+      "documentFamily": "iso-machinery-safety",
+      "edition": "2010",
+      "designator": "ISO-12100-2010",
+      "ocrSource": false,
+      "note": "No real PDF available yet (verified, not in norm/). Only 4 clauses (5.4, 6.2.11.1, 6.2.11.4, 6.2.11.7) loaded, hand-transcribed from text the user quoted directly, via tools/norm-indexer/work/ir-manual/ + the real generate_norm_graph.py (not the PDF pipeline) - see moqui-cybersecurity-agent/skills/mechanical-safety-crosswalk/SKILL.md. Marked provenanceClass=MANUAL_PARTIAL on every clause vertex, distinct from EXTRACTED. When the real PDF becomes available, replace this entry's sourceFile and re-run parse_norm_sources.py for full coverage - this is not a special case to remove, just the normal pipeline finally having its input."
+    },
+    {
+      "documentId": "ISO-TR-22100-4-2018",
+      "sourceFile": null,
+      "title": "ISO/TR 22100-4:2018 - Sicurezza del macchinario - Relazione con la ISO 12100 - Parte 4: Guida ai fabbricanti di macchine per la considerazione degli aspetti IT-security (cyber security) collegati alla sicurezza",
+      "documentFamily": "iso-machinery-safety-cyber-bridge",
+      "edition": "2018",
+      "designator": "ISO-TR-22100-4-2018",
+      "ocrSource": false,
+      "note": "No real PDF available yet (verified, not in norm/). 5 sections hand-transcribed from text the user quoted directly (same ir-manual/ mechanism and MANUAL_PARTIAL marking as ISO-12100-2010 above). Bridges ISO 12100 (what must be protected) and IEC 62443 (how) - see mechanical-safety-crosswalk skill."
+    }
+  ]
+}

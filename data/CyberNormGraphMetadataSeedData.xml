@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <moqui.basic.Enumeration enumId="PpCyberNormGraph" enumTypeId="ParameterPurpose" description="OT Cybersecurity Normative Graph Metadata"/>
+
+    <!-- Vertex metadata: NormDocument / NormPart / NormClause / NormDefinition -->
+    <moqui.math.ParameterDef parameterDefId="CyberNormVertexTypeParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberNormGraph" parameterCode="vertexType" parameterName="Norm Vertex Type" description="NormDocument, NormPart, NormClause, or NormDefinition."/>
+    <moqui.math.ParameterDef parameterDefId="CyberNormLogicalIdParam" parameterTypeEnumId="PtText" purposeEnumId="PpCyberNormGraph" parameterCode="logicalId" parameterName="Norm Logical Id" description="Canonical URI for the vertex, e.g. norm-clause://EN-IEC-62443-3-3/5.3.2, stable across re-generation."/>
+    <moqui.math.ParameterDef parameterDefId="CyberNormDocumentIdParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberNormGraph" parameterCode="documentId" parameterName="Norm Document Id" description="Short document id, e.g. IEC-62443-3-3, matching config/norm-sources.json documentId."/>
+    <moqui.math.ParameterDef parameterDefId="CyberNormDocumentFamilyParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberNormGraph" parameterCode="documentFamily" parameterName="Norm Document Family" description="Numbering/segmentation family, e.g. en-iec-hierarchical, eu-regulation-article."/>
+    <moqui.math.ParameterDef parameterDefId="CyberNormDocumentTitleParam" parameterTypeEnumId="PtText" purposeEnumId="PpCyberNormGraph" parameterCode="documentTitle" parameterName="Norm Document Title" description="Title of the source normative document."/>
+    <moqui.math.ParameterDef parameterDefId="CyberNormEditionParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberNormGraph" parameterCode="edition" parameterName="Norm Edition" description="Edition, year, or version identifier of the source document."/>
+    <moqui.math.ParameterDef parameterDefId="CyberNormClauseNumberParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberNormGraph" parameterCode="clauseNumber" parameterName="Clause Number" description="Clause/article/annex-point number as it appears in the source document."/>
+    <moqui.math.ParameterDef parameterDefId="CyberNormClauseTitleParam" parameterTypeEnumId="PtText" purposeEnumId="PpCyberNormGraph" parameterCode="clauseTitle" parameterName="Clause Title" description="Heading text of the clause, if present."/>
+    <moqui.math.ParameterDef parameterDefId="CyberNormClauseTextParam" parameterTypeEnumId="PtText" purposeEnumId="PpCyberNormGraph" parameterCode="clauseText" parameterName="Clause Text" description="Extracted body text of the clause. Stored in Parameter.textValue (text-long column) regardless of the logical PtText type."/>
+    <moqui.math.ParameterDef parameterDefId="CyberNormSourceFileParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberNormGraph" parameterCode="sourceFile" parameterName="Source File" description="File name of the source PDF the clause was extracted from."/>
+    <moqui.math.ParameterDef parameterDefId="CyberNormPageParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberNormGraph" parameterCode="page" parameterName="Source Page" description="Approximate page number in the source PDF, for human review."/>
+
+    <!-- Shared vertex+edge metadata -->
+    <moqui.math.ParameterDef parameterDefId="CyberNormProvenanceClassParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberNormGraph" parameterCode="provenanceClass" parameterName="Provenance Class" description="EXTRACTED, DERIVED, INFERRED, or MANUALLY_REVIEWED. Same taxonomy used for PLC source knowledge graphs."/>
+
+    <!-- Edge-only metadata -->
+    <moqui.math.ParameterDef parameterDefId="CyberNormConfidenceParam" parameterTypeEnumId="PtTextShort" purposeEnumId="PpCyberNormGraph" parameterCode="confidence" parameterName="Relation Confidence" description="Heuristic confidence (0.0-1.0, as text) for an automatically extracted cross-reference relation."/>
+    <moqui.math.ParameterDef parameterDefId="CyberNormRationaleParam" parameterTypeEnumId="PtText" purposeEnumId="PpCyberNormGraph" parameterCode="rationale" parameterName="Relation Rationale" description="Short human-readable explanation of why a relation was extracted, e.g. the matched reference phrase."/>
+
+</entity-facade-xml>

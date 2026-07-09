@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Phase 4, first real example of the systematic norm-to-product crosswalk: uses existing
+    mantle-udm ProductCategory/ProductFeature/ProductFeatureGroup/ProductCategoryFeatGrpAppl
+    entities (never used in this project before this file) instead of one-off manual GraphEdge
+    crosswalk entries like CyberPlcNormCrosswalkDemoSeedData.xml.
+
+    Hand-curated from real, verified norm text (confirmed via a live search#NormClauses RPC call
+    against the already-loaded IEC 62443-4-2 norm graph, not invented): clause 15.1 defines the
+    "network device" component-type scope ("The purpose of this set of requirements is to
+    document requirements that are specific to network devices"), and clause 15.12.1 (CR 15.12.1)
+    is a concrete, boolean-style technical requirement ("A network device at a zone boundary
+    shall provide the capability to monitor and control communications at zone boundaries to
+    enforce the compartmentalization defined in the risk-based zones and conduits model").
+
+    This file is NOT an automated norm-text extraction (that is future work, deferred
+    deliberately - see design-session/SESSION.md); it hand-encodes one real, verified
+    requirement to validate the ProductCategory/ProductFeatureGroup schema pattern end-to-end.
+
+    Classifies PROD_SIE_XB208 (the real SCALANCE XB208 switch from Phase 2's
+    CyberHvacCellDemoSeedData.xml) as a Network Device. Deliberately does NOT add a
+    ProductFeatureAppl for the zone-boundary-monitoring capability: a base SCALANCE XB200-series
+    managed switch does not provide zone-boundary monitoring/control (that is typically a
+    dedicated security-appliance function, e.g. SCALANCE S6xx) - the point of this example is to
+    surface a real compliance gap automatically from classification alone, not to force a pass.
+
+    NOT auto-loaded (type="demo", same convention as the other Phase 2/3 demo seed files).
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="demo">
+
+    <mantle.product.category.ProductCategory productCategoryId="NCAT_IEC62443_4_2_NETDEV" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="95e85059b1731754b90bb1e230d51809"
+            productCategoryTypeEnumId="PctRegulatory" categoryName="IEC 62443-4-2 Network Device"
+            description="Component-type scope defined by IEC 62443-4-2 clause 15.1: 'The purpose of this set of requirements is to document requirements that are specific to network devices.'"/>
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_ZONE_BOUNDARY_MONITORING" sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="7536e81f34c11c835e83495af1dab5bd"
+            productFeatureTypeEnumId="PftSecurityCapability"
+            description="IEC 62443-4-2 CR 15.12.1: the component shall provide the capability to monitor and control communications at zone boundaries to enforce the compartmentalization defined in the risk-based zones and conduits model."/>
+
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_IEC62443_4_2_NETDEV_REQS"
+            description="IEC 62443-4-2 Network Device (Clause 15) technical requirements"/>
+
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC62443_4_2_NETDEV_REQS"
+            productFeatureId="FEAT_ZONE_BOUNDARY_MONITORING" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="NCAT_IEC62443_4_2_NETDEV"
+            productFeatureGroupId="FGRP_IEC62443_4_2_NETDEV_REQS" fromDate="2026-01-01 00:00:00"
+            applTypeEnumId="PfatStandard"/>
+
+    <mantle.product.category.ProductCategoryMember productCategoryId="NCAT_IEC62443_4_2_NETDEV"
+            productId="PROD_SIE_XB208" fromDate="2026-01-01 00:00:00"
+            comments="Classified as Network Device per IEC 62443-4-2 scope; classification is manual/declared in this first example, not deduced from an attached certificate/datasheet."/>
+
+</entity-facade-xml>

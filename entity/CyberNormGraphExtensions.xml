@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+    <!--
+        This component depends on moqui-mcp, which already extends moqui.math.Parameter
+        with graphId/graphVertexId/graphEdgeId/textValue (see AgentGraphMathExtensions.xml
+        in moqui-mcp) and extends GraphVertex/GraphEdge with the outgoingEdges/incomingEdges/
+        parameters relationships. Those extensions are NOT redeclared here to avoid
+        conflicting extend-entity blocks on the same fields.
+
+        Only new ParameterDef-keyed metadata for the normative graph is added, via the
+        pivot view-entity below (same EAV-over-Parameter pattern as
+        moqui-mcp's AgentArtifactVertexMeta / moqui-source-knowledge's PlcGraphVertexMeta).
+    -->
+
+    <view-entity entity-name="CyberNormVertexMeta" package="moqui.cyber.graph">
+        <member-entity entity-alias="GV" entity-name="moqui.math.GraphVertex"/>
+        <member-entity entity-alias="PVT" entity-name="moqui.math.Parameter" join-from-alias="GV" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphVertexId"/>
+            <entity-condition><econdition entity-alias="PVT" field-name="parameterDefId" value="CyberNormVertexTypeParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PLI" entity-name="moqui.math.Parameter" join-from-alias="GV" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphVertexId"/>
+            <entity-condition><econdition entity-alias="PLI" field-name="parameterDefId" value="CyberNormLogicalIdParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PDI" entity-name="moqui.math.Parameter" join-from-alias="GV" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphVertexId"/>
+            <entity-condition><econdition entity-alias="PDI" field-name="parameterDefId" value="CyberNormDocumentIdParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PDF" entity-name="moqui.math.Parameter" join-from-alias="GV" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphVertexId"/>
+            <entity-condition><econdition entity-alias="PDF" field-name="parameterDefId" value="CyberNormDocumentFamilyParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PDT" entity-name="moqui.math.Parameter" join-from-alias="GV" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphVertexId"/>
+            <entity-condition><econdition entity-alias="PDT" field-name="parameterDefId" value="CyberNormDocumentTitleParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PED" entity-name="moqui.math.Parameter" join-from-alias="GV" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphVertexId"/>
+            <entity-condition><econdition entity-alias="PED" field-name="parameterDefId" value="CyberNormEditionParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PCN" entity-name="moqui.math.Parameter" join-from-alias="GV" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphVertexId"/>
+            <entity-condition><econdition entity-alias="PCN" field-name="parameterDefId" value="CyberNormClauseNumberParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PCT" entity-name="moqui.math.Parameter" join-from-alias="GV" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphVertexId"/>
+            <entity-condition><econdition entity-alias="PCT" field-name="parameterDefId" value="CyberNormClauseTitleParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PCX" entity-name="moqui.math.Parameter" join-from-alias="GV" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphVertexId"/>
+            <entity-condition><econdition entity-alias="PCX" field-name="parameterDefId" value="CyberNormClauseTextParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PSF" entity-name="moqui.math.Parameter" join-from-alias="GV" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphVertexId"/>
+            <entity-condition><econdition entity-alias="PSF" field-name="parameterDefId" value="CyberNormSourceFileParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PPG" entity-name="moqui.math.Parameter" join-from-alias="GV" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphVertexId"/>
+            <entity-condition><econdition entity-alias="PPG" field-name="parameterDefId" value="CyberNormPageParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PPC" entity-name="moqui.math.Parameter" join-from-alias="GV" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphVertexId"/>
+            <entity-condition><econdition entity-alias="PPC" field-name="parameterDefId" value="CyberNormProvenanceClassParam"/></entity-condition>
+        </member-entity>
+
+        <alias entity-alias="GV" name="graphId"/>
+        <alias entity-alias="GV" name="graphVertexId"/>
+        <alias entity-alias="GV" name="label"/>
+        <alias entity-alias="GV" name="lastUpdatedStamp"/>
+        <alias entity-alias="PVT" name="vertexType" field="textValue"/>
+        <alias entity-alias="PLI" name="logicalId" field="textValue"/>
+        <alias entity-alias="PDI" name="documentId" field="textValue"/>
+        <alias entity-alias="PDF" name="documentFamily" field="textValue"/>
+        <alias entity-alias="PDT" name="documentTitle" field="textValue"/>
+        <alias entity-alias="PED" name="edition" field="textValue"/>
+        <alias entity-alias="PCN" name="clauseNumber" field="textValue"/>
+        <alias entity-alias="PCT" name="clauseTitle" field="textValue"/>
+        <alias entity-alias="PCX" name="clauseText" field="textValue"/>
+        <alias entity-alias="PSF" name="sourceFile" field="textValue"/>
+        <alias entity-alias="PPG" name="page" field="textValue"/>
+        <alias entity-alias="PPC" name="provenanceClass" field="textValue"/>
+    </view-entity>
+
+    <view-entity entity-name="CyberNormEdgeMeta" package="moqui.cyber.graph">
+        <member-entity entity-alias="GE" entity-name="moqui.math.GraphEdge"/>
+        <member-entity entity-alias="FGV" entity-name="moqui.math.GraphVertex" join-from-alias="GE">
+            <key-map field-name="graphId"/>
+            <key-map field-name="fromVertexId" related="graphVertexId"/>
+        </member-entity>
+        <member-entity entity-alias="TGV" entity-name="moqui.math.GraphVertex" join-from-alias="GE">
+            <key-map field-name="graphId"/>
+            <key-map field-name="toVertexId" related="graphVertexId"/>
+        </member-entity>
+        <member-entity entity-alias="PPC" entity-name="moqui.math.Parameter" join-from-alias="GE" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphEdgeId"/>
+            <entity-condition><econdition entity-alias="PPC" field-name="parameterDefId" value="CyberNormProvenanceClassParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PCF" entity-name="moqui.math.Parameter" join-from-alias="GE" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphEdgeId"/>
+            <entity-condition><econdition entity-alias="PCF" field-name="parameterDefId" value="CyberNormConfidenceParam"/></entity-condition>
+        </member-entity>
+        <member-entity entity-alias="PRT" entity-name="moqui.math.Parameter" join-from-alias="GE" join-optional="true">
+            <key-map field-name="graphId"/>
+            <key-map field-name="graphEdgeId"/>
+            <entity-condition><econdition entity-alias="PRT" field-name="parameterDefId" value="CyberNormRationaleParam"/></entity-condition>
+        </member-entity>
+
+        <alias entity-alias="GE" name="graphId"/>
+        <alias entity-alias="GE" name="graphEdgeId"/>
+        <alias entity-alias="GE" name="label" name-alias="relationType"/>
+        <alias entity-alias="GE" name="fromVertexId"/>
+        <alias entity-alias="GE" name="toVertexId"/>
+        <alias entity-alias="FGV" name="label" name-alias="fromLabel"/>
+        <alias entity-alias="TGV" name="label" name-alias="toLabel"/>
+        <alias entity-alias="PPC" name="provenanceClass" field="textValue"/>
+        <alias entity-alias="PCF" name="confidence" field="textValue"/>
+        <alias entity-alias="PRT" name="rationale" field="textValue"/>
+    </view-entity>
+
+</entities>

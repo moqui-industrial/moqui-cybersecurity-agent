@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <!-- New content-type values needed for cybersecurity/compliance evidence, added to the
+         existing ProductContentType/AssetContentType/DeviceContentType enumerations (all three
+         entities already existed or were just added; only new enum *values* are added here,
+         not new entities). Same taxonomy names across all three for consistency. -->
+
+    <moqui.basic.Enumeration enumId="PcntCertificate" description="Certificate (CE, UL, PED, etc.)" enumTypeId="ProductContentType"/>
+    <moqui.basic.Enumeration enumId="PcntDatasheet" description="Datasheet" enumTypeId="ProductContentType"/>
+    <moqui.basic.Enumeration enumId="PcntElectricalSchematic" description="Electrical Schematic" enumTypeId="ProductContentType"/>
+    <moqui.basic.Enumeration enumId="PcntBillOfMaterials" description="Bill of Materials" enumTypeId="ProductContentType"/>
+    <!-- Added alongside the Product/PLM perfection task's procedural-schema readiness: reuses
+         this same existing AssetContentType/ProductContentType/DeviceContentType pattern rather
+         than a new entity, for operating/maintenance manuals (procedural vulnerabilities like
+         documented default credentials or USB-based recipe loading live in this content, once a
+         real manual is available - none exists for Smoking Cell 1 yet). -->
+    <moqui.basic.Enumeration enumId="PcntOperatingManual" description="Operating / Maintenance Manual" enumTypeId="ProductContentType"/>
+
+    <moqui.basic.Enumeration enumId="AcntCertificate" description="Certificate (CE, UL, PED, etc.)" enumTypeId="AssetContentType"/>
+    <moqui.basic.Enumeration enumId="AcntDatasheet" description="Datasheet" enumTypeId="AssetContentType"/>
+    <moqui.basic.Enumeration enumId="AcntElectricalSchematic" description="Electrical Schematic" enumTypeId="AssetContentType"/>
+    <moqui.basic.Enumeration enumId="AcntBillOfMaterials" description="Bill of Materials" enumTypeId="AssetContentType"/>
+    <moqui.basic.Enumeration enumId="AcntOperatingManual" description="Operating / Maintenance Manual" enumTypeId="AssetContentType"/>
+
+    <moqui.basic.Enumeration enumId="DCntCertificate" description="Certificate (CE, UL, PED, etc.)" enumTypeId="DeviceContentType"/>
+    <moqui.basic.Enumeration enumId="DCntDatasheet" description="Datasheet" enumTypeId="DeviceContentType"/>
+    <moqui.basic.Enumeration enumId="DCntElectricalSchematic" description="Electrical Schematic" enumTypeId="DeviceContentType"/>
+    <moqui.basic.Enumeration enumId="DCntOperatingManual" description="Operating / Maintenance Manual" enumTypeId="DeviceContentType"/>
+
+    <!-- Phase 3 Device<->software bridge: a PLC/firmware control program, running on a Device,
+         modeled as a MathModel instance whose graphId points at the offline-loaded PLC/CODESYS/C
+         graph (moqui-plc-knowledge), joined to the Device via the existing DeviceMathModel entity
+         (moqui-device). Single generic type, not split FSM/DES, per user decision. -->
+    <moqui.basic.Enumeration enumId="MmtPlcProgram" parentEnumId="MmtModelDriven" enumTypeId="MathModelType" description="PLC / Embedded Firmware Control Program"/>
+
+    <!-- Phase 4: systematic norm-to-product crosswalk via ProductCategory/ProductFeatureGroup
+         (existing mantle-udm entities, never used in this project before this). PctRegulatory
+         marks a ProductCategory as derived from a norm's own component-type vocabulary (e.g. IEC
+         62443-4-2 "Network Device"), distinct from e-commerce-oriented category types. Existing
+         ProductCategoryFeatGrpAppl already carries the "these feature groups are the requirements
+         that apply to this category" semantics: no new entity needed. -->
+    <moqui.basic.Enumeration enumId="PctRegulatory" description="Regulatory / Compliance Scope" enumTypeId="ProductCategoryType"/>
+
+    <!-- PftSecurityCapability: a boolean-style ProductFeature ("the product has/lacks this
+         security capability"), distinct from selectable commercial variants like PftColor/PftSize.
+         Applied with applTypeEnumId="PfatStandard" (intrinsic characteristic, not a purchasable
+         option) via ProductFeatureAppl: presence of the appl record means the capability is
+         present; absence means a compliance gap. -->
+    <moqui.basic.Enumeration enumId="PftSecurityCapability" description="Security Capability" enumTypeId="ProductFeatureType"/>
+
+    <!-- check#ProductCategoryCompliance is a rule-based (not learned) calculation, so it is
+         registered as a MmtCodeDefinedFunction MathModelDef/MathModel pair: reusing moqui-math's
+         existing MathModelRun for per-call history instead of a bespoke result-tracking entity.
+         No new entity needed: Parameter.mathModelId already exists for scalar summaries and
+         MathModelData already exists for structured (Vector/Matrix/Tensor) results, if either is
+         ever needed beyond what MathModelRun.results already captures as JSON. -->
+    <moqui.math.MathModelDef mathModelDefId="MMD_PRODUCT_CATEGORY_COMPLIANCE" modelTypeEnumId="MmtCodeDefinedFunction"
+            modelName="Product Category Compliance Check" versionNumber="1" releaseStatusId="MathModelProduction"
+            description="Checks a Product's ProductFeatureAppl records against the technical requirements of its ProductCategory memberships (via ProductCategoryFeatGrpAppl/ProductFeatureGroup), implemented by the check#ProductCategoryCompliance service."/>
+
+    <moqui.math.MathModel mathModelId="MM_PRODUCT_CATEGORY_COMPLIANCE" mathModelDefId="MMD_PRODUCT_CATEGORY_COMPLIANCE"
+            statusId="MathModelProduction" modelAlias="check#ProductCategoryCompliance"
+            description="Live instance invoked once per check#ProductCategoryCompliance call; each call is logged as a MathModelRun."/>
+
+    <!-- IEC 62443 zone/conduit modeling: DgmpZoneBoundary (verified against the real loaded norm
+         text - IEC 62443-3-2 defines zones as groupings sharing common security requirements,
+         usable along functional/logical layers, not necessarily physical containment) lives in
+         CyberDeviceAssetExtensions.xml's entity seed-data, not here, so it loads before any
+         demo-type file that references it (see the comment there for why). -->
+
+    <!-- check#DeviceGroupContinuityImpact is a rule-based (not learned) calculation, same
+         MmtCodeDefinedFunction/MathModelRun tracking pattern as check#ProductCategoryCompliance -
+         first reuse of the math-model-run-tracking skill beyond the example that produced it. -->
+    <moqui.math.MathModelDef mathModelDefId="MMD_DEVICE_GROUP_CONTINUITY" modelTypeEnumId="MmtCodeDefinedFunction"
+            modelName="Device Group Continuity Impact Check" versionNumber="1" releaseStatusId="MathModelProduction"
+            description="For a DeviceGroup, checks each DeviceGroupMember's criticalityEnumId to determine whether losing that member stops the group, implemented by the check#DeviceGroupContinuityImpact service."/>
+
+    <moqui.math.MathModel mathModelId="MM_DEVICE_GROUP_CONTINUITY" mathModelDefId="MMD_DEVICE_GROUP_CONTINUITY"
+            statusId="MathModelProduction" modelAlias="check#DeviceGroupContinuityImpact"
+            description="Live instance invoked once per check#DeviceGroupContinuityImpact call; each call is logged as a MathModelRun."/>
+
+    <!-- check#ThreatScenarioRisk (Phase 5, Tappa 4): sums the 5 analyst-assigned Likelihood
+         sub-scores on a ThreatScenario vertex, bands the sum into a Likelihood Rating (Table
+         10), takes the max Overall Impact across its linked DamageScenario(s) (Table 1-4),
+         and looks up the Risk Rating (Table 11) - all three tables verified verbatim against
+         the real loaded ISO-DIS-24882 text (see CyberRiskGraphMetadataSeedData.xml). Third
+         reuse of the math-model-run-tracking pattern. -->
+    <moqui.math.MathModelDef mathModelDefId="MMD_THREAT_SCENARIO_RISK" modelTypeEnumId="MmtCodeDefinedFunction"
+            modelName="Threat Scenario Likelihood + Risk Rating" versionNumber="1" releaseStatusId="MathModelProduction"
+            description="Computes Likelihood Rating (sum of 5 Table-5 sub-scores, banded per Table 10) and Risk Rating (Impact x Likelihood, Table 11) for a ThreatScenario vertex, implemented by the check#ThreatScenarioRisk service."/>
+
+    <moqui.math.MathModel mathModelId="MM_THREAT_SCENARIO_RISK" mathModelDefId="MMD_THREAT_SCENARIO_RISK"
+            statusId="MathModelProduction" modelAlias="check#ThreatScenarioRisk"
+            description="Live instance invoked once per check#ThreatScenarioRisk call; each call is logged as a MathModelRun."/>
+
+    <!-- index#ProductVulnerabilities (CVE/CPE ingestion, last of the original Phase 4 gap
+         list): not a pure calculation, but a real external-data ingestion whose outcome is
+         worth tracking the same way - fourth reuse of the math-model-run-tracking pattern. -->
+    <moqui.math.MathModelDef mathModelDefId="MMD_PRODUCT_VULNERABILITIES" modelTypeEnumId="MmtCodeDefinedFunction"
+            modelName="Product Vulnerability (CVE/CPE) Ingestion" versionNumber="1" releaseStatusId="MathModelProduction"
+            description="Calls the real NVD API for a Product's declared CyberProductCpeMatch CPE(s) and ingests matching CyberVulnerability/CyberVulnerabilityCpeMatch rows, implemented by the index#ProductVulnerabilities service."/>
+
+    <moqui.math.MathModel mathModelId="MM_PRODUCT_VULNERABILITIES" mathModelDefId="MMD_PRODUCT_VULNERABILITIES"
+            statusId="MathModelProduction" modelAlias="index#ProductVulnerabilities"
+            description="Live instance invoked once per index#ProductVulnerabilities call; each call is logged as a MathModelRun."/>
+
+    <!-- check#DeviceSafetyExposure (ISO 12100 + ISO/TR 22100-4 mechanical-safety crosswalk):
+         answers the TR 22100-4 clause 3 guiding question - can a cyber vector on this Device
+         reach a Product safety function on record? - by joining existing vectors
+         (DeviceConnection with a physical-port/remote-access driver, CyberDeviceCommunicationFlow)
+         with existing ProductFeature/PftSafetyFunction rows. Fifth reuse of math-model-run-
+         tracking: not a pure calculation, a rule-based join, same MmtCodeDefinedFunction pattern. -->
+    <moqui.math.MathModelDef mathModelDefId="MMD_DEVICE_SAFETY_EXPOSURE" modelTypeEnumId="MmtCodeDefinedFunction"
+            modelName="Device Safety Exposure Check (ISO 12100 / ISO-TR 22100-4)" versionNumber="1" releaseStatusId="MathModelProduction"
+            description="For a Device, joins its real attack-vector connections against the linked Product's PftSafetyFunction rows to check whether a cyber compromise could reach a physical safety function, per check#DeviceSafetyExposure."/>
+
+    <moqui.math.MathModel mathModelId="MM_DEVICE_SAFETY_EXPOSURE" mathModelDefId="MMD_DEVICE_SAFETY_EXPOSURE"
+            statusId="MathModelProduction" modelAlias="check#DeviceSafetyExposure"
+            description="Live instance invoked once per check#DeviceSafetyExposure call; each call is logged as a MathModelRun."/>
+
+    <!-- check#CodeSecureCodingCompliance: generalizes the one hand-made CyberPlcNormCrosswalk
+         edge (Phase 4) into a systematic code<->norm crosswalk, covering both the PLC/SCL graph
+         and any C firmware graph via the same moqui-plc-knowledge PlcGraphVertexMeta substrate.
+         Sixth reuse of math-model-run-tracking. -->
+    <moqui.math.MathModelDef mathModelDefId="MMD_CODE_SECURE_CODING_COMPLIANCE" modelTypeEnumId="MmtCodeDefinedFunction"
+            modelName="Code Secure Coding Compliance Crosswalk (Top-20 / IEC 62443)" versionNumber="1" releaseStatusId="MathModelProduction"
+            description="For a PLC or C code Graph, crosswalks parser-detected SecurityObservation findings and credential-like Symbol vertices to real, verified norm clauses, implemented by the check#CodeSecureCodingCompliance service."/>
+
+    <moqui.math.MathModel mathModelId="MM_CODE_SECURE_CODING_COMPLIANCE" mathModelDefId="MMD_CODE_SECURE_CODING_COMPLIANCE"
+            statusId="MathModelProduction" modelAlias="check#CodeSecureCodingCompliance"
+            description="Live instance invoked once per check#CodeSecureCodingCompliance call; each call is logged as a MathModelRun."/>
+
+    <!-- attach#ProductContentFromPath (product-content-attachment skill, Case 1: single-product
+         document). Seventh reuse of math-model-run-tracking. -->
+    <moqui.math.MathModelDef mathModelDefId="MMD_PRODUCT_CONTENT_ATTACH" modelTypeEnumId="MmtCodeDefinedFunction"
+            modelName="Product Content Attachment (Single Product)" versionNumber="1" releaseStatusId="MathModelProduction"
+            description="Attaches a document already on a shared filesystem path to one real Product's ProductContent, implemented by attach#ProductContentFromPath."/>
+
+    <moqui.math.MathModel mathModelId="MM_PRODUCT_CONTENT_ATTACH" mathModelDefId="MMD_PRODUCT_CONTENT_ATTACH"
+            statusId="MathModelProduction" modelAlias="attach#ProductContentFromPath"
+            description="Live instance invoked once per attach#ProductContentFromPath call; each call is logged as a MathModelRun."/>
+
+    <!-- attach#ProductFamilyContentFromPath (product-content-attachment skill, Case 2: product-
+         family document). Eighth reuse of math-model-run-tracking. -->
+    <moqui.math.MathModelDef mathModelDefId="MMD_PRODUCT_FAMILY_CONTENT_ATTACH" modelTypeEnumId="MmtCodeDefinedFunction"
+            modelName="Product Content Attachment (Product Family)" versionNumber="1" releaseStatusId="MathModelProduction"
+            description="Finds-or-creates the family ProductCategory, ensures ProductCategoryMember for its real products, and attaches a document to ProductCategoryContent, implemented by attach#ProductFamilyContentFromPath."/>
+
+    <moqui.math.MathModel mathModelId="MM_PRODUCT_FAMILY_CONTENT_ATTACH" mathModelDefId="MMD_PRODUCT_FAMILY_CONTENT_ATTACH"
+            statusId="MathModelProduction" modelAlias="attach#ProductFamilyContentFromPath"
+            description="Live instance invoked once per attach#ProductFamilyContentFromPath call; each call is logged as a MathModelRun."/>
+
+    <!-- classify#Product (norm-product-classification skill, Workflow B - hierarchical
+         DeviceType/AssetClass/ProductCategory classification against the vocabulary materialized
+         by Workflow A). Ninth reuse of math-model-run-tracking. -->
+    <moqui.math.MathModelDef mathModelDefId="MMD_PRODUCT_CLASSIFICATION" modelTypeEnumId="MmtCodeDefinedFunction"
+            modelName="Product Classification (DeviceType/AssetClass/ProductCategory)" versionNumber="1" releaseStatusId="MathModelProduction"
+            description="Applies an agent-made hierarchical classification decision to a real Product's Asset(s)/Device(s) and ensures ProductCategoryMember for chosen norm-derived categories, implemented by classify#Product."/>
+
+    <moqui.math.MathModel mathModelId="MM_PRODUCT_CLASSIFICATION" mathModelDefId="MMD_PRODUCT_CLASSIFICATION"
+            statusId="MathModelProduction" modelAlias="classify#Product"
+            description="Live instance invoked once per classify#Product call; each call is logged as a MathModelRun."/>
+
+</entity-facade-xml>

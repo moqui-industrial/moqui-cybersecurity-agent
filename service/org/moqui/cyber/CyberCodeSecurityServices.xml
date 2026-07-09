@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="check" noun="CodeSecureCodingCompliance" authenticate="true" allow-remote="true">
+        <description>Generalizes the single hand-made edge in CyberPlcNormCrosswalkDemoSeedData.xml
+            (MqttConnectionFactory.password -&gt; IEC 62443-3-3 SR 1.7 RE 1) into a systematic
+            service: for any moqui-plc-knowledge code graph (PLC/SCL or C, same
+            moqui.math.GraphVertex substrate via the shared PlcGraphVertexMeta view), finds two
+            kinds of real, structurally-detectable findings and crosswalks each to a real,
+            verified norm clause (never invented - looked up dynamically by documentId+
+            clauseNumber, same convention as every clause vertex already in this project):
+
+            1. SecurityObservation vertices (vertexType=SecurityObservation) - already emitted by
+               the real parser (parser/c_firmware_parser.py's C_UNBOUNDED_COPY/
+               C_PLAINTEXT_NETWORK_SCHEME/C_SHARED_GLOBAL_MULTI_WRITER rules) when the code graph
+               was generated - this service does not detect new patterns, it crosswalks patterns
+               the parser already found.
+            2. Symbol vertices (vertexType=Symbol, codeKind=Variable) whose canonicalName matches
+               a credential-like name (password/secret/credential/token/apikey) - the same
+               structural signal that produced the one real hand-made edge.
+
+            Pattern-to-clause table (verified via search#NormClauses/search#NormClausesSemantic
+            against the real loaded corpus before writing this service, not guessed):
+              C_UNBOUNDED_COPY          -&gt; IEC-62443-4-1 8.4.1 (secure coding standards)
+              C_PLAINTEXT_NETWORK_SCHEME -&gt; IEC-62443-4-2 8.2 (confidentiality in transit)
+              credential-like Symbol     -&gt; IEC-62443-3-3 5.9.3.1 (SR 1.7 RE 1)
+            C_SHARED_GLOBAL_MULTI_WRITER has no verified norm clause match (a real, honest gap,
+            not forced) - reported as a finding with no crosswalk edge.
+
+            Writes crosswalk edges into the existing dedicated CyberPlcNormCrosswalk Graph (never
+            merges the code graph and the norm graph), same pattern as the original hand-made
+            edge. Sixth reuse of math-model-run-tracking.</description>
+        <in-parameters>
+            <parameter name="graphId" required="true"><description>The code Graph to scan, e.g. TestIec61131Codesys or IotFirmwareC.</description></parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="findings" type="List"/>
+            <parameter name="edgesCreated" type="Integer"/>
+            <parameter name="mathModelRunId"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+                import java.security.MessageDigest
+
+                def runValue = ec.entity.makeValue('moqui.math.MathModelRun')
+                        .setAll([mathModelId: 'MM_CODE_SECURE_CODING_COMPLIANCE',
+                                 startTime: ec.user.nowTimestamp, parameters: JsonOutput.toJson([graphId: graphId]),
+                                 hasError: 'N'])
+                runValue.setSequencedIdPrimary()
+                runValue.create()
+                mathModelRunId = runValue.mathModelRunId
+
+                try {
+                    String crosswalkGraphId = 'CyberPlcNormCrosswalk'
+                    if (!ec.entity.find('moqui.math.Graph').condition('graphId', crosswalkGraphId).one()) {
+                        ec.entity.makeValue('moqui.math.Graph')
+                                .setAll([graphId: crosswalkGraphId, graphTypeEnumId: 'GtDirected',
+                                         name: 'PLC-to-Norm Crosswalk', loopsAllowed: 'N',
+                                         description: 'Crosswalk edges linking PLC/firmware graph vertices to normative clause vertices, without merging either source graph.'])
+                                .create()
+                    }
+
+                    // rule_id / pattern -> [documentId, clauseNumber], verified real clauses (see description).
+                    Map<String, List<String>> ruleToClause = [
+                        C_UNBOUNDED_COPY:           ['IEC-62443-4-1', '8.4.1'],
+                        C_PLAINTEXT_NETWORK_SCHEME: ['IEC-62443-4-2', '8.2'],
+                        CREDENTIAL_LIKE_SYMBOL:     ['IEC-62443-3-3', '5.9.3.1']
+                    ]
+
+                    Closure<String> findClauseVertexId = { String documentId, String clauseNumber ->
+                        def row = ec.entity.find('moqui.cyber.graph.CyberNormVertexMeta')
+                                .condition('documentId', documentId).condition('clauseNumber', clauseNumber)
+                                .condition('vertexType', 'NormClause').one()
+                        row?.graphVertexId as String
+                    }
+
+                    Closure<Void> ensureEdge = { String fromVertexId, String toVertexId, String rationale ->
+                        // Check by (graphId, fromVertexId, toVertexId, label) first, not just the derived
+                        // edgeId - CyberPlcNormCrosswalkDemoSeedData.xml's one hand-made edge
+                        // (EDGE_PLC_NORM_1) uses an arbitrary id, not this hash scheme, and must be
+                        // recognized as the same real edge rather than duplicated.
+                        def existingEdge = ec.entity.find('moqui.math.GraphEdge').condition('graphId', crosswalkGraphId)
+                                .condition('fromVertexId', fromVertexId).condition('toVertexId', toVertexId)
+                                .condition('label', 'VIOLATES_SECURE_CODING_RULE').one()
+                        String edgeId = existingEdge?.graphEdgeId as String
+                        if (!existingEdge) {
+                            String source = "${crosswalkGraphId}|VIOLATES_SECURE_CODING_RULE|${fromVertexId}|${toVertexId}"
+                            edgeId = MessageDigest.getInstance('SHA-1').digest(source.getBytes('UTF-8')).encodeHex().toString()
+                            ec.entity.makeValue('moqui.math.GraphEdge')
+                                    .setAll([graphEdgeId: edgeId, graphId: crosswalkGraphId, edgeTypeEnumId: 'GetDirected',
+                                             isDirected: 'Y', isLoop: 'N', fromVertexId: fromVertexId, toVertexId: toVertexId,
+                                             label: 'VIOLATES_SECURE_CODING_RULE'])
+                                    .create()
+                            ec.entity.makeValue('moqui.math.Parameter')
+                                    .setAll([parameterId: ec.entity.sequencedIdPrimary('moqui.math.Parameter', null, null),
+                                             parameterDefId: 'CyberNormRationaleParam', graphId: crosswalkGraphId,
+                                             graphEdgeId: edgeId, textValue: rationale])
+                                    .create()
+                            edgesCreated = (edgesCreated ?: 0) + 1
+                        }
+                    }
+                    edgesCreated = 0
+
+                    List<Map> findingList = []
+
+                    ec.entity.find('moqui.plc.graph.PlcGraphVertexMeta')
+                            .condition('graphId', graphId).condition('vertexType', 'SecurityObservation')
+                            .list().each { obs ->
+                        String ruleId = obs.qualifiedName ? (obs.qualifiedName as String).split('@')[0] : null
+                        List<String> clause = ruleId ? ruleToClause[ruleId] : null
+                        Map<String, Object> finding = [graphVertexId: obs.graphVertexId, ruleId: ruleId,
+                                qualifiedName: obs.qualifiedName]
+                        if (clause) {
+                            String clauseVertexId = findClauseVertexId(clause[0], clause[1])
+                            if (clauseVertexId) {
+                                ensureEdge(obs.graphVertexId as String, clauseVertexId,
+                                        "Parser-detected ${ruleId} finding, real structural rule (see parser/c_firmware_parser.py), crosswalked to ${clause[0]} ${clause[1]}.")
+                                finding.crosswalkedTo = "${clause[0]} ${clause[1]}"
+                            } else {
+                                finding.crosswalkedTo = null
+                                finding.note = 'Mapped norm clause not found in loaded corpus.'
+                            }
+                        } else {
+                            finding.crosswalkedTo = null
+                            finding.note = 'No verified norm clause mapping for this rule (honest gap, not forced).'
+                        }
+                        findingList.add(finding)
+                    }
+
+                    ec.entity.find('moqui.plc.graph.PlcGraphVertexMeta')
+                            .condition('graphId', graphId).condition('vertexType', 'Symbol').condition('codeKind', 'Variable')
+                            .list().findAll { sym ->
+                                sym.canonicalName && (sym.canonicalName as String) ==~ /(?i).*(password|secret|credential|token|apikey).*/
+                            }.each { sym ->
+                        List<String> clause = ruleToClause['CREDENTIAL_LIKE_SYMBOL']
+                        String clauseVertexId = findClauseVertexId(clause[0], clause[1])
+                        Map<String, Object> finding = [graphVertexId: sym.graphVertexId, ruleId: 'CREDENTIAL_LIKE_SYMBOL',
+                                qualifiedName: sym.qualifiedName]
+                        if (clauseVertexId) {
+                            ensureEdge(sym.graphVertexId as String, clauseVertexId,
+                                    "${sym.qualifiedName} is a Symbol/Variable whose name matches a credential-like pattern; ${clause[0]} ${clause[1]} requires password generation/lifetime controls a hardcoded value structurally cannot satisfy.")
+                            finding.crosswalkedTo = "${clause[0]} ${clause[1]}"
+                        } else {
+                            finding.crosswalkedTo = null
+                            finding.note = 'Mapped norm clause not found in loaded corpus.'
+                        }
+                        findingList.add(finding)
+                    }
+
+                    findings = findingList
+
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, results: JsonOutput.toJson(
+                                    [graphId: graphId, findingCount: findingList.size(), edgesCreated: edgesCreated])])
+                            .update()
+                } catch (Throwable t) {
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, hasError: 'Y', errors: t.toString()])
+                            .update()
+                    throw t
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+</services>

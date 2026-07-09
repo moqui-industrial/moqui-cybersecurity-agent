@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Declarative projection layer over moqui.math.MathModelRun (see the
+    math-model-run-tracking skill): rebuildable OpenSearch read model of every
+    compliance-check run, instead of an ad hoc indexing script. Same
+    "DataDocument first, script only for evaluation/bootstrap" principle as
+    moqui-mcp/skills/moqui-datadocument-datafeed/SKILL.md.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <moqui.entity.document.DataDocument
+            dataDocumentId="ComplianceCheckRunDocument"
+            documentName="Compliance Check Run Document"
+            documentTitle="${mathModelId} @ ${startTime}"
+            primaryEntityName="moqui.math.MathModelRun"
+            indexName="cyber_compliance_runs_v1">
+        <fields fieldSeqId="01" fieldPath="mathModelRunId"/>
+        <fields fieldSeqId="02" fieldPath="mathModelId"/>
+        <fields fieldSeqId="03" fieldPath="startTime"/>
+        <fields fieldSeqId="04" fieldPath="endDate"/>
+        <fields fieldSeqId="05" fieldPath="parameters"/>
+        <fields fieldSeqId="06" fieldPath="results"/>
+        <fields fieldSeqId="07" fieldPath="hasError"/>
+        <fields fieldSeqId="08" fieldPath="errors"/>
+        <fields fieldSeqId="09" fieldPath="userId"/>
+    </moqui.entity.document.DataDocument>
+
+</entity-facade-xml>

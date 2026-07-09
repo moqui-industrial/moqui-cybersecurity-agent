@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This software is in the public domain under CC0 1.0 Universal plus a
+     Grant of Patent License.
+
+     To the extent possible under law, the author(s) have dedicated all
+     copyright and related and neighboring rights to this software to the
+     public domain worldwide. This software is distributed without any warranty.
+
+     You should have received a copy of the CC0 Public Domain Dedication
+     along with this software (see the LICENSE.md file). If not, see
+     <https://creativecommons.org/publicdomain/zero/1.0/>. -->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="check" noun="ProductCategoryCompliance" authenticate="true" allow-remote="true">
+        <description>Systematic norm-to-product crosswalk (Phase 4): for a Product, resolve the
+            technical requirements implied by its ProductCategory memberships (via the existing
+            mantle-usl find#ProductFeatureGroups service and ProductFeatureGroupAppl), then check
+            each required ProductFeature against the product's actual ProductFeatureAppl records.
+            Reuses existing entities/services end to end; no new crosswalk entity.
+
+            This is a MmtCodeDefinedFunction MathModel (MM_PRODUCT_CATEGORY_COMPLIANCE, see
+            CyberMachineGraphMetadataSeedData.xml): every call is logged as a moqui.math.MathModelRun
+            (parameters/results as JSON, per the same run-tracking pattern any calculated result in
+            this project should use instead of a bespoke result-tracking entity).</description>
+        <in-parameters>
+            <parameter name="productId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="results" type="List"/>
+            <parameter name="mathModelRunId"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+
+                def runValue = ec.entity.makeValue('moqui.math.MathModelRun')
+                        .setAll([mathModelId: 'MM_PRODUCT_CATEGORY_COMPLIANCE',
+                                 startTime: ec.user.nowTimestamp, parameters: JsonOutput.toJson([productId: productId]),
+                                 hasError: 'N'])
+                runValue.setSequencedIdPrimary()
+                runValue.create()
+                mathModelRunId = runValue.mathModelRunId
+
+                try {
+                    // find#ProductFeatureGroups defaults applTypeEnumId to "PfatSelectable" (commercial
+                    // variant-generating groups like Color/Size); our norm-derived requirement groups
+                    // use "PfatStandard" (intrinsic, non-variant characteristics) instead, so it must be
+                    // passed explicitly -- an empty string does NOT fall through the service's own
+                    // ignore-if-empty condition the way a literally-absent parameter would.
+                    Map groupResult = ec.service.sync().name('mantle.product.ProductServices.find#ProductFeatureGroups')
+                            .parameters([productId: productId, applTypeEnumId: 'PfatStandard']).call()
+                    List featureGroups = groupResult.productFeatureGroupList ?: []
+
+                    results = []
+                    featureGroups.each { Map group ->
+                        String featureGroupId = group.productFeatureGroupId as String
+                        List groupAppls = ec.entity.find('mantle.product.feature.ProductFeatureGroupAppl')
+                                .condition('productFeatureGroupId', featureGroupId)
+                                .conditionDate('fromDate', 'thruDate', ec.user.nowTimestamp)
+                                .list()
+                        groupAppls.each { groupAppl ->
+                            String productFeatureId = groupAppl.productFeatureId as String
+                            def feature = ec.entity.find('mantle.product.feature.ProductFeature')
+                                    .condition('productFeatureId', productFeatureId).one()
+                            def actualAppl = ec.entity.find('mantle.product.feature.ProductFeatureAppl')
+                                    .condition('productId', productId)
+                                    .condition('productFeatureId', productFeatureId)
+                                    .conditionDate('fromDate', 'thruDate', ec.user.nowTimestamp)
+                                    .list()
+                            results.add([
+                                productFeatureGroupId: featureGroupId,
+                                productFeatureId     : productFeatureId,
+                                description          : feature?.description,
+                                status               : actualAppl ? 'SATISFIED' : 'MISSING'
+                            ])
+                        }
+                    }
+
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, results: JsonOutput.toJson(results)])
+                            .update()
+                } catch (Throwable t) {
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, hasError: 'Y', errors: t.toString()])
+                            .update()
+                    throw t
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+</services>

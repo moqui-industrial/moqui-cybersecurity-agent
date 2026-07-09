@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Vocabulary extraction pass over EN 40000-1-3 (prEN 40000-1-3, "Cybersecurity - Vulnerability
+    handling and disclosure"), triggered by Annex ZA's own correspondence table (Table ZA.1:
+    "Correspondence between this European Standard and Annex I of the Cyber Resilience Act") -
+    the real, concrete example of a cross-reference-driven grouping signal that motivated this
+    whole pass (norm-product-classification skill, Workflow A step 5; find#NormClauseReferences
+    on the ZA vertex is what surfaced this table). Annex ZA maps CRA Annex I Part 2 essential
+    requirements (1)-(8) to 25 real requirement clauses across 5.3-5.8 (PRE/RCP/VRF/RMD/RLS/PRA
+    - Preparation, Receipt, Verification, Remediation, Release, Post-release-Action, the
+    ISO/IEC 30111 + 29147 vulnerability handling/disclosure lifecycle). All 25 read in full from
+    tools/norm-indexer/work/ir/clauses.jsonl (untruncated), not the 4000-char-truncated live graph
+    API - same discipline as the IEC 62443-4-2 pass.
+
+    Real, honest finding after reading all 25: only a small minority describe a per-Product
+    technical capability that fits mantle.product.feature.ProductFeature (a discrete attribute
+    checked against one real Product via ProductFeatureAppl). The large majority - CVD policy
+    (5.3.3), vulnerability monitoring (5.4.3), risk assessment process (5.5.3), remediation
+    decision/production/testing (5.6.2-5.6.4), security test-and-review planning (5.3.10, 5.4.7,
+    5.4.8), product/component identification bookkeeping (5.3.7, 5.3.9) - are manufacturer
+    ORGANIZATIONAL PROCESS requirements: things a company does (a policy it maintains, a workflow
+    it runs), not something a product technically has. Forcing all 25 into ProductFeature would
+    misuse the mechanism (every classified product would get a "yes/no this manufacturer has a
+    CVD policy" ProductFeatureAppl, conflating org-level process compliance with product-level
+    technical capability) - a real modeling mismatch, not a gap to paper over. Representing
+    manufacturer process compliance properly needs a different mechanism (e.g. a
+    supplier/manufacturer compliance-tracking entity, closer to how MathModelRun already tracks
+    an audit trail) - a real, separate design question, deliberately flagged here rather than
+    forced into today's mechanism.
+
+    The 2 clauses extracted below ARE genuine per-product technical capabilities, the same kind
+    already captured for IEC 62443-4-2's EDR/HDR/NDR update-support requirements:
+    - 5.7.2 (RLS-1, Release): secure/authenticated/timely security update distribution -
+      directly comparable to FEAT_EDR_UPDATE_SUPPORT/FEAT_HDR_UPDATE_SUPPORT/FEAT_NDR_UPDATE_SUPPORT.
+    - 5.3.8 (PRE-7, Preparation): machine-readable SBOM availability - a real, distinct technical
+      artifact a product either does or doesn't ship with.
+    5.3.11/PRE-10 (mechanism to distribute security updates/information) substantially overlaps
+    5.7.2/RLS-1 (both "security update distribution mechanism") - not duplicated as a second
+    feature.
+
+    Category linkage: EN 40000-1-3 is a horizontal CRA-harmonized standard - its scope is not one
+    IEC 62443-4-2 component type but all of them (any product with digital elements). Reusing the
+    4 existing IEC 62443-4-2 categories (NCAT_IEC62443_4_2_SWAPP/EMBDEV/HOSTDEV/NETDEV) via a
+    second ProductCategoryFeatGrpAppl row each, rather than fabricating a new redundant category,
+    reflects that real cross-cutting scope (verified: ProductCategoryFeatGrpAppl's PK already
+    supports more than one group per category, same as IEC 62443-4-2's own NETDEV precedent).
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_EN40000_SECURE_UPDATE_DIST" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="0b7ec095c63cc8d216ccfa76fec45599"
+            description="EN 40000-1-3 5.7.2 [RLS-1] (Release): security updates shall be distributed in a timely manner, with installation instructions unless fully automated, via mechanisms ensuring authenticity and integrity."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_EN40000_SBOM_AVAILABLE" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="bcbe485fcdf37467e6c11c610bcd9537"
+            description="EN 40000-1-3 5.3.8 [PRE-7] (Preparation): software components shall be identified and documented in a Software Bill of Materials (SBOM), machine-readable (e.g. SPDX, CycloneDX), reissued on every update."/>
+
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_EN40000_VULN_HANDLING"
+            description="EN 40000-1-3 (CRA Annex ZA) product-level vulnerability-handling capabilities: secure update distribution and SBOM availability. Excludes CVD/monitoring/risk-assessment/remediation clauses - manufacturer process, not product feature (see file header)."/>
+
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_EN40000_VULN_HANDLING" productFeatureId="FEAT_EN40000_SECURE_UPDATE_DIST" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_EN40000_VULN_HANDLING" productFeatureId="FEAT_EN40000_SBOM_AVAILABLE" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+
+    <!-- Horizontal scope: linked to all 4 existing IEC 62443-4-2 component-type categories, not a
+         new one (see file header) - each already has at least one group linked, so this is a
+         second/third ProductCategoryFeatGrpAppl row per category, same pattern as NETDEV's own
+         second link in CyberNormVocabulary_IEC-62443-4-2.xml. -->
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="NCAT_IEC62443_4_2_SWAPP"
+            productFeatureGroupId="FGRP_EN40000_VULN_HANDLING" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="NCAT_IEC62443_4_2_EMBDEV"
+            productFeatureGroupId="FGRP_EN40000_VULN_HANDLING" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="NCAT_IEC62443_4_2_HOSTDEV"
+            productFeatureGroupId="FGRP_EN40000_VULN_HANDLING" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="NCAT_IEC62443_4_2_NETDEV"
+            productFeatureGroupId="FGRP_EN40000_VULN_HANDLING" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+
+</entity-facade-xml>

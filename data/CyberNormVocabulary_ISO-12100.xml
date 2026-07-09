@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Systematic vocabulary extraction pass over ISO 12100, second of the "high-yield norms first"
+    batch (norm-product-classification skill, Workflow A). Every record cites its real source
+    clause (queried live via find#NormClausesByDocument, not from memory).
+
+    Real, honest finding: ISO 12100's corpus in this project is only 4 hand-transcribed clauses
+    (provenanceClass=MANUAL_PARTIAL, no source PDF configured - see norm-sources.json) - a small
+    fraction of the real standard. Of those 4:
+    - 6.2.11.4 is already fully covered - it is the exact clause behind the 5 existing
+      FEAT_NO_UNEXPECTED_START/FEAT_PARAMETER_INTEGRITY/FEAT_STOP_NOT_IMPEDED/FEAT_NO_EJECTION/
+      FEAT_PROTECTIVE_DEVICE_INTEGRITY features in CyberMechanicalSafetyVocabularySeedData.xml -
+      not redefined here.
+    - 5.4 (hazard identification duty) and 6.2.11.1 (control systems shall be safe/reliable and
+      resist operating stresses/external influences) are general design principles, not testable
+      technical criteria - per Workflow A step 2's own discipline ("discard clauses that are
+      process/policy language with no testable technical criterion"), no ProductFeature/
+      ProductCategory is forced from them. A ProductCategory for "any machine with a control
+      system" would also be near-universal and add no real classification value beyond what
+      check#DeviceSafetyExposure already does structurally.
+    - 6.2.11.7 (Software) is the one genuinely new, testable requirement in this small corpus -
+      captured below.
+
+    A full ISO 12100 pass would need the complete standard text, not available in this project
+    yet (no source PDF) - this file reflects the real, limited corpus honestly rather than
+    padding it with content sourced elsewhere.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_SOFTWARE_USABILITY" productFeatureTypeEnumId="PftSafetyFunction"
+            description="ISO 12100 6.2.11.7 (Software): interactive software shall be designed to be easy to use and to avoid errors by the operator."/>
+
+</entity-facade-xml>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This software is in the public domain under CC0 1.0 Universal plus a
+     Grant of Patent License.
+
+     To the extent possible under law, the author(s) have dedicated all
+     copyright and related and neighboring rights to this software to the
+     public domain worldwide. This software is distributed without any warranty.
+
+     You should have received a copy of the CC0 Public Domain Dedication
+     along with this software (see the LICENSE.md file). If not, see
+     <https://creativecommons.org/publicdomain/zero/1.0/>. -->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="check" noun="DeviceGroupContinuityImpact" authenticate="true" allow-remote="true">
+        <description>BIA (Business Impact Analysis) continuity check: for a DeviceGroup (a zone, a
+            panel, or a controller-scoped sub-plant - see the device-group-zone-modeling skill),
+            determine for each DeviceGroupMember whether losing that device stops the group.
+            criticalityEnumId (moqui-cybersecurity-agent's extend-entity on DeviceGroupMember) is
+            the signal: absent or DgmcEssential means the member is a single point of failure for
+            the group (GROUP_STOPS); DgmcRedundant/DgmcStandby/DgmcNonEssential mean the group
+            keeps functioning without it (GROUP_CONTINUES). Deliberately not inferred from
+            purposeEnumId or from duplicate purposeEnumId values within the group - two members
+            can share the same functional purpose without being redundant for each other (e.g. two
+            drives each driving a different actuator: losing either one is still critical).
+
+            This is a MmtCodeDefinedFunction MathModel (MM_DEVICE_GROUP_CONTINUITY, see
+            CyberMachineGraphMetadataSeedData.xml), following the same math-model-run-tracking
+            pattern as check#ProductCategoryCompliance: every call is logged as a
+            moqui.math.MathModelRun.</description>
+        <in-parameters>
+            <parameter name="deviceId" required="true"><description>The DeviceGroup to check.</description></parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="results" type="List"/>
+            <parameter name="mathModelRunId"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+
+                def runValue = ec.entity.makeValue('moqui.math.MathModelRun')
+                        .setAll([mathModelId: 'MM_DEVICE_GROUP_CONTINUITY',
+                                 startTime: ec.user.nowTimestamp, parameters: JsonOutput.toJson([deviceId: deviceId]),
+                                 hasError: 'N'])
+                runValue.setSequencedIdPrimary()
+                runValue.create()
+                mathModelRunId = runValue.mathModelRunId
+
+                try {
+                    List members = ec.entity.find('moqui.device.DeviceGroupMember')
+                            .condition('deviceId', deviceId)
+                            .orderBy('sequenceNum')
+                            .list()
+
+                    results = members.collect { member ->
+                        String criticalityEnumId = member.criticalityEnumId
+                        boolean essential = !criticalityEnumId || criticalityEnumId == 'DgmcEssential'
+                        [
+                            memberDeviceId  : member.memberDeviceId,
+                            purposeEnumId   : member.purposeEnumId,
+                            criticalityEnumId: criticalityEnumId ?: 'DgmcEssential',
+                            continuityImpact: essential ? 'GROUP_STOPS' : 'GROUP_CONTINUES'
+                        ]
+                    }
+
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, results: JsonOutput.toJson(results)])
+                            .update()
+                } catch (Throwable t) {
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, hasError: 'Y', errors: t.toString()])
+                            .update()
+                    throw t
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+</services>

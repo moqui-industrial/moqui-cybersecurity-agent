@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Systematic vocabulary extraction pass over ISO/TR 22100-4, third of the "high-yield norms
+    first" batch (norm-product-classification skill, Workflow A). Every record cites its real
+    source clause (queried live via find#NormClausesByDocument, not from memory). Same small,
+    MANUAL_PARTIAL corpus caveat as ISO 12100 (5 hand-transcribed clauses, no source PDF).
+
+    Of the 5 clauses: clause 1 (scope/principle - a cyber attack is a "reasonably foreseeable
+    misuse" under ISO 12100), clause 3 (the guiding safety-impact question), and clause 5 (a pure
+    cross-reference to IEC 62443/ISO 27000) are methodology/scope statements, not testable
+    technical criteria - no record forced from them, per Workflow A's own discipline. Clause 2's
+    vector checklist (LAN/Internet connections, remote access, physical ports, wireless) is
+    already operationalized structurally in check#DeviceSafetyExposure's own vector-gathering
+    logic (CyberMechanicalSafetyServices.xml) - not duplicated here as vocabulary data.
+
+    Clause 4 (mitigation measures) is the one clause with genuinely testable, decomposable
+    requirements - captured below as 5 standalone ProductFeature records, productFeatureTypeEnumId
+    ="PftSecurityCapability" (these are security controls, not safety-behavior requirements, so
+    kept distinct from the existing PftSafetyFunction records from ISO 12100/6.2.11.4 - a real,
+    meaningful distinction: PftSafetyFunction records answer "does the machine behave safely on
+    control-system fault"; these answer "does the system have this specific security control").
+    No ProductFeatureGroup/ProductCategory wrapping - same precedent as the existing 5
+    PftSafetyFunction records in CyberMechanicalSafetyVocabularySeedData.xml, which
+    check#DeviceSafetyExposure reads directly as flat ProductFeatureAppl evidence, no group
+    traversal needed for this crosswalk.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_ACCESS_CONTROL_RBAC" productFeatureTypeEnumId="PftSecurityCapability"
+            description="ISO/TR 22100-4 clause 4: the system shall implement access control - strong passwords, role-based account management (RBAC), and disabling of default accounts."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NETWORK_SEGMENTATION" productFeatureTypeEnumId="PftSecurityCapability"
+            description="ISO/TR 22100-4 clause 4: the Safety/PLC network shall be logically or physically segmented from external networks."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PATCH_MANAGEMENT" productFeatureTypeEnumId="PftSecurityCapability"
+            description="ISO/TR 22100-4 clause 4: the system shall support update/patch management without invalidating the machine's safety certification."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_HARDENING_UNUSED_PORTS" productFeatureTypeEnumId="PftSecurityCapability"
+            description="ISO/TR 22100-4 clause 4: unnecessary physical and logical ports shall be disabled (hardening)."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_NETWORK_REQS_DOCUMENTED" productFeatureTypeEnumId="PftSecurityCapability"
+            description="ISO/TR 22100-4 clause 4: the manual/information for use shall document the network requirements needed to keep the machine safe (e.g. dedicated, firewalled VLAN)."/>
+
+</entity-facade-xml>
