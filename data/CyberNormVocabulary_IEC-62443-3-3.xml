@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    IEC 62443-3-3 baseline System Requirements (SR 1.1-SR 7.8, 51 base requirements -
+    REs deliberately excluded, same "base level not every enhancement" scope discipline
+    already used for IEC 62443-4-2), explicitly deferred by CyberNormVocabulary_IEC-62443-4-2.xml's
+    own header comment ("reserve don't populate... real, valuable vocabulary, deferred to a
+    later pass"), now delivered. All 51 read in full from tools/norm-indexer/work/ir/clauses.jsonl
+    (the X.Y.1 "Requirement" sub-clause - the parent X.Y heading is an empty 0-length-text section
+    title in this norm's own structure, same pattern already confirmed for IEC 62443-4-2).
+
+    Real architectural finding that shaped this file (verified via the norm's own clause 4.1,
+    not assumed): these are CONTROL-SYSTEM-level requirements ("the control system shall..."),
+    not component-level like 4-2's CR/SAR/EDR/HDR/NDR. They do not fit mantle.product.feature.
+    ProductFeature/ProductCategory (a single-Product mechanism) - they fit moqui.device.DeviceGroup
+    (which already represents a zone/system in this project's BIA/zone-conduit work, and whose
+    real defining norm text - IEC 62443-3-2 - literally says zones group "assets which share
+    common security requirements"). Reused ProductFeature/ProductFeatureGroup as the pure content
+    model (label + description text) since it already fits that need with zero changes, but linked
+    to DeviceGroup via a new CyberDeviceGroupNormRequirementAppl join entity instead of the
+    existing Product-scoped ProductCategoryFeatGrpAppl/ProductCategoryMember - see
+    CyberDeviceAssetExtensions.xml and CyberDeviceGroupComplianceServices.xml.
+
+    SL-tiering deliberately NOT modeled: IEC 62443-3-3's own Annex B (Table B.1, SR/RE to SL 1-4
+    mapping) has its checkmark data lost to OCR in this project's corpus (confirmed, not assumed,
+    while extracting Annex B - see SESSION.md) - there is no honest way to say "SR 1.1 required at
+    SL2 but not SL1" from what this project actually has. All 51 are modeled as one flat SL-
+    independent baseline (the same treatment Annex B itself received: real content, non-extractable
+    granularity honestly left out rather than guessed).
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_1" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="ef147dcc17a113f384f0cb2cbea163db"
+            description="IEC 62443-3-3 SR 1.1 (Human user identification and authentication): The control system shall provide the capability to identify and authenticate all human users."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_2" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="438f21aebdbbde095c5eab07288086d0"
+            description="IEC 62443-3-3 SR 1.2 (Software process and device identification and authentication): The control system shall provide the capability to identify and authenticate all software processes and devices."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_3" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="bbcaceefcf84a11eba549907c2b4a077"
+            description="IEC 62443-3-3 SR 1.3 (Account management): The control system shall provide the capability to support the management of all accounts by authorized users, including adding, activating, modifying, disabling and removing accounts."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_4" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="4dc33004a4901aa04599b4372db1fd95"
+            description="IEC 62443-3-3 SR 1.4 (Identifier management): The control system shall provide the capability to support the management of identifiers by user, group, role or control system interface."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_5" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="ef2c047c4c54c857de5bd9aca0dec7cd"
+            description="IEC 62443-3-3 SR 1.5 (Authenticator management): The control system shall provide the capability to: h) initialize authenticator content; i) change all default authenticators upon control system installation; j) change/refresh all authenticators;..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_6" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="84beaa003bc1059ec07fb2401e148ce4"
+            description="IEC 62443-3-3 SR 1.6 (Wireless access management): The control system shall provide the capability to identify and authenticate all users (humans, software processes or devices) engaged in wireless communication."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_7" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="2559285e50ffb910f5c4452b89b848a2"
+            description="IEC 62443-3-3 SR 1.7 (Strength of password-based authentication): For control systems utilizing password-based authentication, the control system shall provide the capability to enforce configurable password strength based on minimum length and..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_8" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="ac1a5e50204b447cf56a0cae6e4990c7"
+            description="IEC 62443-3-3 SR 1.8 (Public key infrastructure certificates): Where PKI is utilized, the control system shall provide the capability to operate a PKI according to commonly accepted best practices or obtain public key certificates from an existing..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_9" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="118b3c568e1e4413bd3c21809c5f562f"
+            description="IEC 62443-3-3 SR 1.9 (Strength of public key authentication): For control systems utilizing public key authentication, the control system shall provide the capability to: a) validate certificates by checking the validity of the signature of a given..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_10" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="31e3e0e139cb7c16d945f562d361e961"
+            description="IEC 62443-3-3 SR 1.10 (Authenticator feedback): The control system shall provide the capability to obscure feedback of authentication information during the authentication process."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_11" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="29a9a6b95bf30f7d28900089e3176369"
+            description="IEC 62443-3-3 SR 1.11 (Unsuccessful login attempts): The control system shall provide the capability to enforce a limit of a configurable number of consecutive invalid access attempts by any user (human, software process or device) during a..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_12" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="e61a0c81936d16c5ce9a0aec2471f339"
+            description="IEC 62443-3-3 SR 1.12 (System use notification): The control system shall provide the capability to display a system use notification message before authenticating. The system use notification message shall be configurable by authorized personnel."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_1_13" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="87c19c15979e32a7134dfb3add7c797a"
+            description="IEC 62443-3-3 SR 1.13 (Access via untrusted networks): The control system shall provide the capability to monitor and control all methods of access to the control system via untrusted networks."/>
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_2_1" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="63e3b9bfc051e9d808400b95a530da95"
+            description="IEC 62443-3-3 SR 2.1 (Authorization enforcement): On all interfaces, the control system shall provide the capability to enforce authorizations assigned to all human users for controlling use of the control system to support segregation of duties..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_2_2" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="0eeeb3eee3846e92f491ac5b0517e4f7"
+            description="IEC 62443-3-3 SR 2.2 (Wireless use control): The control system shall provide the capability to authorize, monitor and enforce usage restrictions for wireless connectivity to the control system according to commonly accepted security industry..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_2_3" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="4ec21f35aaafef5da7709ed3ffac8a23"
+            description="IEC 62443-3-3 SR 2.3 (Use control for portable and mobile devices): The control system shall provide the capability to automatically enforce configurable usage restrictions that include: a) preventing the use of portable and mobile devices; b)..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_2_4" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="b4a5a625f4bcab8ffde983cf79dbfcc0"
+            description="IEC 62443-3-3 SR 2.4 (Mobile code): The control system shall provide the capability to enforce usage restrictions for mobile code technologies based on the potential to cause damage to the control system that include: a) preventing the execution of..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_2_5" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="ff5559b74045b8bb51e9eca502a0cc20"
+            description="IEC 62443-3-3 SR 2.5 (Session lock): The control system shall provide the capability to prevent further access by initiating a session lock after a configurable time period of inactivity or by manual initiation."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_2_6" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="d12d7262c34aeed29d325141c3efe342"
+            description="IEC 62443-3-3 SR 2.6 (Remote session termination): The control system shall provide the capability to terminate a remote session either automatically after a configurable time period of inactivity or manually by the user who initiated the session."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_2_7" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="5f29daf7cf9116cbcd616fbdeb92ee0e"
+            description="IEC 62443-3-3 SR 2.7 (Concurrent session control): The control system shall provide the capability to limit the number of concurrent sessions per interface for any given user (human, software process or device) to a configurable number of sessions."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_2_8" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="4a142dfa194041069b4f8550480daaf0"
+            description="IEC 62443-3-3 SR 2.8 (Auditable events): The control system shall provide the capability to generate audit records relevant to security for the following categories: access control, request errors, operating system events, control system events,..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_2_9" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="b315974c989cdaa64abd27e11fa88669"
+            description="IEC 62443-3-3 SR 2.9 (Audit storage capacity): The control system shall allocate sufficient audit record storage capacity according to commonly recognized recommendations for log management and system configuration."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_2_10" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="20111f10d129f774a5414da0817367b7"
+            description="IEC 62443-3-3 SR 2.10 (Response to audit processing failures): The control system shall provide the capability to alert personnel and prevent the loss of essential services and functions in the event of an audit processing failure."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_2_11" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="493f37bf863d2101e2521a446cffa38e"
+            description="IEC 62443-3-3 SR 2.11 (Timestamps): The control system shall provide timestamps for use in audit record generation."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_2_12" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="dafebafc9963e23fac2803abda1d575a"
+            description="IEC 62443-3-3 SR 2.12 (Non-repudiation): The control system shall provide the capability to determine whether a given human user took a particular action."/>
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_3_1" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="59384b73f0bc1df96673fda3721f6c7a"
+            description="IEC 62443-3-3 SR 3.1 (Communication integrity): The control system shall provide the capability to protect the integrity of transmitted information."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_3_2" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="8d03bca1ae1cd143ac033adbcf9ec00c"
+            description="IEC 62443-3-3 SR 3.2 (Malicious code protection): The control system shall provide the capability to employ protection mechanisms to prevent, detect, report and mitigate the effects of malicious code or unauthorized software."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_3_3" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="d70542c55a43ff2e6ca87ebe350431ab"
+            description="IEC 62443-3-3 SR 3.3 (Security functionality verification): The control system shall provide the capability to support verification of the intended operation of security functions and report when anomalies are discovered during FAT, SAT and..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_3_4" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="81b69c5bb2df38fb0f666096a1742efd"
+            description="IEC 62443-3-3 SR 3.4 (Software and information integrity): The control system shall provide the capability to detect, record, report and protect against unauthorized changes to software and information at rest."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_3_5" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="14fe341ea76d7c16754aed8f75c2829e"
+            description="IEC 62443-3-3 SR 3.5 (Input validation): The control system shall validate the syntax and content of any input which is used as an industrial process control input or input that directly impacts the action of the control system."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_3_6" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="2988ad2a2d2ac4cc4493575eba7341de"
+            description="IEC 62443-3-3 SR 3.6 (Deterministic output): The control system shall provide the capability to set outputs to a predetermined state if normal operation cannot be maintained as a result of an attack."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_3_7" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="e813795d6bffef7059a652e3098886e4"
+            description="IEC 62443-3-3 SR 3.7 (Error handling): The control system shall identify and handle error conditions in a manner such that effective remediation can occur."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_3_8" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="0726982ade5e1af1a21a22da59ece2b8"
+            description="IEC 62443-3-3 SR 3.8 (Session integrity): The control system shall provide the capability to protect the integrity of sessions. The control system shall reject any usage of invalid session IDs."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_3_9" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="54d49fc35cbd03e800295481dbcc5c56"
+            description="IEC 62443-3-3 SR 3.9 (Protection of audit information): The control system shall protect audit information and audit tools (if present) from unauthorized access, modification and deletion."/>
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_4_1" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="5092faab2b0523785569ca58c1709cd3"
+            description="IEC 62443-3-3 SR 4.1 (Information confidentiality): The control system shall provide the capability to protect the confidentiality of information for which explicit read authorization is supported, whether at rest or in transit."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_4_2" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="5e0ffab082615aff2a852d5614dd5f1a"
+            description="IEC 62443-3-3 SR 4.2 (Information persistence): The control system shall provide the capability to purge all information for which explicit read authorization is supported from components to be released from active service and/or decommissioned."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_4_3" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="f2e3e2873a0dcbd9a312e2d385b1ea3d"
+            description="IEC 62443-3-3 SR 4.3 (Use of cryptography): If cryptography is required, the control system shall use cryptographic algorithms, key sizes and mechanisms for key establishment and management according to commonly accepted security industry practices..."/>
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_5_1" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="4b7c7fe2424f95a601290abdf1643f65"
+            description="IEC 62443-3-3 SR 5.1 (Network segmentation): The control system shall provide the capability to logically segment control system networks from non-control system networks and to logically segment critical control system networks from other control..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_5_2" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="19bb3be93c647530ee776579116258c6"
+            description="IEC 62443-3-3 SR 5.2 (Zone boundary protection): The control system shall provide the capability to monitor and control communications at zone boundaries to enforce the compartmentalization defined in the risk-based zones and conduits model."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_5_3" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="f9d86c219acdf00678f9f92667347197"
+            description="IEC 62443-3-3 SR 5.3 (General purpose person-to-person communication restrictions): The control system shall provide the capability to prevent general purpose person-to-person messages from being received from users or systems external to the..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_5_4" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="874ac0257e632d4bcb4101cb8c941650"
+            description="IEC 62443-3-3 SR 5.4 (Application partitioning): The control system shall provide the capability to support partitioning of data, applications and services based on criticality to facilitate implementing a zoning model."/>
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_6_1" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="3d5118393004b51aaa13b61746d134a7"
+            description="IEC 62443-3-3 SR 6.1 (Audit log accessibility): The control system shall provide the capability for authorized humans and/or tools to access audit logs on a read-only basis."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_6_2" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="626234990a8ee11bad5ce4574fc2efc3"
+            description="IEC 62443-3-3 SR 6.2 (Continuous monitoring): The control system shall provide the capability to continuously monitor all security mechanism performance using commonly accepted security industry practices and recommendations to detect, characterize..."/>
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_7_1" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="ad72cf82ee97cd914528efdc856684ad"
+            description="IEC 62443-3-3 SR 7.1 (Denial of service protection): The control system shall provide the capability to operate in a degraded mode during a DoS event."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_7_2" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="89aa4a10ab926250af5ebffff12cc07c"
+            description="IEC 62443-3-3 SR 7.2 (Resource management): The control system shall provide the capability to limit the use of resources by security functions to prevent resource exhaustion."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_7_3" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="efd468a2197c59a23923ca763dd94454"
+            description="IEC 62443-3-3 SR 7.3 (Control system backup): The identity and location of critical files and the ability to conduct backups of user-level and system-level information (including system state information) shall be supported by the control system..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_7_4" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="31a412a85b6f21a726e882dc5a507695"
+            description="IEC 62443-3-3 SR 7.4 (Control system recovery and reconstitution): The control system shall provide the capability to recover and reconstitute to a known secure state after a disruption or failure."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_7_5" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="2aa8ae710ae081eb9e1dd5f9af4dea40"
+            description="IEC 62443-3-3 SR 7.5 (Emergency power): The control system shall provide the capability to switch to and from an emergency power supply without affecting the existing security state or a documented degraded mode."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_7_6" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="fa36f7954846cec5ce5fe3b07198a935"
+            description="IEC 62443-3-3 SR 7.6 (Network and security configuration settings): The control system shall provide the capability to be configured according to recommended network and security configurations as described in guidelines provided by the control..."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_7_7" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="51b99ccad12376bdb31908a8d0ca868c"
+            description="IEC 62443-3-3 SR 7.7 (Least functionality): The control system shall provide the capability to specifically prohibit and/or restrict the use of unnecessary functions, ports, protocols and/or services."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_IEC3333_SR_7_8" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="5ecee7ff03e80ff99ffec0de4056935a"
+            description="IEC 62443-3-3 SR 7.8 (Control system component inventory): The control system shall provide the capability to report the current list of installed components and their associated properties."/>
+
+    <!-- 7 FR (Foundational Requirement) groups - the norm's own real, stable top-level taxonomy,
+         identical in kind (though system- not component-scoped) to the 4 component-type categories
+         already used for IEC 62443-4-2. -->
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_IEC3333_FR1_IAC"
+            description="IEC 62443-3-3 FR1 - Identification and authentication control (IAC): baseline system requirements for an IACS control system/zone."/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_IEC3333_FR2_UC"
+            description="IEC 62443-3-3 FR2 - Use control (UC): baseline system requirements for an IACS control system/zone."/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_IEC3333_FR3_SI"
+            description="IEC 62443-3-3 FR3 - System integrity (SI): baseline system requirements for an IACS control system/zone."/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_IEC3333_FR4_DC"
+            description="IEC 62443-3-3 FR4 - Data confidentiality (DC): baseline system requirements for an IACS control system/zone."/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_IEC3333_FR5_RDF"
+            description="IEC 62443-3-3 FR5 - Restricted data flow (RDF): baseline system requirements for an IACS control system/zone."/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_IEC3333_FR6_TRE"
+            description="IEC 62443-3-3 FR6 - Timely response to events (TRE): baseline system requirements for an IACS control system/zone."/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_IEC3333_FR7_RA"
+            description="IEC 62443-3-3 FR7 - Resource availability (RA): baseline system requirements for an IACS control system/zone."/>
+
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_1" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_2" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_3" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_4" fromDate="2026-01-01 00:00:00" sequenceNum="4"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_5" fromDate="2026-01-01 00:00:00" sequenceNum="5"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_6" fromDate="2026-01-01 00:00:00" sequenceNum="6"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_7" fromDate="2026-01-01 00:00:00" sequenceNum="7"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_8" fromDate="2026-01-01 00:00:00" sequenceNum="8"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_9" fromDate="2026-01-01 00:00:00" sequenceNum="9"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_10" fromDate="2026-01-01 00:00:00" sequenceNum="10"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_11" fromDate="2026-01-01 00:00:00" sequenceNum="11"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_12" fromDate="2026-01-01 00:00:00" sequenceNum="12"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR1_IAC" productFeatureId="FEAT_IEC3333_SR_1_13" fromDate="2026-01-01 00:00:00" sequenceNum="13"/>
+
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR2_UC" productFeatureId="FEAT_IEC3333_SR_2_1" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR2_UC" productFeatureId="FEAT_IEC3333_SR_2_2" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR2_UC" productFeatureId="FEAT_IEC3333_SR_2_3" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR2_UC" productFeatureId="FEAT_IEC3333_SR_2_4" fromDate="2026-01-01 00:00:00" sequenceNum="4"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR2_UC" productFeatureId="FEAT_IEC3333_SR_2_5" fromDate="2026-01-01 00:00:00" sequenceNum="5"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR2_UC" productFeatureId="FEAT_IEC3333_SR_2_6" fromDate="2026-01-01 00:00:00" sequenceNum="6"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR2_UC" productFeatureId="FEAT_IEC3333_SR_2_7" fromDate="2026-01-01 00:00:00" sequenceNum="7"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR2_UC" productFeatureId="FEAT_IEC3333_SR_2_8" fromDate="2026-01-01 00:00:00" sequenceNum="8"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR2_UC" productFeatureId="FEAT_IEC3333_SR_2_9" fromDate="2026-01-01 00:00:00" sequenceNum="9"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR2_UC" productFeatureId="FEAT_IEC3333_SR_2_10" fromDate="2026-01-01 00:00:00" sequenceNum="10"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR2_UC" productFeatureId="FEAT_IEC3333_SR_2_11" fromDate="2026-01-01 00:00:00" sequenceNum="11"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR2_UC" productFeatureId="FEAT_IEC3333_SR_2_12" fromDate="2026-01-01 00:00:00" sequenceNum="12"/>
+
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR3_SI" productFeatureId="FEAT_IEC3333_SR_3_1" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR3_SI" productFeatureId="FEAT_IEC3333_SR_3_2" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR3_SI" productFeatureId="FEAT_IEC3333_SR_3_3" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR3_SI" productFeatureId="FEAT_IEC3333_SR_3_4" fromDate="2026-01-01 00:00:00" sequenceNum="4"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR3_SI" productFeatureId="FEAT_IEC3333_SR_3_5" fromDate="2026-01-01 00:00:00" sequenceNum="5"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR3_SI" productFeatureId="FEAT_IEC3333_SR_3_6" fromDate="2026-01-01 00:00:00" sequenceNum="6"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR3_SI" productFeatureId="FEAT_IEC3333_SR_3_7" fromDate="2026-01-01 00:00:00" sequenceNum="7"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR3_SI" productFeatureId="FEAT_IEC3333_SR_3_8" fromDate="2026-01-01 00:00:00" sequenceNum="8"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR3_SI" productFeatureId="FEAT_IEC3333_SR_3_9" fromDate="2026-01-01 00:00:00" sequenceNum="9"/>
+
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR4_DC" productFeatureId="FEAT_IEC3333_SR_4_1" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR4_DC" productFeatureId="FEAT_IEC3333_SR_4_2" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR4_DC" productFeatureId="FEAT_IEC3333_SR_4_3" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR5_RDF" productFeatureId="FEAT_IEC3333_SR_5_1" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR5_RDF" productFeatureId="FEAT_IEC3333_SR_5_2" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR5_RDF" productFeatureId="FEAT_IEC3333_SR_5_3" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR5_RDF" productFeatureId="FEAT_IEC3333_SR_5_4" fromDate="2026-01-01 00:00:00" sequenceNum="4"/>
+
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR6_TRE" productFeatureId="FEAT_IEC3333_SR_6_1" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR6_TRE" productFeatureId="FEAT_IEC3333_SR_6_2" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR7_RA" productFeatureId="FEAT_IEC3333_SR_7_1" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR7_RA" productFeatureId="FEAT_IEC3333_SR_7_2" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR7_RA" productFeatureId="FEAT_IEC3333_SR_7_3" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR7_RA" productFeatureId="FEAT_IEC3333_SR_7_4" fromDate="2026-01-01 00:00:00" sequenceNum="4"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR7_RA" productFeatureId="FEAT_IEC3333_SR_7_5" fromDate="2026-01-01 00:00:00" sequenceNum="5"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR7_RA" productFeatureId="FEAT_IEC3333_SR_7_6" fromDate="2026-01-01 00:00:00" sequenceNum="6"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR7_RA" productFeatureId="FEAT_IEC3333_SR_7_7" fromDate="2026-01-01 00:00:00" sequenceNum="7"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_IEC3333_FR7_RA" productFeatureId="FEAT_IEC3333_SR_7_8" fromDate="2026-01-01 00:00:00" sequenceNum="8"/>
+
+</entity-facade-xml>

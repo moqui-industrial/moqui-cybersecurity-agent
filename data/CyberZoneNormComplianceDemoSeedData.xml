@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    First real example of check#DeviceGroupNormCompliance (the DeviceGroup counterpart of
+    CyberNormProductClassificationDemoSeedData.xml's PROD_SIE_XB208 example): applies all 7 IEC
+    62443-3-3 FR requirement groups to both real Smoking Cell 1 panels
+    (DG_PANEL_MSS311/DG_PANEL_QE1, CyberHvacCellDemoSeedData.xml) - any IACS zone is expected to
+    address all 7 foundational requirement families, not a subset.
+
+    Deliberately exercises both real outcomes of the one automatic evidence check that exists
+    (SR 5.1/5.2 network segmentation, via DeviceGroupMemberPurpose=DgmpZoneBoundary):
+    DG_PANEL_QE1 has a real DgmpZoneBoundary member (DEV_SW_MSS_1, the boundary switch to
+    Corridor-1 - CyberHvacCellDemoSeedData.xml line 534) so its check should return SATISFIED;
+    DG_PANEL_MSS311 has no such member, so its check should return MISSING - a genuine finding,
+    not a fabricated negative (this panel's own switches were never modeled as a zone boundary,
+    since the boundary in this real network is at the QE1 panel per the factory diagram).
+
+    NOT auto-loaded (type="demo", same convention as CyberNormProductClassificationDemoSeedData.xml).
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="demo">
+
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_MSS311" productFeatureGroupId="FGRP_IEC3333_FR1_IAC" fromDate="2026-01-01 00:00:00"/>
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_MSS311" productFeatureGroupId="FGRP_IEC3333_FR2_UC" fromDate="2026-01-01 00:00:00"/>
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_MSS311" productFeatureGroupId="FGRP_IEC3333_FR3_SI" fromDate="2026-01-01 00:00:00"/>
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_MSS311" productFeatureGroupId="FGRP_IEC3333_FR4_DC" fromDate="2026-01-01 00:00:00"/>
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_MSS311" productFeatureGroupId="FGRP_IEC3333_FR5_RDF" fromDate="2026-01-01 00:00:00"/>
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_MSS311" productFeatureGroupId="FGRP_IEC3333_FR6_TRE" fromDate="2026-01-01 00:00:00"/>
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_MSS311" productFeatureGroupId="FGRP_IEC3333_FR7_RA" fromDate="2026-01-01 00:00:00"/>
+
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_QE1" productFeatureGroupId="FGRP_IEC3333_FR1_IAC" fromDate="2026-01-01 00:00:00"/>
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_QE1" productFeatureGroupId="FGRP_IEC3333_FR2_UC" fromDate="2026-01-01 00:00:00"/>
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_QE1" productFeatureGroupId="FGRP_IEC3333_FR3_SI" fromDate="2026-01-01 00:00:00"/>
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_QE1" productFeatureGroupId="FGRP_IEC3333_FR4_DC" fromDate="2026-01-01 00:00:00"/>
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_QE1" productFeatureGroupId="FGRP_IEC3333_FR5_RDF" fromDate="2026-01-01 00:00:00"/>
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_QE1" productFeatureGroupId="FGRP_IEC3333_FR6_TRE" fromDate="2026-01-01 00:00:00"/>
+    <org.moqui.cyber.CyberDeviceGroupNormRequirementAppl deviceId="DG_PANEL_QE1" productFeatureGroupId="FGRP_IEC3333_FR7_RA" fromDate="2026-01-01 00:00:00"/>
+
+</entity-facade-xml>

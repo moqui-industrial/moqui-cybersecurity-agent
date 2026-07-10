@@ -94,6 +94,19 @@ along with this software (see the LICENSE.md file). If not, see
             statusId="MathModelProduction" modelAlias="check#DeviceGroupContinuityImpact"
             description="Live instance invoked once per check#DeviceGroupContinuityImpact call; each call is logged as a MathModelRun."/>
 
+    <!-- check#DeviceGroupNormCompliance: system-level norm crosswalk counterpart to
+         check#ProductCategoryCompliance, for zone/system-scoped requirements (IEC 62443-3-3's
+         control-system SRs) that don't fit a single Product. Uses
+         CyberDeviceGroupNormRequirementAppl (CyberDeviceAssetExtensions.xml) instead of
+         ProductCategoryMember/find#ProductFeatureGroups. -->
+    <moqui.math.MathModelDef mathModelDefId="MMD_DEVICE_GROUP_NORM_COMPLIANCE" modelTypeEnumId="MmtCodeDefinedFunction"
+            modelName="Device Group Norm Compliance Check" versionNumber="1" releaseStatusId="MathModelProduction"
+            description="For a DeviceGroup (zone), checks applicable norm requirements against real evidence where it exists (SR 5.1/5.2), else reports NoEvidenceSchema. Implemented by check#DeviceGroupNormCompliance."/>
+
+    <moqui.math.MathModel mathModelId="MM_DEVICE_GROUP_NORM_COMPLIANCE" mathModelDefId="MMD_DEVICE_GROUP_NORM_COMPLIANCE"
+            statusId="MathModelProduction" modelAlias="check#DeviceGroupNormCompliance"
+            description="Live instance invoked once per check#DeviceGroupNormCompliance call; each call is logged as a MathModelRun."/>
+
     <!-- check#ThreatScenarioRisk (Phase 5, Tappa 4): sums the 5 analyst-assigned Likelihood
          sub-scores on a ThreatScenario vertex, bands the sum into a Likelihood Rating (Table
          10), takes the max Overall Impact across its linked DamageScenario(s) (Table 1-4),

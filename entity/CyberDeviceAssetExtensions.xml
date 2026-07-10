@@ -207,4 +207,28 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="sourceGraphVertexId" type="id"/>
     </extend-entity>
 
+    <!--
+        System-level norm requirement applicability for a zone/system (moqui.device.DeviceGroup),
+        the DeviceGroup counterpart of mantle.product.feature.ProductCategoryFeatGrpAppl - which
+        cannot be reused directly here since it is keyed on productCategoryId, and a DeviceGroup
+        is not a mantle.product.Product/ProductCategory member (it is a Device specialization,
+        shared-PK on deviceId). Real, verified reason this exists as a separate link rather than
+        reusing ProductFeature/ProductCategory's own Product-scoped mechanism: IEC 62443-3-3's
+        System Requirements are explicitly control-SYSTEM-scoped ("the control system shall...",
+        clause 4.1), matching DeviceGroup (an existing zone/system grouping in this project, per
+        the BIA/zone-conduit work) rather than a single Product. The ProductFeature/
+        ProductFeatureGroup content model (label + description text) is still reused as-is - only
+        the link to what the requirement applies to changes.
+    -->
+    <entity entity-name="CyberDeviceGroupNormRequirementAppl" package="org.moqui.cyber" cache="never">
+        <field name="deviceId" type="id" is-pk="true">
+            <description>The DeviceGroup (moqui.device.Device with deviceTypeEnumId=DtDeviceGroup) this requirement group applies to.</description></field>
+        <field name="productFeatureGroupId" type="id" is-pk="true"/>
+        <field name="fromDate" type="date-time" is-pk="true" default="ec.user.nowTimestamp"/>
+        <field name="thruDate" type="date-time"/>
+        <field name="comments" type="text-medium"/>
+        <relationship type="one" related="moqui.device.DeviceGroup"/>
+        <relationship type="one" related="mantle.product.feature.ProductFeatureGroup"/>
+    </entity>
+
 </entities>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Vocabulary extraction pass over BS EN 50742-2025 ("Approach B product requirements",
+    clause 7 - the machinery Safety-Related Security Level (SRSL) requirements), part of the
+    normative-coverage completion pass. Chosen over the other 8 remaining undocumented norms
+    after a real triage (see design-session/SESSION.md): unlike IEC 62443-3-3's baseline SR/RE
+    (verified via its own clause 4.1 to be control-SYSTEM-level, not component-level - a
+    DeviceGroup/zone concern, not ProductFeature) and unlike most of the other 8 (organizational
+    process/legal-definitional/methodology content), this document's clause 7 is explicitly
+    titled "Product requirements" and clause 4.2 confirms machine/product-level scope
+    ("the design and the construction of machinery shall not allow hazardous situations via
+    connections").
+
+    All 15 records below cite their real X.Y.Z "shall" clause (read in full from
+    tools/norm-indexer/work/ir/clauses.jsonl, not the graph API's 4000-char truncation).
+    SRSL tiering: 7.4.3.x clauses grade their requirement across SRSL0 (none)/SRSL1/SRSL2/SRSL3
+    (stricter each level) - captured at the SRSL1 (first non-trivial) tier as the baseline
+    testable requirement, same "base level, not every enhancement" scope discipline already
+    used for IEC 62443-4-2's SR/CR base requirements vs REs. FEAT_BSEN50742_SW_AUTHENTICITY is
+    the one exception: its SRSL1 tier is "None", so SRSL2 (the first non-trivial tier) is cited
+    instead - verified directly in the source text, not assumed to follow the SRSL1 default.
+
+    productFeatureTypeEnumId=PftSecurityCapability throughout (not PftSafetyFunction): these are
+    security controls in service of safety (the norm's own term is "Safety-related Security
+    level"), matching the existing distinction already established for ISO/TR 22100-4's 5
+    security-control features vs ISO 12100's PftSafetyFunction behavioral requirements.
+
+    Grouping follows the document's own real clause structure (7.2 Security measures / 7.3
+    Information collection / 7.4 Protection measures against corruption) - not an arbitrary
+    split. New ProductCategory NCAT_BSEN50742_SAFETY_SECURITY: this document's scope (any
+    machine with safety functions and digital interfaces) does not match any existing IEC
+    62443-4-2 component-type category (those are IACS-component-scoped: Software Application/
+    Embedded/Host/Network Device), so reusing one would misrepresent the applicability - a new
+    category is the honest choice here, unlike EN 40000-1-3 where reuse was the honest choice.
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <mantle.product.category.ProductCategory productCategoryId="NCAT_BSEN50742_SAFETY_SECURITY"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="16d2e52d2a4972a17fb37ad35580f7eb"
+            productCategoryTypeEnumId="PctRegulatory" categoryName="BS EN 50742 Safety-Related Security Machinery"
+            description="BS EN 50742:2025 clause 4.2: machinery whose design and construction must not allow hazardous situations via physical/logical/network connections - safety-related security (SRSL) product requirements apply (clause 7)."/>
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_INTERFACE_PROTECTION" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="b5aad74dc4382f1c8605a94a92ee5651"
+            description="BS EN 50742 7.1: all machinery interfaces that are accessible and can affect safety shall be identified and protected using countermeasures or compensating countermeasures."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_CRYPTO_STATE_OF_ART" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="012b46e441f65f81f1b710f6f6a762a9"
+            description="BS EN 50742 7.2.2: where cryptographic methods are used, only state-of-the-art algorithms shall be selected (e.g. per ENISA guidance)."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_INTERVENTION_LOGGING" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="16e80c41c6588e5ae60d568ecc0a11af"
+            description="BS EN 50742 7.3.3: the machine shall provide digital or physical means for traceability of interventions, readable/accessible, collected automatically by the machinery."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_LOG_STORAGE_DURATION" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="a09ec54e7c41663c64ed2bd7bdc15266"
+            description="BS EN 50742 7.3.4: intervention log records shall be stored for at least 5 years, enabled from the time the machine is put into service."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_LOG_TAMPER_PROTECTION" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="5f5d3b9eb74c7519ad9dc08dd3d82b02"
+            description="BS EN 50742 7.3.5: logs shall be secured against tampering; log deletion, if applicable, shall only be possible via an authorized procedure."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_SRSL_DETERMINED" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="7bd6aecdae53f89916828a4d63bbfd35"
+            description="BS EN 50742 7.4.2: for each safety function, a Safety-related Security Level (SRSL0-3) shall be determined and documented, based on the threat assessment."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_AUTHENTICATION" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="438696dc326f73750506cef65a6ec2e7"
+            description="BS EN 50742 7.4.3.2.1 (SRSL1+): entities (human users, software processes, intervening devices) shall be authenticated."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_AUTHORIZATION" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="3dd8ed61678281d16e1199e0fe5b3d08"
+            description="BS EN 50742 7.4.3.3.1 (SRSL1+): interventions on the machine shall require authorization."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_SW_INTEGRITY_VERIFICATION" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="1d74c5149b7310c47edf8e6a13ff6d83"
+            description="BS EN 50742 7.4.3.4.1 (SRSL1+): integrity of software and safety-related configuration data shall be verified at startup (e.g. checksums)."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_SECURE_BOOT" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="a60fa4bba48a06fd5edffbc95fd8b06e"
+            description="BS EN 50742 7.4.3.4.2 (SRSL1+): integrity of the boot process shall be protected and verified at startup (cryptographic signature verification required at SRSL3)."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_COMM_INTEGRITY" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="be0681c9b755ab440b54a7cae4d69805"
+            description="BS EN 50742 7.4.3.4.3 (SRSL1+): the integrity of exchanged information shall be verified."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_INPUT_VALIDATION" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="8b1ec39f9cc9c4c44d5b94ae33d06c79"
+            description="BS EN 50742 7.4.3.4.4 (SRSL1+): input data shall be validated against defined boundaries; invalid input data shall be rejected."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_PHYSICAL_TAMPER_DETECT" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="99556aea96cc256f26f832ac0a51e23d"
+            description="BS EN 50742 7.4.3.4.5 (SRSL1+): physical tampering shall be detected (e.g. seal breaking)."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_SW_AUTHENTICITY" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="9db8cfc1253e78a1ed82100b488f1b0b"
+            description="BS EN 50742 7.4.3.5.1 (SRSL2+, none required at SRSL1): authenticity of critical data (SRESW/SRASW, config) shall be verified via cryptographic signatures at installation."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_BSEN50742_SW_VERSION_IDENTIFICATION" productFeatureTypeEnumId="PftSecurityCapability"
+            sourceGraphId="OtCyberNormGraph" sourceGraphVertexId="d8bbf1b8898a2285d39d7b0aada7f994"
+            description="BS EN 50742 7.5: software version and configuration information shall be available on demand, in human-readable form."/>
+
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_BSEN50742_INTERFACES_CRYPTO"
+            description="BS EN 50742 clause 7.2 (Security measures): interface identification/protection and cryptographic algorithm selection."/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_BSEN50742_LOGGING"
+            description="BS EN 50742 clause 7.3 (Information collection): intervention logging, evidence, retention and tamper protection."/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_BSEN50742_INTEGRITY_AUTH"
+            description="BS EN 50742 clause 7.4 (Protection measures against corruption): SRSL determination, authentication, authorization, integrity, tamper detection, authenticity."/>
+
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_INTERFACES_CRYPTO" productFeatureId="FEAT_BSEN50742_INTERFACE_PROTECTION" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_INTERFACES_CRYPTO" productFeatureId="FEAT_BSEN50742_CRYPTO_STATE_OF_ART" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_LOGGING" productFeatureId="FEAT_BSEN50742_INTERVENTION_LOGGING" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_LOGGING" productFeatureId="FEAT_BSEN50742_LOG_STORAGE_DURATION" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_LOGGING" productFeatureId="FEAT_BSEN50742_LOG_TAMPER_PROTECTION" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_INTEGRITY_AUTH" productFeatureId="FEAT_BSEN50742_SRSL_DETERMINED" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_INTEGRITY_AUTH" productFeatureId="FEAT_BSEN50742_AUTHENTICATION" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_INTEGRITY_AUTH" productFeatureId="FEAT_BSEN50742_AUTHORIZATION" fromDate="2026-01-01 00:00:00" sequenceNum="3"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_INTEGRITY_AUTH" productFeatureId="FEAT_BSEN50742_SW_INTEGRITY_VERIFICATION" fromDate="2026-01-01 00:00:00" sequenceNum="4"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_INTEGRITY_AUTH" productFeatureId="FEAT_BSEN50742_SECURE_BOOT" fromDate="2026-01-01 00:00:00" sequenceNum="5"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_INTEGRITY_AUTH" productFeatureId="FEAT_BSEN50742_COMM_INTEGRITY" fromDate="2026-01-01 00:00:00" sequenceNum="6"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_INTEGRITY_AUTH" productFeatureId="FEAT_BSEN50742_INPUT_VALIDATION" fromDate="2026-01-01 00:00:00" sequenceNum="7"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_INTEGRITY_AUTH" productFeatureId="FEAT_BSEN50742_PHYSICAL_TAMPER_DETECT" fromDate="2026-01-01 00:00:00" sequenceNum="8"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_INTEGRITY_AUTH" productFeatureId="FEAT_BSEN50742_SW_AUTHENTICITY" fromDate="2026-01-01 00:00:00" sequenceNum="9"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_BSEN50742_INTEGRITY_AUTH" productFeatureId="FEAT_BSEN50742_SW_VERSION_IDENTIFICATION" fromDate="2026-01-01 00:00:00" sequenceNum="10"/>
+
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="NCAT_BSEN50742_SAFETY_SECURITY"
+            productFeatureGroupId="FGRP_BSEN50742_INTERFACES_CRYPTO" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="NCAT_BSEN50742_SAFETY_SECURITY"
+            productFeatureGroupId="FGRP_BSEN50742_LOGGING" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+    <mantle.product.feature.ProductCategoryFeatGrpAppl productCategoryId="NCAT_BSEN50742_SAFETY_SECURITY"
+            productFeatureGroupId="FGRP_BSEN50742_INTEGRITY_AUTH" fromDate="2026-01-01 00:00:00" applTypeEnumId="PfatStandard"/>
+
+</entity-facade-xml>

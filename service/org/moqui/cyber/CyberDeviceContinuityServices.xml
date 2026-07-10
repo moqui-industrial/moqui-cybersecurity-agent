@@ -77,4 +77,97 @@
         </actions>
     </service>
 
+    <service verb="check" noun="DeviceGroupNormCompliance" authenticate="true" allow-remote="true">
+        <description>System-level norm-to-zone crosswalk: the DeviceGroup counterpart of
+            check#ProductCategoryCompliance, for norm content that is explicitly control-SYSTEM
+            scoped rather than component/Product scoped (IEC 62443-3-3's baseline System
+            Requirements, verified via the norm's own clause 4.1 - "the control system SRs" -
+            not assumed). Resolves the DeviceGroup's applicable requirement group(s) via
+            CyberDeviceGroupNormRequirementAppl (not ProductCategoryMember/
+            find#ProductFeatureGroups - a DeviceGroup is not a mantle.product.Product), then for
+            each ProductFeature in those groups reports one of three honest statuses:
+            - SATISFIED / MISSING: only for the 2 requirements (SR 5.1 Network segmentation, SR
+              5.2 Zone boundary protection) that have a real, already-modeled structural evidence
+              signal in this project - a DeviceGroupMember with purposeEnumId=DgmpZoneBoundary
+              (the conduit/boundary-device pattern from the device-group-zone-modeling skill).
+            - NoEvidenceSchema: every other requirement - honestly reported as not automatically
+              evaluable, since no real evidence entity/data exists yet for it (e.g. account
+              management, audit logging, session control) - never guessed as SATISFIED or
+              fabricated as MISSING. Same discipline already applied to CyberDeviceAccount/
+              CyberDeviceCommunicationFlow being schema-ready-but-empty.
+
+            This is a MmtCodeDefinedFunction MathModel (MM_DEVICE_GROUP_NORM_COMPLIANCE, see
+            CyberMachineGraphMetadataSeedData.xml): every call is logged as a
+            moqui.math.MathModelRun.</description>
+        <in-parameters>
+            <parameter name="deviceId" required="true"><description>The DeviceGroup to check.</description></parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="results" type="List"/>
+            <parameter name="mathModelRunId"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+
+                def runValue = ec.entity.makeValue('moqui.math.MathModelRun')
+                        .setAll([mathModelId: 'MM_DEVICE_GROUP_NORM_COMPLIANCE',
+                                 startTime: ec.user.nowTimestamp, parameters: JsonOutput.toJson([deviceId: deviceId]),
+                                 hasError: 'N'])
+                runValue.setSequencedIdPrimary()
+                runValue.create()
+                mathModelRunId = runValue.mathModelRunId
+
+                try {
+                    // The only 2 requirements with a real structural evidence signal today.
+                    Set segmentationFeatureIds = ['FEAT_IEC3333_SR_5_1', 'FEAT_IEC3333_SR_5_2'] as Set
+                    boolean hasZoneBoundaryMember = ec.entity.find('moqui.device.DeviceGroupMember')
+                            .condition('deviceId', deviceId)
+                            .condition('purposeEnumId', 'DgmpZoneBoundary')
+                            .list().size() > 0
+
+                    List reqAppls = ec.entity.find('org.moqui.cyber.CyberDeviceGroupNormRequirementAppl')
+                            .condition('deviceId', deviceId)
+                            .conditionDate('fromDate', 'thruDate', ec.user.nowTimestamp)
+                            .list()
+
+                    results = []
+                    reqAppls.each { reqAppl ->
+                        String featureGroupId = reqAppl.productFeatureGroupId as String
+                        List groupAppls = ec.entity.find('mantle.product.feature.ProductFeatureGroupAppl')
+                                .condition('productFeatureGroupId', featureGroupId)
+                                .conditionDate('fromDate', 'thruDate', ec.user.nowTimestamp)
+                                .list()
+                        groupAppls.each { groupAppl ->
+                            String productFeatureId = groupAppl.productFeatureId as String
+                            def feature = ec.entity.find('mantle.product.feature.ProductFeature')
+                                    .condition('productFeatureId', productFeatureId).one()
+                            String status
+                            if (segmentationFeatureIds.contains(productFeatureId)) {
+                                status = hasZoneBoundaryMember ? 'SATISFIED' : 'MISSING'
+                            } else {
+                                status = 'NoEvidenceSchema'
+                            }
+                            results.add([
+                                productFeatureGroupId: featureGroupId,
+                                productFeatureId     : productFeatureId,
+                                description          : feature?.description,
+                                status               : status
+                            ])
+                        }
+                    }
+
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, results: JsonOutput.toJson(results)])
+                            .update()
+                } catch (Throwable t) {
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, hasError: 'Y', errors: t.toString()])
+                            .update()
+                    throw t
+                }
+            ]]></script>
+        </actions>
+    </service>
+
 </services>
