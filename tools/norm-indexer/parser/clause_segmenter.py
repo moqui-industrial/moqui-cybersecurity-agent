@@ -17,7 +17,16 @@ class SegmentedClause:
 
 
 _PAGE_MARKER_RE = re.compile(r"^\s*\d+\s*/\s*\d+\s*$")
-_DOT_LEADER_RE = re.compile(r"\.{3,}")
+# Two real dot-leader renderings found in this project's corpus: consecutive dots with no
+# gaps ("....... 13", most documents so far), and dots each followed by a space
+# ("General . . . . . . . . 33", UL 508A - pdftotext preserves the PDF's actual glyph
+# spacing, and UL's dot-leader glyphs are individually spaced, not run together). Verified
+# real UL508A TOC lines before writing this: every entry has 15-40+ repetitions regardless
+# of title length (the leader always fills to the page-number column), so a {6,}-repetition
+# threshold on the space-separated form has a wide safety margin against a real heading
+# line coincidentally containing a run of periods (e.g. an abbreviation list) while still
+# reliably excluding every real TOC entry.
+_DOT_LEADER_RE = re.compile(r"\.{3,}|(?:\.\s){6,}")
 _NUMBERED_LIST_HEADING_RE = re.compile(r"^\s*(\d{1,3})\.\s+(\S.*)$")
 _EN_IEC_HEADING_RE = re.compile(r"^\s*(\d+(?:\.\d+){1,4}|[A-Z]{1,2}\.\d+(?:\.\d+){0,4})\s+([A-Za-zÀ-ɏ].*)$")
 # Annex/Allegato heading for the en-iec-hierarchical family (IEC 62443-*, EN 40000-*). Real data

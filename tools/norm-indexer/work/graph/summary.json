@@ -1,10 +1,10 @@
 {
-  "clauseVertexCount": 1895,
-  "documentVertexCount": 12,
-  "edgeEvidenceCount": 2593,
-  "emittedEdgeCount": 2546,
-  "emittedVertexCount": 2081,
-  "graphId": "OtCyberNormGraph",
-  "unresolvedExternalVertexCount": 174,
-  "vertexEvidenceCount": 1947
+  "clauseVertexCount": 3021,
+  "documentVertexCount": 14,
+  "edgeEvidenceCount": 4865,
+  "emittedEdgeCount": 4095,
+  "emittedVertexCount": 3364,
+  "graphId": "ElectricalComplianceNormGraph",
+  "unresolvedExternalVertexCount": 329,
+  "vertexEvidenceCount": 3574
 }
