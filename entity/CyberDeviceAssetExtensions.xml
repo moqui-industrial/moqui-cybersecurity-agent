@@ -15,27 +15,10 @@ along with this software (see the LICENSE.md file). If not, see
 <entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
 
-    <!--
-        Neither moqui-device nor mantle-udm depends on the other, so this link
-        lives here, in the component that depends on both. Placed on the base
-        Device entity (not PhysicalDevice) because Device/PhysicalDevice/
-        DeviceGroup share the same PK (deviceId) in a class-table-inheritance
-        style, and a fixed asset can be a single physical device OR a whole
-        device group (e.g. an electrical panel tracked as one Asset with
-        several PhysicalDevice children).
-
-        Type vs instance: mantle.product.Product is the type/class (e.g. "SIMATIC
-        ET 200SP IM155-6PN"); mantle.product.asset.Asset is one physical instance
-        of a Product (e.g. the specific IM155-6PN installed in a specific
-        cabinet); moqui.device.Device/PhysicalDevice is also instance-level
-        (PhysicalDevice already carries serialNumber/uuid/hash/firmwareVersion),
-        so Device and Asset are two views of the same physical unit - this
-        FK is what ties those two views together.
-    -->
-    <extend-entity entity-name="Device" package="moqui.device">
-        <field name="assetId" type="id"/>
-        <relationship type="one-nofk" related="mantle.product.asset.Asset" short-alias="asset"/>
-    </extend-entity>
+    <!-- Device.assetId (the Device<->Asset cross-reference) moved to mantle-udm/entity/
+         ProductAssetEntities.xml - it is not cyber-specific (also used by UL508A/IEC electrical
+         compliance and future domains), so it now lives in the neutral data-layer component every
+         domain component already depends on, rather than here. -->
 
     <!--
         BIA (Business Impact Analysis) continuity targets, per device. moqui-device's
