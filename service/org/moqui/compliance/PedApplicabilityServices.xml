@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This software is in the public domain under CC0 1.0 Universal plus a
+     Grant of Patent License.
+
+     To the extent possible under law, the author(s) have dedicated all
+     copyright and related and neighboring rights to this software to the
+     public domain worldwide. This software is distributed without any warranty.
+
+     You should have received a copy of the CC0 Public Domain Dedication
+     along with this software (see the LICENSE.md file). If not, see
+     <https://creativecommons.org/publicdomain/zero/1.0/>. -->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="derive" noun="PedApplicability" authenticate="true" allow-remote="true">
+        <description>Fase 2 mechanism proof: a real ternary
+            (TRUE/FALSE/UNKNOWN) derived-boolean determination, deliberately not reduced to
+            pressure alone. Checks PED 2014/68/EU applicability (Article 1.2 threshold, Article 1.3
+            real exclusions) - not Annex II category assignment (out of scope, needs real
+            fluid-group/equipment tables).
+
+            Fail-closed: if ANY required input (pressureBar, fluidGroup, at least one of
+            volumeLiters/nominalDiameterMm, equipmentType, isAssembly, exclusions) is missing, the
+            outcome is INCOMPLETE and no ProductFeatureAppl is written - the ternary state stays
+            UNKNOWN (absence of both FEAT_PED_APPLICABLE and FEAT_PED_NOT_APPLICABLE), never
+            FALSE. exclusions must be passed explicitly (an empty list is valid - it means the
+            caller considered exclusions and found none - but a missing/null value is not).
+
+            This is a MmtCodeDefinedFunction MathModel (MM_PED_APPLICABILITY, see
+            CompliancePedMechanismProofSeedData.xml) - same run-tracking pattern as
+            check#ProductCategoryCompliance, reused as-is.</description>
+        <in-parameters>
+            <parameter name="productId" required="true"/>
+            <parameter name="pressureBar" type="BigDecimal"><description>PS, maximum allowable pressure, bar.</description></parameter>
+            <parameter name="fluidGroup" type="Integer"><description>PED fluid group, 1 or 2.</description></parameter>
+            <parameter name="volumeLiters" type="BigDecimal"/>
+            <parameter name="nominalDiameterMm" type="Integer"><description>DN, for piping.</description></parameter>
+            <parameter name="equipmentType"><description>Vessel/Piping/Assembly/Accessory.</description></parameter>
+            <parameter name="isAssembly" type="Boolean"/>
+            <parameter name="exclusions" type="List"><description>Article 1.3 exclusion codes that
+                apply, e.g. TransportablePressureEquipment, SimplePressureVessel - pass an empty
+                list, not null, when none apply.</description></parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="outcome"><description>Applicable / NotApplicable / INCOMPLETE.</description></parameter>
+            <parameter name="missingInputs" type="List"/>
+            <parameter name="mathModelRunId"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+
+                Map inputParams = [productId: productId, pressureBar: pressureBar, fluidGroup: fluidGroup,
+                        volumeLiters: volumeLiters, nominalDiameterMm: nominalDiameterMm,
+                        equipmentType: equipmentType, isAssembly: isAssembly, exclusions: exclusions]
+
+                missingInputs = []
+                if (pressureBar == null) missingInputs.add('pressureBar')
+                if (fluidGroup == null) missingInputs.add('fluidGroup')
+                if (volumeLiters == null && nominalDiameterMm == null) missingInputs.add('volumeLiters or nominalDiameterMm')
+                if (!equipmentType) missingInputs.add('equipmentType')
+                if (isAssembly == null) missingInputs.add('isAssembly')
+                if (exclusions == null) missingInputs.add('exclusions (pass an empty list if none apply)')
+
+                def runValue = ec.entity.makeValue('moqui.math.MathModelRun')
+                        .setAll([mathModelId: 'MM_PED_APPLICABILITY', startTime: ec.user.nowTimestamp,
+                                 parameters: JsonOutput.toJson(inputParams), hasError: 'N'])
+                runValue.setSequencedIdPrimary()
+                runValue.create()
+                mathModelRunId = runValue.mathModelRunId
+
+                try {
+                    if (missingInputs) {
+                        outcome = 'INCOMPLETE'
+                        ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                                .setAll([endDate: ec.user.nowTimestamp,
+                                         results: JsonOutput.toJson([outcome: outcome, missingInputs: missingInputs])])
+                                .update()
+                        return
+                    }
+
+                    // Article 1.3 real exclusions (subset - full list is longer, out of scope here)
+                    boolean excluded = exclusions.contains('TransportablePressureEquipment') || exclusions.contains('SimplePressureVessel')
+                    // Article 1.2: PS > 0.5 bar
+                    boolean overThreshold = pressureBar > 0.5G
+                    boolean applicable = overThreshold && !excluded
+                    outcome = applicable ? 'Applicable' : 'NotApplicable'
+                    String reason = excluded ? "Excluded under Article 1.3: ${exclusions.find { it in ['TransportablePressureEquipment', 'SimplePressureVessel'] }}"
+                            : (overThreshold ? 'PS > 0.5 bar (Article 1.2), no applicable exclusion' : 'PS <= 0.5 bar (Article 1.2 threshold not met)')
+
+                    String applicableFeatureId = applicable ? 'FEAT_PED_APPLICABLE' : 'FEAT_PED_NOT_APPLICABLE'
+                    String otherFeatureId = applicable ? 'FEAT_PED_NOT_APPLICABLE' : 'FEAT_PED_APPLICABLE'
+
+                    // Idempotency / conflict avoidance: close out any stale appl on the OTHER
+                    // mutually-exclusive feature before writing the new one, so a re-run with
+                    // changed inputs never leaves both TRUE and FALSE active at once.
+                    ec.entity.find('mantle.product.feature.ProductFeatureAppl')
+                            .condition('productId', productId).condition('productFeatureId', otherFeatureId)
+                            .conditionDate('fromDate', 'thruDate', ec.user.nowTimestamp)
+                            .list().each { it.set('thruDate', ec.user.nowTimestamp); it.update() }
+
+                    def existingAppl = ec.entity.find('mantle.product.feature.ProductFeatureAppl')
+                            .condition('productId', productId).condition('productFeatureId', applicableFeatureId)
+                            .conditionDate('fromDate', 'thruDate', ec.user.nowTimestamp)
+                            .list()
+                    if (!existingAppl) {
+                        ec.entity.makeValue('mantle.product.feature.ProductFeatureAppl')
+                                .setAll([productId: productId, productFeatureId: applicableFeatureId,
+                                         fromDate: ec.user.nowTimestamp, applTypeEnumId: 'PfatStandard',
+                                         evidenceKindEnumId: 'PfekDerived', mathModelRunId: mathModelRunId])
+                                .create()
+                    }
+
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp,
+                                     results: JsonOutput.toJson([outcome: outcome, reason: reason, productFeatureId: applicableFeatureId])])
+                            .update()
+                } catch (Throwable t) {
+                    ec.entity.find('moqui.math.MathModelRun').condition('mathModelRunId', mathModelRunId).one()
+                            .setAll([endDate: ec.user.nowTimestamp, hasError: 'Y', errors: t.toString()])
+                            .update()
+                    throw t
+                }
+            ]]></script>
+        </actions>
+    </service>
+
+</services>

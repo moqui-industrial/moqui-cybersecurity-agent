@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<https://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<!--
+    Fase 2 mechanism proof: a real, working example of a ternary
+    (TRUE/FALSE/UNKNOWN) derived boolean, with full provenance, deliberately NOT reduced to a
+    single input. Lives here (moqui-cybersecurity-agent) only because it already has the
+    ProductFeatureType extension point and math-model-run-tracking infrastructure this proof
+    reuses - PED is not a cyber concept, and does not belong in this component long-term (see
+    plan Fase 9: PED is its own future domain, likely its own sibling component the same way
+    moqui-electrical-compliance-agent is separate from this one). Package
+    org.moqui.compliance.PedApplicabilityServices (not org.moqui.cyber.*) signals this
+    intentionally.
+
+    No real PED (2014/68/EU) norm graph is indexed in this project (unlike UL508A/IEC 60204-1) -
+    the rule below is documented in prose only, citing real article numbers, never a fabricated
+    sourceGraphVertexId. Only PED *applicability* (Article 1.2/1.3) is modeled, not Annex II
+    category I-IV assignment (which needs real fluid-group/equipment-type tables, out of scope
+    for a Fase 2 mechanism proof).
+-->
+<entity-facade-xml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-facade-3.xsd" type="seed-initial">
+
+    <moqui.basic.Enumeration enumId="PftRegulatoryApplicability" description="Regulatory Applicability (derived TRUE/FALSE/UNKNOWN determination)" enumTypeId="ProductFeatureType"/>
+
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PED_APPLICABLE" productFeatureTypeEnumId="PftRegulatoryApplicability"
+            description="PED 2014/68/EU Article 1.2: this equipment/assembly has a maximum allowable pressure PS greater than 0.5 bar and is not excluded under Article 1.3 - the Directive applies."/>
+    <mantle.product.feature.ProductFeature productFeatureId="FEAT_PED_NOT_APPLICABLE" productFeatureTypeEnumId="PftRegulatoryApplicability"
+            description="PED 2014/68/EU Article 1.2/1.3: this equipment/assembly has PS at or below 0.5 bar, or is explicitly excluded under Article 1.3 - the Directive does not apply."/>
+    <mantle.product.feature.ProductFeatureGroup productFeatureGroupId="FGRP_PED_APPLICABILITY"
+            description="PED 2014/68/EU applicability determination - mutually exclusive TRUE/FALSE pair; absence of both means UNKNOWN (incomplete input), never assume FALSE."/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_PED_APPLICABILITY" productFeatureId="FEAT_PED_APPLICABLE" fromDate="2026-01-01 00:00:00" sequenceNum="1"/>
+    <mantle.product.feature.ProductFeatureGroupAppl productFeatureGroupId="FGRP_PED_APPLICABILITY" productFeatureId="FEAT_PED_NOT_APPLICABLE" fromDate="2026-01-01 00:00:00" sequenceNum="2"/>
+
+    <moqui.math.MathModelDef mathModelDefId="MMD_PED_APPLICABILITY" modelTypeEnumId="MmtCodeDefinedFunction"
+            modelName="PED Applicability Determination" versionNumber="1" releaseStatusId="MathModelProduction"
+            description="PED 2014/68/EU Art 1.2 (PS&gt;0.5 bar) + Art 1.3 exclusions. Requires PS/fluidGroup/volume-DN/equipmentType/isAssembly/exclusions - any missing input gives INCOMPLETE, never FALSE. See derive#PedApplicability. Category I-IV out of scope."/>
+    <moqui.math.MathModel mathModelId="MM_PED_APPLICABILITY" mathModelDefId="MMD_PED_APPLICABILITY"
+            statusId="MathModelProduction" modelAlias="derive#PedApplicability"
+            description="Live instance invoked once per derive#PedApplicability call; each call is logged as a MathModelRun."/>
+
+</entity-facade-xml>
